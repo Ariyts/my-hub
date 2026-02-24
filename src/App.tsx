@@ -50,7 +50,12 @@ function MainArea() {
 }
 
 export function App() {
-  const { isDarkTheme, showSettings, sidebarCollapsed } = useStore();
+  const { isDarkTheme, showSettings, sidebarCollapsed, loadFromCloud } = useStore();
+
+  // Load data from cloud on app start
+  useEffect(() => {
+    loadFromCloud();
+  }, []);
 
   useEffect(() => {
     if (isDarkTheme) {
