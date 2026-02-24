@@ -6,10 +6,12 @@ import type {
   CommandItem, LinkItem, PromptItem, Settings, AnyItem
 } from './types';
 import {
-  loadPublicData,
   initializeGitHubSync,
   saveToGitHub,
 } from './utils/githubSync';
+
+// Import embedded data - this will be bundled at build time
+import embeddedData from './data.json';
 
 const defaultSettings: Settings = {
   theme: 'system',
@@ -23,28 +25,6 @@ const defaultSettings: Settings = {
   github: {
     token: '',
   },
-};
-
-const sampleData = {
-  folders: [
-    { id: 'f1', name: 'Work', type: 'notes' as ObjectType, parentId: null, createdAt: new Date().toISOString(), color: '#4CAF50', isExpanded: true },
-    { id: 'f2', name: 'Personal', type: 'notes' as ObjectType, parentId: null, createdAt: new Date().toISOString(), color: '#2196F3', isExpanded: false },
-    { id: 'f3', name: 'Git', type: 'commands' as ObjectType, parentId: null, createdAt: new Date().toISOString(), color: '#FF9800', isExpanded: true },
-    { id: 'f4', name: 'Docker', type: 'commands' as ObjectType, parentId: null, createdAt: new Date().toISOString(), color: '#9C27B0', isExpanded: false },
-    { id: 'f5', name: 'Dev Resources', type: 'links' as ObjectType, parentId: null, createdAt: new Date().toISOString(), color: '#FF5722', isExpanded: true },
-    { id: 'f6', name: 'Coding', type: 'prompts' as ObjectType, parentId: null, createdAt: new Date().toISOString(), color: '#607D8B', isExpanded: true },
-  ] as Folder[],
-  notes: [
-    {
-      id: 'n1', folderId: 'f1', title: 'Welcome to Knowledge Hub', type: 'notes' as const,
-      content: '# Welcome! 👋\n\nThis is your personal knowledge hub.\n\n## Features\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## Cloud Sync\nYour data syncs automatically!\n- Data loads from cloud when you open this page\n- Go to **Settings → Sync** to enable saving\n\n---\n> Start organizing your knowledge!',
-      tags: ['welcome', 'guide'], isFavorite: true,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    },
-  ] as NoteItem[],
-  commands: [],
-  links: [],
-  prompts: [],
 };
 
 interface StoreActions {
@@ -98,10 +78,10 @@ interface StoreActions {
   getActiveItem: () => AnyItem | null;
 
   // GitHub sync
-  syncStatus: 'idle' | 'loading' | 'connecting' | 'syncing' | 'success' | 'error';
+  syncStatus: 'idle' | 'connecting' | 'syncing' | 'success' | 'error';
   syncMessage: string;
-  canSave: boolean; // Has token with write access
-  loadFromCloud: () => Promise<void>;
+  canSave: boolean;
+  dataExportedAt: string;
   connectGitHub: (token: string) => Promise<boolean>;
   syncToCloud: () => Promise<void>;
   disconnectGitHub: () => void;
@@ -109,17 +89,20 @@ interface StoreActions {
 
 const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
 
+// Use embedded data (built into the app)
+const initialData = embeddedData as any;
+
 export const useStore = create<AppState & StoreActions>()(
   persist(
     (set, get) => ({
       activeType: 'notes',
-      activeFolderId: 'f1',
-      activeItemId: 'n1',
-      folders: sampleData.folders,
-      notes: sampleData.notes,
-      commands: sampleData.commands,
-      links: sampleData.links,
-      prompts: sampleData.prompts,
+      activeFolderId: initialData.folders?.[0]?.id || null,
+      activeItemId: initialData.notes?.[0]?.id || null,
+      folders: initialData.folders || [],
+      notes: initialData.notes || [],
+      commands: initialData.commands || [],
+      links: initialData.links || [],
+      prompts: initialData.prompts || [],
       settings: defaultSettings,
       searchQuery: '',
       showSettings: false,
@@ -312,37 +295,10 @@ export const useStore = create<AppState & StoreActions>()(
       syncStatus: 'idle',
       syncMessage: '',
       canSave: false,
-
-      loadFromCloud: async () => {
-        set({ syncStatus: 'loading' });
-        
-        const buildTime = new Date().toISOString();
-        console.log('[Sync v2] Loading data from cloud...', buildTime);
-        
-        const result = await loadPublicData();
-        
-        console.log('[Sync v2] Result:', result.success, result.message);
-        
-        if (result.success && result.data) {
-          console.log('[Sync v2] Data exported at:', result.data.exportedAt);
-          console.log('[Sync v2] Loaded', result.data.notes?.length || 0, 'notes:', result.data.notes?.map((n: any) => n.title).join(', '));
-          set({
-            folders: result.data.folders || [],
-            notes: result.data.notes || [],
-            commands: result.data.commands || [],
-            links: result.data.links || [],
-            prompts: result.data.prompts || [],
-            syncStatus: 'idle',
-          });
-        } else {
-          // If no cloud data, keep current data
-          console.log('[Sync v2] No cloud data, keeping current state');
-          set({ syncStatus: 'idle' });
-        }
-      },
+      dataExportedAt: initialData.exportedAt || '',
 
       connectGitHub: async (token: string) => {
-        set({ syncStatus: 'connecting', syncMessage: 'Verifying token...' });
+        set({ syncStatus: 'connecting', syncMessage: 'Connecting...' });
         
         const result = await initializeGitHubSync(token);
         
@@ -372,12 +328,12 @@ export const useStore = create<AppState & StoreActions>()(
         const state = get();
         
         if (!state.canSave || !state.settings.github.token) {
-          set({ syncStatus: 'error', syncMessage: 'Connect with token first to save' });
+          set({ syncStatus: 'error', syncMessage: 'Connect with token first' });
           setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
           return;
         }
         
-        set({ syncStatus: 'syncing', syncMessage: 'Saving to cloud...' });
+        set({ syncStatus: 'syncing', syncMessage: 'Saving...' });
         
         const data = {
           folders: state.folders,
@@ -393,7 +349,7 @@ export const useStore = create<AppState & StoreActions>()(
         if (result.success) {
           set({
             syncStatus: 'success',
-            syncMessage: result.message,
+            syncMessage: 'Saved! Site will rebuild automatically.',
             settings: {
               ...state.settings,
               github: { ...state.settings.github, lastSync: new Date().toISOString() },
@@ -419,7 +375,7 @@ export const useStore = create<AppState & StoreActions>()(
     {
       name: 'knowledge-hub-storage',
       partialize: (state) => ({
-        // Only persist UI preferences, NOT data (data comes from cloud)
+        // Only persist UI preferences
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
         activeType: state.activeType,

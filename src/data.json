@@ -1,0 +1,22 @@
+{
+  "folders": [
+    { "id": "f1", "name": "Work", "type": "notes", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#4CAF50", "isExpanded": true },
+    { "id": "f2", "name": "Personal", "type": "notes", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#2196F3", "isExpanded": false },
+    { "id": "f3", "name": "Git", "type": "commands", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#FF9800", "isExpanded": true },
+    { "id": "f4", "name": "Docker", "type": "commands", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#9C27B0", "isExpanded": false },
+    { "id": "f5", "name": "Dev Resources", "type": "links", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#FF5722", "isExpanded": true },
+    { "id": "f6", "name": "Coding", "type": "prompts", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#607D8B", "isExpanded": true }
+  ],
+  "notes": [
+    {
+      "id": "n1", "folderId": "f1", "title": "Welcome to Knowledge Hub", "type": "notes",
+      "content": "# Welcome! 👋\n\nThis is your personal knowledge hub.\n\n## Features\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## How to save\n1. Click **Settings** (⚙️)\n2. Go to **Sync** tab\n3. Enter your GitHub token\n4. Click **Save to Cloud**\n\nYour data will be automatically synced!\n\n---\n> Start organizing your knowledge!",
+      "tags": ["welcome", "guide"], "isFavorite": true,
+      "createdAt": "2026-02-24T00:00:00.000Z", "updatedAt": "2026-02-24T00:00:00.000Z"
+    }
+  ],
+  "commands": [],
+  "links": [],
+  "prompts": [],
+  "exportedAt": "2026-02-24T00:00:00.000Z"
+}

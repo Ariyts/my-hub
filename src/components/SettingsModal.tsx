@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Github, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Globe } from 'lucide-react';
+import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap } from 'lucide-react';
 
 interface TabProps {
   active: boolean;
@@ -28,7 +28,7 @@ export function SettingsModal() {
   const { 
     setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, 
     exportData, importData, clearAllData,
-    syncStatus, syncMessage, canSave,
+    syncStatus, syncMessage, canSave, dataExportedAt,
     connectGitHub, syncToCloud, disconnectGitHub
   } = useStore();
   
@@ -62,7 +62,7 @@ export function SettingsModal() {
         reader.onload = (ev) => {
           const data = ev.target?.result as string;
           importData(data);
-          alert('Data imported successfully!');
+          alert('Data imported!');
         };
         reader.readAsText(file);
       }
@@ -89,7 +89,6 @@ export function SettingsModal() {
         className="w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{ background: bg, border: `1px solid ${border}` }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: border }}>
           <h2 className="text-lg font-bold" style={{ color: textColor }}>Settings</h2>
           <button onClick={() => setShowSettings(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -97,7 +96,6 @@ export function SettingsModal() {
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-1 px-4 pt-3 pb-1 border-b overflow-x-auto" style={{ borderColor: border }}>
           <Tab active={activeTab === 'sync'} onClick={() => setActiveTab('sync')}>🔄 Sync</Tab>
           <Tab active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>🎨 Appearance</Tab>
@@ -105,20 +103,20 @@ export function SettingsModal() {
           <Tab active={activeTab === 'data'} onClick={() => setActiveTab('data')}>💾 Data</Tab>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {activeTab === 'sync' && (
             <>
-              {/* Status Banner */}
-              <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: '#4CAF5015', border: '1px solid #4CAF5040' }}>
-                <Globe size={20} style={{ color: '#4CAF50' }} />
+              {/* Info Banner */}
+              <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: '#6366f115', border: '1px solid #6366f140' }}>
+                <Zap size={20} style={{ color: '#6366f1' }} />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: '#4CAF50' }}>Auto-sync enabled</p>
-                  <p className="text-xs" style={{ color: mutedColor }}>Your data loads automatically from cloud on every visit</p>
+                  <p className="text-sm font-medium" style={{ color: '#6366f1' }}>Auto-rebuild enabled</p>
+                  <p className="text-xs" style={{ color: mutedColor }}>
+                    Site rebuilds automatically when you save (takes ~1 min)
+                  </p>
                 </div>
               </div>
 
-              {/* Status Message */}
               {syncMessage && (
                 <div 
                   className="flex items-center gap-2 p-3 rounded-lg text-sm"
@@ -127,7 +125,7 @@ export function SettingsModal() {
                     color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
                   }}
                 >
-                  {(syncStatus === 'loading' || syncStatus === 'connecting' || syncStatus === 'syncing') && (
+                  {(syncStatus === 'connecting' || syncStatus === 'syncing') && (
                     <RefreshCw size={14} className="animate-spin" />
                   )}
                   {syncStatus === 'success' && <Check size={14} />}
@@ -153,7 +151,7 @@ export function SettingsModal() {
                     <p className="text-xs" style={{ color: mutedColor }}>
                       {canSave 
                         ? `Connected as @${settings.github.username}` 
-                        : 'Enter token to save changes to cloud'}
+                        : 'Enter token to save changes'}
                     </p>
                   </div>
                 </div>
@@ -162,7 +160,7 @@ export function SettingsModal() {
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-medium block mb-1.5" style={{ color: mutedColor }}>
-                        GitHub Personal Access Token
+                        GitHub Token
                       </label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -170,7 +168,7 @@ export function SettingsModal() {
                             type={showToken ? 'text' : 'password'}
                             className="w-full px-3 py-2.5 rounded-lg text-sm outline-none pr-10"
                             style={inputStyle}
-                            placeholder="ghp_xxxxxxxxxxxx"
+                            placeholder="ghp_xxx..."
                             value={token}
                             onChange={(e) => setToken(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
@@ -195,7 +193,7 @@ export function SettingsModal() {
                       </div>
                     </div>
                     <p className="text-xs" style={{ color: mutedColor }}>
-                      Need a token? Go to GitHub → Settings → Developer settings → Personal access tokens → Generate (needs 'repo' scope)
+                      Need token? GitHub → Settings → Developer settings → Personal access tokens → Generate (repo scope)
                     </p>
                   </div>
                 ) : (
@@ -208,44 +206,40 @@ export function SettingsModal() {
                         style={{ background: '#4CAF50', color: 'white', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
                       >
                         <Upload size={16} />
-                        Save to Cloud
+                        Save & Rebuild Site
                       </button>
                       <button
                         onClick={disconnectGitHub}
-                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all border"
+                        className="flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium border"
                         style={{ borderColor: border, color: mutedColor }}
                       >
                         <CloudOff size={16} />
                       </button>
                     </div>
-                    {settings.github.lastSync && (
+                    {dataExportedAt && (
                       <p className="text-xs text-center" style={{ color: mutedColor }}>
-                        Last saved: {new Date(settings.github.lastSync).toLocaleString()}
+                        Data: {new Date(dataExportedAt).toLocaleString()}
                       </p>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Info */}
+              {/* How it works */}
               <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>💡 How it works</h4>
-                <div className="grid grid-cols-2 gap-3 text-xs" style={{ color: mutedColor }}>
-                  <div className="flex items-start gap-2">
-                    <Globe size={14} className="mt-0.5" style={{ color: '#4CAF50' }} />
-                    <span>Data loads automatically from public cloud</span>
+                <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>🔄 How sync works</h4>
+                <div className="space-y-2 text-xs" style={{ color: mutedColor }}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>1</span>
+                    <span>Click "Save & Rebuild Site"</span>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Lock size={14} className="mt-0.5" style={{ color: '#6366f1' }} />
-                    <span>Token needed only for saving changes</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>2</span>
+                    <span>Data saved to GitHub, site rebuilds (~1 min)</span>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Cloud size={14} className="mt-0.5" style={{ color: '#2196F3' }} />
-                    <span>Works on all devices instantly</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <RefreshCw size={14} className="mt-0.5" style={{ color: '#FF9800' }} />
-                    <span>Refresh page to get latest data</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>3</span>
+                    <span>Refresh page to see changes on any device</span>
                   </div>
                 </div>
               </div>
@@ -289,39 +283,15 @@ export function SettingsModal() {
                   <span className="text-sm font-mono w-10 text-center" style={{ color: textColor }}>{settings.fontSize}px</span>
                 </div>
               </section>
-              <section>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: textColor }}>Editor Width</h3>
-                <div className="flex gap-3">
-                  {[{ v: 'full', l: 'Full Width' }, { v: 'centered', l: 'Centered' }].map(({ v, l }) => (
-                    <button key={v} onClick={() => setSettings({ editorWidth: v as 'full' | 'centered' })}
-                      className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all"
-                      style={{ borderColor: settings.editorWidth === v ? '#6366f1' : border, background: settings.editorWidth === v ? '#6366f120' : bgSecondary, color: settings.editorWidth === v ? '#6366f1' : mutedColor }}>
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </section>
-              <section>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: textColor }}>Preview Mode</h3>
-                <div className="flex gap-2">
-                  {[{ v: 'split', l: 'Split' }, { v: 'tab', l: 'Tab' }, { v: 'off', l: 'Off' }].map(({ v, l }) => (
-                    <button key={v} onClick={() => setSettings({ previewMode: v as 'split' | 'tab' | 'off' })}
-                      className="flex-1 py-2 rounded-lg border text-sm font-medium transition-all"
-                      style={{ borderColor: settings.previewMode === v ? '#6366f1' : border, background: settings.previewMode === v ? '#6366f120' : bgSecondary, color: settings.previewMode === v ? '#6366f1' : mutedColor }}>
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </section>
             </>
           )}
 
           {activeTab === 'editor' && (
             <>
               {[
-                { key: 'autoSave', label: 'Auto-save', desc: 'Save automatically every 30 seconds' },
-                { key: 'spellCheck', label: 'Spell Check', desc: 'Enable browser spell checking' },
-                { key: 'lineNumbers', label: 'Line Numbers', desc: 'Show line numbers in code blocks' },
+                { key: 'autoSave', label: 'Auto-save', desc: 'Save automatically' },
+                { key: 'spellCheck', label: 'Spell Check', desc: 'Browser spell checking' },
+                { key: 'lineNumbers', label: 'Line Numbers', desc: 'Show line numbers' },
               ].map(({ key, label, desc }) => (
                 <div key={key} className="flex items-center justify-between p-4 rounded-xl" style={{ background: bgSecondary }}>
                   <div>
@@ -340,19 +310,6 @@ export function SettingsModal() {
                   </button>
                 </div>
               ))}
-              <div>
-                <label className="text-sm font-medium block mb-2" style={{ color: textColor }}>Code Font</label>
-                <select
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                  style={inputStyle}
-                  value={settings.codeFont}
-                  onChange={(e) => setSettings({ codeFont: e.target.value })}
-                >
-                  {['Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Source Code Pro', 'Inconsolata', 'monospace'].map(f => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-              </div>
             </>
           )}
 
@@ -368,8 +325,8 @@ export function SettingsModal() {
                     <Download size={20} style={{ color: '#2196F3' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: textColor }}>Export All Data</p>
-                    <p className="text-xs" style={{ color: mutedColor }}>Download all notes, commands, links and prompts as JSON</p>
+                    <p className="text-sm font-semibold" style={{ color: textColor }}>Export Data</p>
+                    <p className="text-xs" style={{ color: mutedColor }}>Download as JSON</p>
                   </div>
                 </button>
                 <button
@@ -382,11 +339,11 @@ export function SettingsModal() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: textColor }}>Import Data</p>
-                    <p className="text-xs" style={{ color: mutedColor }}>Import from a previously exported JSON file</p>
+                    <p className="text-xs" style={{ color: mutedColor }}>Import from JSON file</p>
                   </div>
                 </button>
                 <button
-                  onClick={() => { if (confirm('This will delete ALL your data. Are you sure?')) clearAllData(); }}
+                  onClick={() => { if (confirm('Delete ALL data?')) clearAllData(); }}
                   className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:border-red-400 text-left"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
@@ -395,7 +352,7 @@ export function SettingsModal() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-red-400">Clear All Data</p>
-                    <p className="text-xs" style={{ color: mutedColor }}>Permanently delete all data. Cannot be undone!</p>
+                    <p className="text-xs" style={{ color: mutedColor }}>Cannot be undone</p>
                   </div>
                 </button>
               </div>
@@ -403,14 +360,13 @@ export function SettingsModal() {
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: border }}>
           <button onClick={() => setShowSettings(false)} className="px-4 py-2 rounded-lg text-sm font-medium" style={{ background: bgSecondary, color: mutedColor }}>
             Close
           </button>
           <button onClick={handleSave} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{ background: saved ? '#4CAF5020' : '#6366f120', color: saved ? '#4CAF50' : '#6366f1' }}>
             <Save size={14} />
-            {saved ? 'Saved!' : 'Save Settings'}
+            {saved ? 'Saved!' : 'Save'}
           </button>
         </div>
       </div>

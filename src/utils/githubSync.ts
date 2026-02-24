@@ -1,8 +1,7 @@
 /**
- * GitHub Sync Service - Public Version
- * - Reading data: PUBLIC (no token needed)
- * - Writing data: requires token
- * - Data stored in public repo: my-hub-data
+ * GitHub Sync Service
+ * Saves data to the 'data' branch of the same repository
+ * Triggers automatic rebuild via GitHub Actions
  */
 
 export interface GitHubConfig {
@@ -18,53 +17,9 @@ export interface SyncResult {
 }
 
 const GITHUB_API = 'https://api.github.com';
+const REPO = 'Ariyts/my-hub';
 const DATA_FILE = 'knowledge-hub-data.json';
 const DATA_BRANCH = 'data';
-
-// Public data URL - works without authentication!
-const PUBLIC_DATA_URL = 'https://raw.githubusercontent.com/Ariyts/my-hub-data/data/knowledge-hub-data.json';
-
-/**
- * Load data from public URL - NO TOKEN NEEDED
- * This is the primary way data loads - always works, no rate limits
- */
-export async function loadPublicData(): Promise<SyncResult> {
-  try {
-    // Add timestamp to bypass cache
-    const url = `${PUBLIC_DATA_URL}?t=${Date.now()}`;
-    
-    const response = await fetch(url, {
-      cache: 'no-store', // Always get fresh data
-    });
-    
-    if (response.status === 404) {
-      return {
-        success: false,
-        message: 'No data found. Save your data first.',
-      };
-    }
-    
-    if (!response.ok) {
-      return {
-        success: false,
-        message: `Failed to load data (${response.status})`,
-      };
-    }
-    
-    const data = await response.json();
-    
-    return {
-      success: true,
-      message: 'Data loaded!',
-      data,
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      message: error.message || 'Failed to load data',
-    };
-  }
-}
 
 /**
  * Make an authenticated request to GitHub API
@@ -105,10 +60,10 @@ export async function getUserInfo(token: string): Promise<{ username: string; na
 }
 
 /**
- * Check if user has write access to my-hub-data repo
+ * Check if user has write access to the repo
  */
 async function checkWriteAccess(token: string, username: string): Promise<boolean> {
-  const response = await githubRequest(`/repos/Ariyts/my-hub-data/collaborators/${username}/permission`, token);
+  const response = await githubRequest(`/repos/${REPO}/collaborators/${username}/permission`, token);
   if (!response.ok) return false;
   
   const data = await response.json();
@@ -120,24 +75,22 @@ async function checkWriteAccess(token: string, username: string): Promise<boolea
  */
 export async function initializeGitHubSync(token: string): Promise<GitHubConfig & SyncResult> {
   try {
-    // Get user info
     const userInfo = await getUserInfo(token);
     if (!userInfo) {
       return {
         token,
         success: false,
-        message: 'Invalid token. Please check your Personal Access Token.',
+        message: 'Invalid token',
       };
     }
     
-    // Check write access to the data repo
     const hasAccess = await checkWriteAccess(token, userInfo.username);
     if (!hasAccess) {
       return {
         token,
         username: userInfo.username,
         success: false,
-        message: 'You need write access to the repository. Contact the owner.',
+        message: 'No write access. Contact the owner.',
       };
     }
     
@@ -145,7 +98,7 @@ export async function initializeGitHubSync(token: string): Promise<GitHubConfig 
       token,
       username: userInfo.username,
       success: true,
-      message: `Ready to save as @${userInfo.username}`,
+      message: `Ready as @${userInfo.username}`,
     };
   } catch (error: any) {
     return {
@@ -157,11 +110,41 @@ export async function initializeGitHubSync(token: string): Promise<GitHubConfig 
 }
 
 /**
- * Get file SHA from GitHub (needed for update)
+ * Ensure data branch exists
+ */
+async function ensureDataBranch(token: string): Promise<void> {
+  // Check if branch exists
+  const checkResponse = await githubRequest(`/repos/${REPO}/branches/${DATA_BRANCH}`, token);
+  if (checkResponse.ok) return;
+  
+  // Get default branch SHA
+  const repoResponse = await githubRequest(`/repos/${REPO}`, token);
+  if (!repoResponse.ok) throw new Error('Cannot access repo');
+  
+  const repoData = await repoResponse.json();
+  const defaultBranch = repoData.default_branch;
+  
+  const refResponse = await githubRequest(`/repos/${REPO}/git/refs/heads/${defaultBranch}`, token);
+  if (!refResponse.ok) throw new Error('Cannot get branch ref');
+  
+  const refData = await refResponse.json();
+  
+  // Create data branch
+  await githubRequest(`/repos/${REPO}/git/refs`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      ref: `refs/heads/${DATA_BRANCH}`,
+      sha: refData.object.sha,
+    }),
+  });
+}
+
+/**
+ * Get file SHA from data branch
  */
 async function getFileSha(token: string): Promise<string | null> {
   const response = await githubRequest(
-    `/repos/Ariyts/my-hub-data/contents/${DATA_FILE}?ref=${DATA_BRANCH}`,
+    `/repos/${REPO}/contents/${DATA_FILE}?ref=${DATA_BRANCH}`,
     token
   );
   
@@ -172,17 +155,20 @@ async function getFileSha(token: string): Promise<string | null> {
 }
 
 /**
- * Save data to GitHub - REQUIRES TOKEN
+ * Save data to GitHub - triggers rebuild
  */
 export async function saveToGitHub(config: GitHubConfig, data: any): Promise<SyncResult> {
   if (!config.token) {
     return {
       success: false,
-      message: 'Token required to save data. Go to Settings → Sync.',
+      message: 'Token required',
     };
   }
   
   try {
+    // Ensure data branch exists
+    await ensureDataBranch(config.token);
+    
     // Get existing file SHA
     const sha = await getFileSha(config.token);
     
@@ -200,7 +186,7 @@ export async function saveToGitHub(config: GitHubConfig, data: any): Promise<Syn
     }
     
     const response = await githubRequest(
-      `/repos/Ariyts/my-hub-data/contents/${DATA_FILE}`,
+      `/repos/${REPO}/contents/${DATA_FILE}`,
       config.token,
       {
         method: 'PUT',
@@ -218,7 +204,7 @@ export async function saveToGitHub(config: GitHubConfig, data: any): Promise<Syn
     
     return {
       success: true,
-      message: 'Saved successfully! Data will appear on all devices.',
+      message: 'Saved! Site rebuilding... (takes ~1 min)',
       data: { lastSync: new Date().toISOString() },
     };
   } catch (error: any) {
