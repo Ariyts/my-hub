@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useStore } from '../store';
 import { X, Download, Upload, Trash2, Moon, Sun, Github, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Globe } from 'lucide-react';
 
@@ -29,18 +29,13 @@ export function SettingsModal() {
     setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, 
     exportData, importData, clearAllData,
     syncStatus, syncMessage, canSave,
-    loadFromCloud, connectGitHub, syncToCloud, disconnectGitHub
+    connectGitHub, syncToCloud, disconnectGitHub
   } = useStore();
   
   const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('sync');
   const [saved, setSaved] = useState(false);
   const [token, setToken] = useState('');
   const [showToken, setShowToken] = useState(false);
-
-  // Load data from cloud on mount
-  useEffect(() => {
-    loadFromCloud();
-  }, []);
 
   const handleSave = () => {
     setSaved(true);
