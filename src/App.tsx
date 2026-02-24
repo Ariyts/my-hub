@@ -7,16 +7,29 @@ import { CommandsView } from './components/CommandsView';
 import { LinksView } from './components/LinksView';
 import { PromptsView } from './components/PromptsView';
 import { SettingsModal } from './components/SettingsModal';
-import type { NoteItem } from './types';
+import type { NoteItem, BaseDataType } from './types';
 import { FileText } from 'lucide-react';
 
+// Get base type for any type (default or custom)
+function getBaseType(activeType: string, customTypes: any[]): BaseDataType {
+  const customType = customTypes?.find(t => t.id === activeType);
+  if (customType) return customType.baseType;
+  if (['notes', 'commands', 'links', 'prompts'].includes(activeType)) {
+    return activeType as BaseDataType;
+  }
+  return 'notes';
+}
+
 function MainArea() {
-  const { activeType, activeItemId, notes, activeFolderId, isDarkTheme } = useStore();
+  const { activeType, activeItemId, notes, activeFolderId, isDarkTheme, settings } = useStore();
 
   const bg = isDarkTheme ? '#0f172a' : '#ffffff';
   const mutedColor = isDarkTheme ? '#94a3b8' : '#64748b';
+  
+  const baseType = getBaseType(activeType, settings.customTypes || []);
 
-  if (activeType === 'notes') {
+  // Render based on base type
+  if (baseType === 'notes') {
     const note = notes.find(n => n.id === activeItemId);
     if (note) {
       return <NoteEditor note={note as NoteItem} />;
@@ -27,22 +40,22 @@ function MainArea() {
           <FileText size={36} style={{ color: '#4CAF50', opacity: 0.6 }} />
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No note selected</p>
-          <p className="text-sm" style={{ color: mutedColor }}>Choose a note from the sidebar or create a new one</p>
+          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No item selected</p>
+          <p className="text-sm" style={{ color: mutedColor }}>Select an item from the list or create a new one</p>
         </div>
       </div>
     );
   }
 
-  if (activeType === 'commands') {
+  if (baseType === 'commands') {
     return <CommandsView folderId={activeFolderId} />;
   }
 
-  if (activeType === 'links') {
+  if (baseType === 'links') {
     return <LinksView folderId={activeFolderId} />;
   }
 
-  if (activeType === 'prompts') {
+  if (baseType === 'prompts') {
     return <PromptsView folderId={activeFolderId} />;
   }
 
@@ -50,7 +63,7 @@ function MainArea() {
 }
 
 export function App() {
-  const { isDarkTheme, showSettings, sidebarCollapsed } = useStore();
+  const { isDarkTheme, showSettings } = useStore();
 
   useEffect(() => {
     if (isDarkTheme) {
@@ -66,13 +79,12 @@ export function App() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
-        const { setActiveType, setSidebarCollapsed, sidebarCollapsed: sc } = useStore.getState();
+        const { setActiveType } = useStore.getState();
         switch (e.key) {
           case '1': e.preventDefault(); setActiveType('notes'); break;
           case '2': e.preventDefault(); setActiveType('commands'); break;
           case '3': e.preventDefault(); setActiveType('links'); break;
           case '4': e.preventDefault(); setActiveType('prompts'); break;
-          case 'b': e.preventDefault(); setSidebarCollapsed(!sc); break;
         }
       }
     };
@@ -88,18 +100,13 @@ export function App() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
       }}
     >
-      {/* Layer 1: Sidebar */}
-      {!sidebarCollapsed && <Sidebar />}
-      {sidebarCollapsed && (
-        <div className="relative">
-          <Sidebar />
-        </div>
-      )}
+      {/* Sidebar */}
+      <Sidebar />
 
-      {/* Layer 2: Folder Panel */}
+      {/* Folder Panel */}
       <FolderPanel />
 
-      {/* Layer 3: Main Area */}
+      {/* Main Area */}
       <main className="flex-1 overflow-hidden">
         <MainArea />
       </main>

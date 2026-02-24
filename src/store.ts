@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type {
   AppState, ObjectType, Folder, NoteItem,
   CommandContainer, LinkContainer, PromptContainer,
-  CommandItem, LinkItem, PromptItem, Settings, AnyItem
+  CommandItem, LinkItem, PromptItem, Settings, AnyItem, CustomType
 } from './types';
 import {
   initializeGitHubSync,
@@ -25,6 +25,7 @@ const defaultSettings: Settings = {
   github: {
     token: '',
   },
+  customTypes: [],
 };
 
 interface StoreActions {
@@ -281,13 +282,19 @@ export const useStore = create<AppState & StoreActions>()(
 
       getActiveItem: () => {
         const state = get();
-        const { activeItemId, activeType } = state;
+        const { activeItemId, activeType, settings } = state;
         if (!activeItemId) return null;
-        switch (activeType) {
+        
+        // Find the base type for custom types
+        const customType = settings.customTypes?.find(t => t.id === activeType);
+        const baseType = customType?.baseType || activeType;
+        
+        switch (baseType) {
           case 'notes': return state.notes.find(n => n.id === activeItemId) || null;
           case 'commands': return state.commands.find(c => c.id === activeItemId) || null;
           case 'links': return state.links.find(l => l.id === activeItemId) || null;
           case 'prompts': return state.prompts.find(p => p.id === activeItemId) || null;
+          default: return null;
         }
       },
 

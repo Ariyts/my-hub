@@ -1,4 +1,14 @@
-export type ObjectType = 'notes' | 'commands' | 'links' | 'prompts';
+export type BaseDataType = 'notes' | 'commands' | 'links' | 'prompts';
+export type ObjectType = string; // Now supports custom types
+
+export interface CustomType {
+  id: string;
+  label: string;
+  icon: string;
+  color: string;
+  baseType: BaseDataType; // Which data structure to use
+  isDefault?: boolean; // Can't delete default types
+}
 
 export interface Folder {
   id: string;
@@ -108,6 +118,7 @@ export interface Settings {
   lineNumbers: boolean;
   codeFont: string;
   github: GitHubSyncConfig;
+  customTypes: CustomType[];
 }
 
 export interface AppState {
