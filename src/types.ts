@@ -1,26 +1,58 @@
+// ============================================
+// WORKSPACE ARCHITECTURE
+// ============================================
+// Workspace (главный уровень)
+// └── Category (Notes, Commands, Links, Prompts)
+//     └── Folder (папки пользователя)
+//         └── Items (заметки, команды, ссылки, промпты)
+
+// Base data types for items
 export type BaseDataType = 'notes' | 'commands' | 'links' | 'prompts';
-export type ObjectType = string; // Now supports custom types
 
-export interface CustomType {
-  id: string;
-  label: string;
-  icon: string;
-  color: string;
-  baseType: BaseDataType; // Which data structure to use
-  isDefault?: boolean; // Can't delete default types
-}
-
-export interface Folder {
+// ============================================
+// WORKSPACE - главный уровень организации
+// ============================================
+export interface Workspace {
   id: string;
   name: string;
-  type: ObjectType;
-  parentId: string | null;
-  createdAt: string;
+  icon: string;
   color?: string;
-  icon?: string;
-  isExpanded?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
+// ============================================
+// CATEGORY - тип контента внутри воркспейса
+// ============================================
+export interface Category {
+  id: string;
+  workspaceId: string;
+  name: string;
+  icon: string;
+  color: string;
+  baseType: BaseDataType;
+  order: number;
+  isDefault?: boolean; // Дефолтные 4 категории нельзя удалить
+}
+
+// ============================================
+// FOLDER - папки пользователя внутри категории
+// ============================================
+export interface Folder {
+  id: string;
+  categoryId: string;
+  parentId: string | null; // Для вложенных папок
+  name: string;
+  icon?: string;
+  color?: string;
+  order: number;
+  isExpanded: boolean;
+  createdAt: string;
+}
+
+// ============================================
+// ITEMS - контент внутри папок
+// ============================================
 export interface NoteItem {
   id: string;
   folderId: string;
@@ -102,6 +134,9 @@ export interface PromptContainer {
 
 export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContainer;
 
+// ============================================
+// SETTINGS - глобальные настройки приложения
+// ============================================
 export interface GitHubSyncConfig {
   token: string;
   username?: string;
@@ -118,23 +153,50 @@ export interface Settings {
   lineNumbers: boolean;
   codeFont: string;
   github: GitHubSyncConfig;
-  customTypes: CustomType[];
-  typesOrder?: string[]; // Order of types in sidebar
-  editedDefaultTypes?: Record<string, Partial<CustomType>>; // Edits to default types
 }
 
+// ============================================
+// APP STATE - состояние приложения
+// ============================================
 export interface AppState {
-  activeType: ObjectType;
-  activeFolderId: string | null;
-  activeItemId: string | null;
+  // Workspaces
+  workspaces: Workspace[];
+  activeWorkspaceId: string | null;
+  
+  // Categories
+  categories: Category[];
+  activeCategoryId: string | null;
+  
+  // Folders
   folders: Folder[];
+  activeFolderId: string | null;
+  
+  // Items
   notes: NoteItem[];
   commands: CommandContainer[];
   links: LinkContainer[];
   prompts: PromptContainer[];
+  activeItemId: string | null;
+  
+  // UI State
   settings: Settings;
   searchQuery: string;
   showSettings: boolean;
   sidebarCollapsed: boolean;
   isDarkTheme: boolean;
+}
+
+// ============================================
+// DATA FILE STRUCTURE - структура файла данных
+// ============================================
+export interface DataFile {
+  workspaces: Workspace[];
+  categories: Category[];
+  folders: Folder[];
+  notes: NoteItem[];
+  commands: CommandContainer[];
+  links: LinkContainer[];
+  prompts: PromptContainer[];
+  exportedAt: string;
+  version: string;
 }

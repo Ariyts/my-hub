@@ -7,35 +7,12 @@ import {
   Edit2, Trash2, GripVertical
 } from 'lucide-react';
 
-const BASE_TYPE_COLORS: Record<BaseDataType, string> = {
-  notes: '#4CAF50',
-  commands: '#2196F3',
-  links: '#FF9800',
-  prompts: '#9C27B0',
-};
-
 const BASE_TYPE_ICONS: Record<BaseDataType, React.ComponentType<{ size?: number; style?: React.CSSProperties; className?: string }>> = {
   notes: FileText,
   commands: Terminal,
   links: Link2,
   prompts: MessageSquare,
 };
-
-// Get color for a type (default or custom)
-function getTypeColor(type: string, settings: any): string {
-  const customType = settings.customTypes?.find((t: any) => t.id === type);
-  if (customType) return customType.color;
-  if (type in BASE_TYPE_COLORS) return BASE_TYPE_COLORS[type as BaseDataType];
-  return '#6366f1';
-}
-
-// Get base type for any type
-function getBaseType(type: string, settings: any): BaseDataType {
-  const customType = settings.customTypes?.find((t: any) => t.id === type);
-  if (customType) return customType.baseType;
-  if (type in BASE_TYPE_COLORS) return type as BaseDataType;
-  return 'notes';
-}
 
 interface FolderItemProps {
   folder: Folder;
@@ -44,15 +21,28 @@ interface FolderItemProps {
   onSelectFolder: (id: string) => void;
   onSelectItem: (id: string) => void;
   onAddItemToFolder: (folderId: string) => void;
+  onAddSubfolder: (parentId: string) => void;
 }
 
-function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem, onAddItemToFolder }: FolderItemProps) {
+function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem, onAddItemToFolder, onAddSubfolder }: FolderItemProps) {
   const { 
-    activeType, notes, commands, links, prompts, 
-    activeFolderId, toggleFolderExpanded, updateFolder, deleteFolder, 
-    isDarkTheme, settings, updateNote, deleteNote, updateCommandContainer, 
-    deleteCommandContainer, updateLinkContainer, deleteLinkContainer,
-    updatePromptContainer, deletePromptContainer
+    activeCategoryId, 
+    categories,
+    folders,
+    notes, commands, links, prompts, 
+    activeFolderId, 
+    toggleFolderExpanded, 
+    updateFolder, 
+    deleteFolder, 
+    isDarkTheme, 
+    updateNote, 
+    deleteNote, 
+    updateCommandContainer, 
+    deleteCommandContainer, 
+    updateLinkContainer, 
+    deleteLinkContainer,
+    updatePromptContainer, 
+    deletePromptContainer
   } = useStore();
   
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: 'folder' | 'item'; itemId?: string } | null>(null);
@@ -60,20 +50,21 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
   const [newName, setNewName] = useState(folder.name);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  const baseType = getBaseType(activeType, settings);
-  const typeColor = getTypeColor(activeType, settings);
+  const activeCategory = categories.find(c => c.id === activeCategoryId);
+  const baseType = activeCategory?.baseType || 'notes';
+  const typeColor = activeCategory?.color || '#4CAF50';
   const TypeIcon = BASE_TYPE_ICONS[baseType];
 
+  // Get child folders
+  const childFolders = folders.filter(f => f.parentId === folder.id).sort((a, b) => a.order - b.order);
+
+  // Get items in this folder
   const getItems = () => {
-    // Get items based on base type (for custom types)
-    const allFolders = useStore.getState().folders.filter(f => f.type === activeType);
-    const folderIds = allFolders.map(f => f.id);
-    
     switch (baseType) {
-      case 'notes': return notes.filter(n => folderIds.includes(n.folderId) && n.folderId === folder.id);
-      case 'commands': return commands.filter(c => folderIds.includes(c.folderId) && c.folderId === folder.id);
-      case 'links': return links.filter(l => folderIds.includes(l.folderId) && l.folderId === folder.id);
-      case 'prompts': return prompts.filter(p => folderIds.includes(p.folderId) && p.folderId === folder.id);
+      case 'notes': return notes.filter(n => n.folderId === folder.id);
+      case 'commands': return commands.filter(c => c.folderId === folder.id);
+      case 'links': return links.filter(l => l.folderId === folder.id);
+      case 'prompts': return prompts.filter(p => p.folderId === folder.id);
     }
   };
 
@@ -140,7 +131,6 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data && data.folderId !== targetFolderId) {
-        // Move item to new folder
         switch (baseType) {
           case 'notes': updateNote(data.id, { folderId: targetFolderId }); break;
           case 'commands': updateCommandContainer(data.id, { folderId: targetFolderId }); break;
@@ -188,6 +178,13 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
                   onClick={() => { setNewName(folder.name); setRenaming({ type: 'folder' }); setContextMenu(null); }}
                 >
                   <Edit2 size={12} /> Rename
+                </button>
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                  style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                  onClick={() => { onAddSubfolder(folder.id); setContextMenu(null); }}
+                >
+                  <Plus size={12} /> Add Subfolder
                 </button>
                 <button
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
@@ -279,6 +276,20 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
         </button>
       </div>
 
+      {/* Child folders */}
+      {folder.isExpanded && childFolders.map((childFolder) => (
+        <FolderItem
+          key={childFolder.id}
+          folder={childFolder}
+          depth={depth + 1}
+          activeItemId={activeItemId}
+          onSelectFolder={onSelectFolder}
+          onSelectItem={onSelectItem}
+          onAddItemToFolder={onAddItemToFolder}
+          onAddSubfolder={onAddSubfolder}
+        />
+      ))}
+
       {/* Items inside folder */}
       {folder.isExpanded && items.map((item) => {
         const isItemActive = activeItemId === item.id;
@@ -350,25 +361,43 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
 
 export function FolderPanel() {
   const {
-    activeType, folders, searchQuery, setSearchQuery, activeItemId,
-    setActiveItemId, addFolder, addNote, addCommandContainer, addLinkContainer,
-    addPromptContainer, setActiveFolderId, isDarkTheme, settings
+    activeCategoryId,
+    categories,
+    folders,
+    searchQuery, 
+    setSearchQuery, 
+    activeItemId,
+    setActiveItemId, 
+    addFolder, 
+    addNote, 
+    addCommandContainer, 
+    addLinkContainer,
+    addPromptContainer, 
+    setActiveFolderId, 
+    isDarkTheme,
   } = useStore();
 
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
-  const typeFolders = folders.filter(f => f.type === activeType && f.parentId === null);
-  const baseType = getBaseType(activeType, settings);
-  const typeColor = getTypeColor(activeType, settings);
+  const activeCategory = categories.find(c => c.id === activeCategoryId);
+  const baseType = activeCategory?.baseType || 'notes';
+  const typeColor = activeCategory?.color || '#4CAF50';
+  const categoryName = activeCategory?.name || 'Select Category';
 
-  const typeLabels: Record<BaseDataType, string> = {
-    notes: 'Notes', commands: 'Commands', links: 'Links', prompts: 'Prompts'
-  };
+  // Get root folders for current category
+  const categoryFolders = folders
+    .filter(f => f.categoryId === activeCategoryId && f.parentId === null)
+    .sort((a, b) => a.order - b.order);
 
-  const handleAddFolder = () => {
+  const handleAddFolder = (parentId: string | null = null) => {
     if (newFolderName.trim()) {
-      addFolder({ name: newFolderName.trim(), type: activeType, parentId: null, isExpanded: true });
+      addFolder({ 
+        name: newFolderName.trim(), 
+        categoryId: activeCategoryId!, 
+        parentId, 
+        isExpanded: true 
+      });
       setNewFolderName('');
       setShowNewFolder(false);
     }
@@ -393,7 +422,6 @@ export function FolderPanel() {
 
   const handleSelectFolder = (folderId: string) => {
     setActiveFolderId(folderId);
-    // Clear item selection when selecting a folder
     setActiveItemId(null);
   };
 
@@ -401,13 +429,27 @@ export function FolderPanel() {
     setActiveItemId(itemId);
   };
 
-  const filteredFolders = typeFolders.filter(f =>
+  const filteredFolders = categoryFolders.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Get current type label
-  const currentType = settings.customTypes?.find((t: any) => t.id === activeType);
-  const typeLabel = currentType?.label || typeLabels[baseType] || 'Items';
+  // No category selected
+  if (!activeCategoryId) {
+    return (
+      <div
+        className="flex flex-col h-full items-center justify-center border-r"
+        style={{
+          width: '260px',
+          minWidth: '260px',
+          background: isDarkTheme ? '#111827' : '#f8fafc',
+          borderColor: isDarkTheme ? '#1e293b' : '#e2e8f0',
+        }}
+      >
+        <div className="text-4xl mb-3">👈</div>
+        <p className="text-sm text-slate-400">Select a category</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -423,14 +465,15 @@ export function FolderPanel() {
       <div className="px-4 pt-4 pb-2 border-b" style={{ borderColor: isDarkTheme ? '#1e293b' : '#e2e8f0' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-sm uppercase tracking-wider" style={{ color: typeColor }}>
-            {typeLabel}
+            {categoryName}
           </h2>
           <button
             onClick={() => {
-              const firstFolder = typeFolders[0];
-              if (firstFolder) handleAddItem(firstFolder.id);
+              if (categoryFolders.length > 0) {
+                handleAddItem(categoryFolders[0].id);
+              }
             }}
-            title={`New ${typeLabel.slice(0, -1)}`}
+            title="New Item"
             className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             style={{ background: `${typeColor}15` }}
           >
@@ -471,6 +514,15 @@ export function FolderPanel() {
             onSelectFolder={handleSelectFolder}
             onSelectItem={handleSelectItem}
             onAddItemToFolder={handleAddItem}
+            onAddSubfolder={(parentId) => {
+              setNewFolderName('');
+              addFolder({ 
+                name: 'New Subfolder', 
+                categoryId: activeCategoryId!, 
+                parentId, 
+                isExpanded: true 
+              });
+            }}
           />
         ))}
       </div>
@@ -489,8 +541,8 @@ export function FolderPanel() {
             placeholder="Folder name..."
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAddFolder(); if (e.key === 'Escape') setShowNewFolder(false); }}
-            onBlur={handleAddFolder}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleAddFolder(null); if (e.key === 'Escape') setShowNewFolder(false); }}
+            onBlur={() => handleAddFolder(null)}
           />
         </div>
       )}
@@ -507,8 +559,9 @@ export function FolderPanel() {
         </button>
         <button
           onClick={() => {
-            const firstFolder = typeFolders[0];
-            if (firstFolder) handleAddItem(firstFolder.id);
+            if (categoryFolders.length > 0) {
+              handleAddItem(categoryFolders[0].id);
+            }
           }}
           className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
           style={{ background: `${typeColor}20`, color: typeColor }}

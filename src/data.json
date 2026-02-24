@@ -1,22 +1,44 @@
 {
+  "workspaces": [
+    { 
+      "id": "ws1", 
+      "name": "My Workspace", 
+      "icon": "🏠", 
+      "color": "#6366f1",
+      "createdAt": "2026-02-24T00:00:00.000Z",
+      "updatedAt": "2026-02-24T00:00:00.000Z"
+    }
+  ],
+  "categories": [
+    { "id": "cat1", "workspaceId": "ws1", "name": "Notes", "icon": "📝", "color": "#4CAF50", "baseType": "notes", "order": 0, "isDefault": true },
+    { "id": "cat2", "workspaceId": "ws1", "name": "Commands", "icon": "⌘", "color": "#2196F3", "baseType": "commands", "order": 1, "isDefault": true },
+    { "id": "cat3", "workspaceId": "ws1", "name": "Links", "icon": "🔗", "color": "#FF9800", "baseType": "links", "order": 2, "isDefault": true },
+    { "id": "cat4", "workspaceId": "ws1", "name": "Prompts", "icon": "💬", "color": "#9C27B0", "baseType": "prompts", "order": 3, "isDefault": true }
+  ],
   "folders": [
-    { "id": "f1", "name": "Work", "type": "notes", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#4CAF50", "isExpanded": true },
-    { "id": "f2", "name": "Personal", "type": "notes", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#2196F3", "isExpanded": false },
-    { "id": "f3", "name": "Git", "type": "commands", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#FF9800", "isExpanded": true },
-    { "id": "f4", "name": "Docker", "type": "commands", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#9C27B0", "isExpanded": false },
-    { "id": "f5", "name": "Dev Resources", "type": "links", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#FF5722", "isExpanded": true },
-    { "id": "f6", "name": "Coding", "type": "prompts", "parentId": null, "createdAt": "2026-02-24T00:00:00.000Z", "color": "#607D8B", "isExpanded": true }
+    { "id": "f1", "categoryId": "cat1", "parentId": null, "name": "Work", "color": "#4CAF50", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" },
+    { "id": "f2", "categoryId": "cat1", "parentId": null, "name": "Personal", "color": "#2196F3", "order": 1, "isExpanded": false, "createdAt": "2026-02-24T00:00:00.000Z" },
+    { "id": "f3", "categoryId": "cat2", "parentId": null, "name": "Git", "color": "#FF9800", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" },
+    { "id": "f4", "categoryId": "cat2", "parentId": null, "name": "Docker", "color": "#9C27B0", "order": 1, "isExpanded": false, "createdAt": "2026-02-24T00:00:00.000Z" },
+    { "id": "f5", "categoryId": "cat3", "parentId": null, "name": "Dev Resources", "color": "#FF5722", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" },
+    { "id": "f6", "categoryId": "cat4", "parentId": null, "name": "Coding", "color": "#607D8B", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" }
   ],
   "notes": [
     {
-      "id": "n1", "folderId": "f1", "title": "Welcome to Knowledge Hub", "type": "notes",
-      "content": "# Welcome! 👋\n\nThis is your personal knowledge hub.\n\n## Features\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## How to save\n1. Click **Settings** (⚙️)\n2. Go to **Sync** tab\n3. Enter your GitHub token\n4. Click **Save to Cloud**\n\nYour data will be automatically synced!\n\n---\n> Start organizing your knowledge!",
-      "tags": ["welcome", "guide"], "isFavorite": true,
-      "createdAt": "2026-02-24T00:00:00.000Z", "updatedAt": "2026-02-24T00:00:00.000Z"
+      "id": "n1", 
+      "folderId": "f1", 
+      "title": "Welcome to Knowledge Hub", 
+      "type": "notes",
+      "content": "# Welcome! 👋\n\nThis is your personal knowledge hub with workspace support.\n\n## Architecture\n\n```\nWorkspace (главный уровень)\n├── Notes (категория в Sidebar)\n│   ├── Work (папка в FolderPanel)\n│   │   └── Заметки\n│   └── Personal (папка)\n├── Commands (категория)\n│   ├── Git (папка)\n│   └── Docker (папка)\n└── Links, Prompts...\n```\n\n## Features\n- 📁 **Workspaces** - Organize different projects/areas\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## How to save\n1. Click **Settings** (⚙️)\n2. Go to **Sync** tab\n3. Enter your GitHub token\n4. Click **Save to Cloud**\n\nYour data will be automatically synced!\n\n---\n> Start organizing your knowledge!",
+      "tags": ["welcome", "guide"], 
+      "isFavorite": true,
+      "createdAt": "2026-02-24T00:00:00.000Z", 
+      "updatedAt": "2026-02-24T00:00:00.000Z"
     }
   ],
   "commands": [],
   "links": [],
   "prompts": [],
-  "exportedAt": "2026-02-24T00:00:00.000Z"
+  "exportedAt": "2026-02-24T00:00:00.000Z",
+  "version": "2.0"
 }

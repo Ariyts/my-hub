@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
-  AppState, ObjectType, Folder, NoteItem,
+  AppState, Workspace, Category, Folder, NoteItem,
   CommandContainer, LinkContainer, PromptContainer,
   CommandItem, LinkItem, PromptItem, Settings, AnyItem
 } from './types';
@@ -25,26 +25,33 @@ const defaultSettings: Settings = {
   github: {
     token: '',
   },
-  customTypes: [],
-  typesOrder: [],
-  editedDefaultTypes: {},
 };
 
+// ============================================
+// STORE ACTIONS INTERFACE
+// ============================================
 interface StoreActions {
-  setActiveType: (type: ObjectType) => void;
-  setActiveFolderId: (id: string | null) => void;
-  setActiveItemId: (id: string | null) => void;
-  setSearchQuery: (query: string) => void;
-  setShowSettings: (show: boolean) => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
-  toggleTheme: () => void;
-  setSettings: (settings: Partial<Settings>) => void;
+  // Workspace actions
+  setActiveWorkspaceId: (id: string) => void;
+  addWorkspace: (workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateWorkspace: (id: string, updates: Partial<Workspace>) => void;
+  deleteWorkspace: (id: string) => void;
+
+  // Category actions
+  setActiveCategoryId: (id: string | null) => void;
+  addCategory: (category: Omit<Category, 'id' | 'order'>) => void;
+  updateCategory: (id: string, updates: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
 
   // Folder actions
-  addFolder: (folder: Omit<Folder, 'id' | 'createdAt'>) => void;
+  setActiveFolderId: (id: string | null) => void;
+  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'order'>) => void;
   updateFolder: (id: string, updates: Partial<Folder>) => void;
   deleteFolder: (id: string) => void;
   toggleFolderExpanded: (id: string) => void;
+
+  // Item selection
+  setActiveItemId: (id: string | null) => void;
 
   // Note actions
   addNote: (note: Omit<NoteItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -75,6 +82,14 @@ interface StoreActions {
   updatePromptItem: (containerId: string, itemId: string, updates: Partial<PromptItem>) => void;
   deletePromptItem: (containerId: string, itemId: string) => void;
 
+  // UI actions
+  setSearchQuery: (query: string) => void;
+  setShowSettings: (show: boolean) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleTheme: () => void;
+  setSettings: (settings: Partial<Settings>) => void;
+
+  // Data operations
   exportData: () => void;
   importData: (data: string) => void;
   clearAllData: () => void;
@@ -98,155 +113,357 @@ const initialData = embeddedData as any;
 export const useStore = create<AppState & StoreActions>()(
   persist(
     (set, get) => ({
-      activeType: 'notes',
-      activeFolderId: initialData.folders?.[0]?.id || null,
-      activeItemId: initialData.notes?.[0]?.id || null,
+      // ============================================
+      // INITIAL STATE
+      // ============================================
+      workspaces: initialData.workspaces || [],
+      activeWorkspaceId: initialData.workspaces?.[0]?.id || null,
+      
+      categories: initialData.categories || [],
+      activeCategoryId: null,
+      
       folders: initialData.folders || [],
+      activeFolderId: null,
+      
       notes: initialData.notes || [],
       commands: initialData.commands || [],
       links: initialData.links || [],
       prompts: initialData.prompts || [],
+      activeItemId: null,
+      
       settings: defaultSettings,
       searchQuery: '',
       showSettings: false,
       sidebarCollapsed: false,
       isDarkTheme: false,
 
-      setActiveType: (type) => set({ activeType: type, activeFolderId: null, activeItemId: null }),
-      setActiveFolderId: (id) => set({ activeFolderId: id }),
-      setActiveItemId: (id) => set({ activeItemId: id }),
-      setSearchQuery: (query) => set({ searchQuery: query }),
-      setShowSettings: (show) => set({ showSettings: show }),
-      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-      toggleTheme: () => set((s) => ({ isDarkTheme: !s.isDarkTheme })),
-      setSettings: (settings) => set((s) => ({ settings: { ...s.settings, ...settings } })),
+      // ============================================
+      // WORKSPACE ACTIONS
+      // ============================================
+      setActiveWorkspaceId: (id) => set({ 
+        activeWorkspaceId: id, 
+        activeCategoryId: null,
+        activeFolderId: null,
+        activeItemId: null 
+      }),
+      
+      addWorkspace: (workspace) => {
+        const newWorkspace: Workspace = {
+          ...workspace,
+          id: genId(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        // Create default categories for new workspace
+        const defaultCategories: Category[] = [
+          { id: genId(), workspaceId: newWorkspace.id, name: 'Notes', icon: '📝', color: '#4CAF50', baseType: 'notes', order: 0, isDefault: true },
+          { id: genId(), workspaceId: newWorkspace.id, name: 'Commands', icon: '⌘', color: '#2196F3', baseType: 'commands', order: 1, isDefault: true },
+          { id: genId(), workspaceId: newWorkspace.id, name: 'Links', icon: '🔗', color: '#FF9800', baseType: 'links', order: 2, isDefault: true },
+          { id: genId(), workspaceId: newWorkspace.id, name: 'Prompts', icon: '💬', color: '#9C27B0', baseType: 'prompts', order: 3, isDefault: true },
+        ];
+        
+        set((s) => ({ 
+          workspaces: [...s.workspaces, newWorkspace],
+          categories: [...s.categories, ...defaultCategories],
+          activeWorkspaceId: newWorkspace.id,
+          activeCategoryId: null,
+          activeFolderId: null,
+          activeItemId: null
+        }));
+      },
+      
+      updateWorkspace: (id, updates) => set((s) => ({
+        workspaces: s.workspaces.map(w => w.id === id ? { ...w, ...updates, updatedAt: new Date().toISOString() } : w)
+      })),
+      
+      deleteWorkspace: (id) => set((s) => {
+        // Get all categories for this workspace
+        const workspaceCategoryIds = s.categories.filter(c => c.workspaceId === id).map(c => c.id);
+        // Get all folders for these categories
+        const categoryFolderIds = s.folders.filter(f => workspaceCategoryIds.includes(f.categoryId)).map(f => f.id);
+        
+        return {
+          workspaces: s.workspaces.filter(w => w.id !== id),
+          categories: s.categories.filter(c => c.workspaceId !== id),
+          folders: s.folders.filter(f => !workspaceCategoryIds.includes(f.categoryId)),
+          notes: s.notes.filter(n => !categoryFolderIds.includes(n.folderId)),
+          commands: s.commands.filter(c => !categoryFolderIds.includes(c.folderId)),
+          links: s.links.filter(l => !categoryFolderIds.includes(l.folderId)),
+          prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
+          activeWorkspaceId: s.activeWorkspaceId === id ? (s.workspaces[0]?.id || null) : s.activeWorkspaceId,
+          activeCategoryId: null,
+          activeFolderId: null,
+          activeItemId: null,
+        };
+      }),
 
+      // ============================================
+      // CATEGORY ACTIONS
+      // ============================================
+      setActiveCategoryId: (id) => set({ activeCategoryId: id, activeFolderId: null, activeItemId: null }),
+      
+      addCategory: (category) => {
+        const state = get();
+        const maxOrder = Math.max(0, ...state.categories.filter(c => c.workspaceId === state.activeWorkspaceId).map(c => c.order));
+        const newCategory: Category = {
+          ...category,
+          id: genId(),
+          order: maxOrder + 1,
+        };
+        set((s) => ({ categories: [...s.categories, newCategory] }));
+      },
+      
+      updateCategory: (id, updates) => set((s) => ({
+        categories: s.categories.map(c => c.id === id ? { ...c, ...updates } : c)
+      })),
+      
+      deleteCategory: (id) => set((s) => {
+        const categoryFolderIds = s.folders.filter(f => f.categoryId === id).map(f => f.id);
+        return {
+          categories: s.categories.filter(c => c.id !== id),
+          folders: s.folders.filter(f => f.categoryId !== id),
+          notes: s.notes.filter(n => !categoryFolderIds.includes(n.folderId)),
+          commands: s.commands.filter(c => !categoryFolderIds.includes(c.folderId)),
+          links: s.links.filter(l => !categoryFolderIds.includes(l.folderId)),
+          prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
+          activeCategoryId: s.activeCategoryId === id ? null : s.activeCategoryId,
+        };
+      }),
+
+      // ============================================
+      // FOLDER ACTIONS
+      // ============================================
+      setActiveFolderId: (id) => set({ activeFolderId: id }),
+      
       addFolder: (folder) => {
-        const newFolder: Folder = { ...folder, id: genId(), createdAt: new Date().toISOString() };
+        const state = get();
+        const maxOrder = Math.max(0, ...state.folders.filter(f => f.categoryId === folder.categoryId && f.parentId === folder.parentId).map(f => f.order));
+        const newFolder: Folder = {
+          ...folder,
+          id: genId(),
+          order: maxOrder + 1,
+          createdAt: new Date().toISOString(),
+        };
         set((s) => ({ folders: [...s.folders, newFolder] }));
       },
+      
       updateFolder: (id, updates) => set((s) => ({
         folders: s.folders.map(f => f.id === id ? { ...f, ...updates } : f)
       })),
-      deleteFolder: (id) => set((s) => ({
-        folders: s.folders.filter(f => f.id !== id),
-        notes: s.notes.filter(n => n.folderId !== id),
-        commands: s.commands.filter(c => c.folderId !== id),
-        links: s.links.filter(l => l.folderId !== id),
-        prompts: s.prompts.filter(p => p.folderId !== id),
-      })),
+      
+      deleteFolder: (id) => set((s) => {
+        // Get all child folder IDs recursively
+        const getChildFolderIds = (parentId: string): string[] => {
+          const children = s.folders.filter(f => f.parentId === parentId);
+          return [parentId, ...children.flatMap(c => getChildFolderIds(c.id))];
+        };
+        const folderIds = getChildFolderIds(id);
+        
+        return {
+          folders: s.folders.filter(f => !folderIds.includes(f.id)),
+          notes: s.notes.filter(n => !folderIds.includes(n.folderId)),
+          commands: s.commands.filter(c => !folderIds.includes(c.folderId)),
+          links: s.links.filter(l => !folderIds.includes(l.folderId)),
+          prompts: s.prompts.filter(p => !folderIds.includes(p.folderId)),
+          activeFolderId: s.activeFolderId === id ? null : s.activeFolderId,
+        };
+      }),
+      
       toggleFolderExpanded: (id) => set((s) => ({
         folders: s.folders.map(f => f.id === id ? { ...f, isExpanded: !f.isExpanded } : f)
       })),
 
+      // ============================================
+      // ITEM SELECTION
+      // ============================================
+      setActiveItemId: (id) => set({ activeItemId: id }),
+
+      // ============================================
+      // NOTE ACTIONS
+      // ============================================
       addNote: (note) => {
-        const newNote: NoteItem = { ...note, id: genId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const newNote: NoteItem = { 
+          ...note, 
+          id: genId(), 
+          createdAt: new Date().toISOString(), 
+          updatedAt: new Date().toISOString() 
+        };
         set((s) => ({ notes: [...s.notes, newNote], activeItemId: newNote.id }));
       },
+      
       updateNote: (id, updates) => set((s) => ({
         notes: s.notes.map(n => n.id === id ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n)
       })),
+      
       deleteNote: (id) => set((s) => ({
         notes: s.notes.filter(n => n.id !== id),
         activeItemId: s.activeItemId === id ? null : s.activeItemId,
       })),
 
+      // ============================================
+      // COMMAND CONTAINER ACTIONS
+      // ============================================
       addCommandContainer: (container) => {
-        const newC: CommandContainer = { ...container, id: genId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const newC: CommandContainer = { 
+          ...container, 
+          id: genId(), 
+          createdAt: new Date().toISOString(), 
+          updatedAt: new Date().toISOString() 
+        };
         set((s) => ({ commands: [...s.commands, newC], activeItemId: newC.id }));
       },
+      
       updateCommandContainer: (id, updates) => set((s) => ({
         commands: s.commands.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c)
       })),
+      
       deleteCommandContainer: (id) => set((s) => ({
         commands: s.commands.filter(c => c.id !== id),
         activeItemId: s.activeItemId === id ? null : s.activeItemId,
       })),
+      
       addCommandItem: (containerId, item) => {
         const newItem: CommandItem = { ...item, id: genId() };
         set((s) => ({
-          commands: s.commands.map(c => c.id === containerId ? { ...c, subItems: [...c.subItems, newItem], updatedAt: new Date().toISOString() } : c)
+          commands: s.commands.map(c => c.id === containerId ? { 
+            ...c, 
+            subItems: [...c.subItems, newItem], 
+            updatedAt: new Date().toISOString() 
+          } : c)
         }));
       },
+      
       updateCommandItem: (containerId, itemId, updates) => set((s) => ({
         commands: s.commands.map(c => c.id === containerId ? {
           ...c, updatedAt: new Date().toISOString(),
           subItems: c.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
         } : c)
       })),
+      
       deleteCommandItem: (containerId, itemId) => set((s) => ({
         commands: s.commands.map(c => c.id === containerId ? {
-          ...c, subItems: c.subItems.filter(i => i.id !== itemId)
+          ...c, 
+          subItems: c.subItems.filter(i => i.id !== itemId)
         } : c)
       })),
 
+      // ============================================
+      // LINK CONTAINER ACTIONS
+      // ============================================
       addLinkContainer: (container) => {
-        const newC: LinkContainer = { ...container, id: genId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const newC: LinkContainer = { 
+          ...container, 
+          id: genId(), 
+          createdAt: new Date().toISOString(), 
+          updatedAt: new Date().toISOString() 
+        };
         set((s) => ({ links: [...s.links, newC], activeItemId: newC.id }));
       },
+      
       updateLinkContainer: (id, updates) => set((s) => ({
         links: s.links.map(l => l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l)
       })),
+      
       deleteLinkContainer: (id) => set((s) => ({
         links: s.links.filter(l => l.id !== id),
         activeItemId: s.activeItemId === id ? null : s.activeItemId,
       })),
+      
       addLinkItem: (containerId, item) => {
         const newItem: LinkItem = { ...item, id: genId() };
         set((s) => ({
-          links: s.links.map(l => l.id === containerId ? { ...l, subItems: [...l.subItems, newItem], updatedAt: new Date().toISOString() } : l)
+          links: s.links.map(l => l.id === containerId ? { 
+            ...l, 
+            subItems: [...l.subItems, newItem], 
+            updatedAt: new Date().toISOString() 
+          } : l)
         }));
       },
+      
       updateLinkItem: (containerId, itemId, updates) => set((s) => ({
         links: s.links.map(l => l.id === containerId ? {
           ...l, updatedAt: new Date().toISOString(),
           subItems: l.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
         } : l)
       })),
+      
       deleteLinkItem: (containerId, itemId) => set((s) => ({
         links: s.links.map(l => l.id === containerId ? {
           ...l, subItems: l.subItems.filter(i => i.id !== itemId)
         } : l)
       })),
 
+      // ============================================
+      // PROMPT CONTAINER ACTIONS
+      // ============================================
       addPromptContainer: (container) => {
-        const newC: PromptContainer = { ...container, id: genId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const newC: PromptContainer = { 
+          ...container, 
+          id: genId(), 
+          createdAt: new Date().toISOString(), 
+          updatedAt: new Date().toISOString() 
+        };
         set((s) => ({ prompts: [...s.prompts, newC], activeItemId: newC.id }));
       },
+      
       updatePromptContainer: (id, updates) => set((s) => ({
         prompts: s.prompts.map(p => p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p)
       })),
+      
       deletePromptContainer: (id) => set((s) => ({
         prompts: s.prompts.filter(p => p.id !== id),
         activeItemId: s.activeItemId === id ? null : s.activeItemId,
       })),
+      
       addPromptItem: (containerId, item) => {
         const newItem: PromptItem = { ...item, id: genId() };
         set((s) => ({
-          prompts: s.prompts.map(p => p.id === containerId ? { ...p, subItems: [...p.subItems, newItem], updatedAt: new Date().toISOString() } : p)
+          prompts: s.prompts.map(p => p.id === containerId ? { 
+            ...p, 
+            subItems: [...p.subItems, newItem], 
+            updatedAt: new Date().toISOString() 
+          } : p)
         }));
       },
+      
       updatePromptItem: (containerId, itemId, updates) => set((s) => ({
         prompts: s.prompts.map(p => p.id === containerId ? {
           ...p, updatedAt: new Date().toISOString(),
           subItems: p.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
         } : p)
       })),
+      
       deletePromptItem: (containerId, itemId) => set((s) => ({
         prompts: s.prompts.map(p => p.id === containerId ? {
           ...p, subItems: p.subItems.filter(i => i.id !== itemId)
         } : p)
       })),
 
+      // ============================================
+      // UI ACTIONS
+      // ============================================
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      setShowSettings: (show) => set({ showSettings: show }),
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      toggleTheme: () => set((s) => ({ isDarkTheme: !s.isDarkTheme })),
+      setSettings: (settings) => set((s) => ({ settings: { ...s.settings, ...settings } })),
+
+      // ============================================
+      // DATA OPERATIONS
+      // ============================================
       exportData: () => {
         const state = get();
         const data = {
+          workspaces: state.workspaces,
+          categories: state.categories,
           folders: state.folders,
           notes: state.notes,
           commands: state.commands,
           links: state.links,
           prompts: state.prompts,
           exportedAt: new Date().toISOString(),
+          version: '2.0',
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -261,11 +478,17 @@ export const useStore = create<AppState & StoreActions>()(
         try {
           const data = JSON.parse(dataStr);
           set({
+            workspaces: data.workspaces || [],
+            categories: data.categories || [],
             folders: data.folders || [],
             notes: data.notes || [],
             commands: data.commands || [],
             links: data.links || [],
             prompts: data.prompts || [],
+            activeWorkspaceId: data.workspaces?.[0]?.id || null,
+            activeCategoryId: null,
+            activeFolderId: null,
+            activeItemId: null,
           });
         } catch (e) {
           console.error('Import failed', e);
@@ -273,25 +496,28 @@ export const useStore = create<AppState & StoreActions>()(
       },
 
       clearAllData: () => set({
+        workspaces: [],
+        categories: [],
         folders: [],
         notes: [],
         commands: [],
         links: [],
         prompts: [],
-        activeItemId: null,
+        activeWorkspaceId: null,
+        activeCategoryId: null,
         activeFolderId: null,
+        activeItemId: null,
       }),
 
       getActiveItem: () => {
         const state = get();
-        const { activeItemId, activeType, settings } = state;
-        if (!activeItemId) return null;
+        const { activeItemId, activeCategoryId } = state;
+        if (!activeItemId || !activeCategoryId) return null;
         
-        // Find the base type for custom types
-        const customType = settings.customTypes?.find(t => t.id === activeType);
-        const baseType = customType?.baseType || activeType;
+        const category = state.categories.find(c => c.id === activeCategoryId);
+        if (!category) return null;
         
-        switch (baseType) {
+        switch (category.baseType) {
           case 'notes': return state.notes.find(n => n.id === activeItemId) || null;
           case 'commands': return state.commands.find(c => c.id === activeItemId) || null;
           case 'links': return state.links.find(l => l.id === activeItemId) || null;
@@ -300,7 +526,9 @@ export const useStore = create<AppState & StoreActions>()(
         }
       },
 
-      // GitHub sync
+      // ============================================
+      // GITHUB SYNC
+      // ============================================
       syncStatus: 'idle',
       syncMessage: '',
       canSave: false,
@@ -345,12 +573,15 @@ export const useStore = create<AppState & StoreActions>()(
         set({ syncStatus: 'syncing', syncMessage: 'Saving...' });
         
         const data = {
+          workspaces: state.workspaces,
+          categories: state.categories,
           folders: state.folders,
           notes: state.notes,
           commands: state.commands,
           links: state.links,
           prompts: state.prompts,
           exportedAt: new Date().toISOString(),
+          version: '2.0',
         };
         
         const result = await saveToGitHub(state.settings.github, data);
@@ -387,7 +618,7 @@ export const useStore = create<AppState & StoreActions>()(
         // Only persist UI preferences
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
-        activeType: state.activeType,
+        activeWorkspaceId: state.activeWorkspaceId,
       }),
     }
   )
