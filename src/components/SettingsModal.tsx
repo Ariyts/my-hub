@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Github, HardDrive, Save } from 'lucide-react';
+import { X, Download, Upload, Trash2, Moon, Sun, Github, HardDrive, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff } from 'lucide-react';
 
 interface TabProps {
   active: boolean;
@@ -25,7 +25,7 @@ function Tab({ active, onClick, children }: TabProps) {
 }
 
 export function SettingsModal() {
-  const { setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, exportData, importData, clearAllData } = useStore();
+  const { setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, exportData, importData, clearAllData, syncStatus, syncMessage, syncWithGitHub, loadFromGitHubRepo, testGitHub } = useStore();
   const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('appearance');
   const [saved, setSaved] = useState(false);
 
@@ -202,6 +202,12 @@ export function SettingsModal() {
                   <div className="flex items-center gap-2">
                     <Github size={18} style={{ color: textColor }} />
                     <span className="font-semibold text-sm" style={{ color: textColor }}>GitHub Integration</span>
+                    {settings.github.enabled && settings.github.lastSync && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#6366f115', color: '#6366f1' }}>
+                        <Cloud size={10} className="inline mr-1" />
+                        Synced
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={() => setSettings({ github: { ...settings.github, enabled: !settings.github.enabled } })}
@@ -231,8 +237,56 @@ export function SettingsModal() {
                         />
                       </div>
                     ))}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs" style={{ color: mutedColor }}>Auto-commit on save</span>
+                    
+                    {/* Status Message */}
+                    {syncMessage && (
+                      <div 
+                        className="flex items-center gap-2 p-2 rounded-lg text-xs"
+                        style={{ 
+                          background: syncStatus === 'error' ? '#ef444415' : syncStatus === 'success' ? '#4CAF5015' : '#6366f115',
+                          color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
+                        }}
+                      >
+                        {syncStatus === 'syncing' && <RefreshCw size={12} className="animate-spin" />}
+                        {syncStatus === 'success' && <Check size={12} />}
+                        {syncStatus === 'error' && <AlertCircle size={12} />}
+                        {syncMessage}
+                      </div>
+                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={testGitHub}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: '#6366f115', color: '#6366f1' }}
+                      >
+                        <RefreshCw size={12} />
+                        Test Connection
+                      </button>
+                      <button
+                        onClick={syncWithGitHub}
+                        disabled={syncStatus === 'syncing'}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: '#4CAF5015', color: '#4CAF50', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
+                      >
+                        <Upload size={12} />
+                        Push to GitHub
+                      </button>
+                      <button
+                        onClick={loadFromGitHubRepo}
+                        disabled={syncStatus === 'syncing'}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all"
+                        style={{ background: '#2196F315', color: '#2196F3', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
+                      >
+                        <Download size={12} />
+                        Pull from GitHub
+                      </button>
+                    </div>
+                    
+                    {/* Auto-sync toggle */}
+                    <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: border }}>
+                      <span className="text-xs" style={{ color: mutedColor }}>Auto-sync on changes</span>
                       <button
                         onClick={() => setSettings({ github: { ...settings.github, autoSync: !settings.github.autoSync } })}
                         className="relative w-9 h-5 rounded-full transition-colors"
@@ -241,6 +295,12 @@ export function SettingsModal() {
                         <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ transform: settings.github.autoSync ? 'translateX(16px)' : 'translateX(2px)' }} />
                       </button>
                     </div>
+                    
+                    {settings.github.lastSync && (
+                      <p className="text-xs text-center" style={{ color: mutedColor }}>
+                        Last sync: {new Date(settings.github.lastSync).toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

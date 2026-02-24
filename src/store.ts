@@ -5,6 +5,12 @@ import type {
   CommandContainer, LinkContainer, PromptContainer,
   CommandItem, LinkItem, PromptItem, Settings, AnyItem
 } from './types';
+import {
+  syncToGitHub,
+  loadFromGitHub,
+  testGitHubConnection,
+  isGitHubConfigValid,
+} from './utils/githubSync';
 
 const defaultSettings: Settings = {
   theme: 'system',
@@ -165,6 +171,13 @@ interface StoreActions {
   importData: (data: string) => void;
   clearAllData: () => void;
   getActiveItem: () => AnyItem | null;
+
+  // GitHub sync actions
+  syncStatus: 'idle' | 'syncing' | 'success' | 'error';
+  syncMessage: string;
+  syncWithGitHub: () => Promise<void>;
+  loadFromGitHubRepo: () => Promise<void>;
+  testGitHub: () => Promise<boolean>;
 }
 
 const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
@@ -368,6 +381,93 @@ export const useStore = create<AppState & StoreActions>()(
           case 'links': return state.links.find(l => l.id === activeItemId) || null;
           case 'prompts': return state.prompts.find(p => p.id === activeItemId) || null;
         }
+      },
+
+      // GitHub sync state and actions
+      syncStatus: 'idle',
+      syncMessage: '',
+
+      syncWithGitHub: async () => {
+        const state = get();
+        const { settings } = state;
+
+        if (!isGitHubConfigValid(settings.github)) {
+          set({ syncStatus: 'error', syncMessage: 'GitHub configuration is incomplete' });
+          return;
+        }
+
+        set({ syncStatus: 'syncing', syncMessage: 'Syncing to GitHub...' });
+
+        const data = {
+          folders: state.folders,
+          notes: state.notes,
+          commands: state.commands,
+          links: state.links,
+          prompts: state.prompts,
+          exportedAt: new Date().toISOString(),
+        };
+
+        const result = await syncToGitHub(settings.github, data);
+
+        if (result.success) {
+          set({
+            syncStatus: 'success',
+            syncMessage: result.message,
+            settings: {
+              ...settings,
+              github: { ...settings.github, lastSync: new Date().toISOString() },
+            },
+          });
+          // Reset to idle after 3 seconds
+          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
+        } else {
+          set({ syncStatus: 'error', syncMessage: result.message });
+        }
+      },
+
+      loadFromGitHubRepo: async () => {
+        const state = get();
+        const { settings } = state;
+
+        if (!isGitHubConfigValid(settings.github)) {
+          set({ syncStatus: 'error', syncMessage: 'GitHub configuration is incomplete' });
+          return;
+        }
+
+        set({ syncStatus: 'syncing', syncMessage: 'Loading from GitHub...' });
+
+        const result = await loadFromGitHub(settings.github);
+
+        if (result.success && result.data) {
+          set({
+            folders: result.data.folders || [],
+            notes: result.data.notes || [],
+            commands: result.data.commands || [],
+            links: result.data.links || [],
+            prompts: result.data.prompts || [],
+            syncStatus: 'success',
+            syncMessage: result.message,
+            settings: {
+              ...settings,
+              github: { ...settings.github, lastSync: new Date().toISOString() },
+            },
+          });
+          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
+        } else {
+          set({ syncStatus: 'error', syncMessage: result.message });
+        }
+      },
+
+      testGitHub: async () => {
+        const state = get();
+        const result = await testGitHubConnection(state.settings.github);
+        if (result.success) {
+          set({ syncMessage: result.message });
+          setTimeout(() => set({ syncMessage: '' }), 3000);
+        } else {
+          set({ syncStatus: 'error', syncMessage: result.message });
+        }
+        return result.success;
       },
     }),
     {
