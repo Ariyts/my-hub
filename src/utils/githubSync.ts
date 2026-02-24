@@ -1,14 +1,13 @@
 /**
- * GitHub Sync Service - Simplified
- * User only needs to provide a token, everything else is automatic
+ * GitHub Sync Service - Public Version
+ * - Reading data: PUBLIC (no token needed)
+ * - Writing data: requires token
+ * - Data stored in public repo: my-hub-data
  */
 
 export interface GitHubConfig {
   token: string;
-  // Auto-detected values
   username?: string;
-  repo?: string;
-  branch?: string;
   lastSync?: string;
 }
 
@@ -21,6 +20,48 @@ export interface SyncResult {
 const GITHUB_API = 'https://api.github.com';
 const DATA_FILE = 'knowledge-hub-data.json';
 const DATA_BRANCH = 'data';
+
+// Public data URL - works without authentication!
+const PUBLIC_DATA_URL = 'https://raw.githubusercontent.com/Ariyts/my-hub-data/data/knowledge-hub-data.json';
+
+/**
+ * Load data from public URL - NO TOKEN NEEDED
+ * This is the primary way data loads - always works, no rate limits
+ */
+export async function loadPublicData(): Promise<SyncResult> {
+  try {
+    const response = await fetch(PUBLIC_DATA_URL, {
+      cache: 'no-store', // Always get fresh data
+    });
+    
+    if (response.status === 404) {
+      return {
+        success: false,
+        message: 'No data found. Save your data first.',
+      };
+    }
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        message: `Failed to load data (${response.status})`,
+      };
+    }
+    
+    const data = await response.json();
+    
+    return {
+      success: true,
+      message: 'Data loaded!',
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'Failed to load data',
+    };
+  }
+}
 
 /**
  * Make an authenticated request to GitHub API
@@ -61,99 +102,18 @@ export async function getUserInfo(token: string): Promise<{ username: string; na
 }
 
 /**
- * Check if repo exists, create if not
+ * Check if user has write access to my-hub-data repo
  */
-async function ensureRepo(token: string, username: string): Promise<string> {
-  const repoName = 'my-hub-data';
+async function checkWriteAccess(token: string, username: string): Promise<boolean> {
+  const response = await githubRequest(`/repos/Ariyts/my-hub-data/collaborators/${username}/permission`, token);
+  if (!response.ok) return false;
   
-  // Check if repo exists
-  const checkResponse = await githubRequest(`/repos/${username}/${repoName}`, token);
-  
-  if (checkResponse.ok) {
-    return repoName;
-  }
-  
-  // Create repo if it doesn't exist
-  const createResponse = await githubRequest('/user/repos', token, {
-    method: 'POST',
-    body: JSON.stringify({
-      name: repoName,
-      description: 'Knowledge Hub - Personal notes and data storage',
-      private: false,
-      auto_init: true,
-    }),
-  });
-  
-  if (!createResponse.ok) {
-    throw new Error('Failed to create repository');
-  }
-  
-  // Wait a moment for repo to be ready
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return repoName;
+  const data = await response.json();
+  return data.permission === 'admin' || data.permission === 'write';
 }
 
 /**
- * Ensure data branch exists
- */
-async function ensureBranch(token: string, username: string, repo: string): Promise<string> {
-  // Get default branch
-  const repoResponse = await githubRequest(`/repos/${username}/${repo}`, token);
-  if (!repoResponse.ok) {
-    throw new Error('Cannot access repository');
-  }
-  
-  const repoData = await repoResponse.json();
-  const defaultBranch = repoData.default_branch;
-  
-  // Check if data branch exists
-  const branchResponse = await githubRequest(
-    `/repos/${username}/${repo}/branches/${DATA_BRANCH}`,
-    token
-  );
-  
-  if (branchResponse.ok) {
-    return DATA_BRANCH;
-  }
-  
-  // Create data branch from default branch
-  // First get the SHA of the default branch
-  const refResponse = await githubRequest(
-    `/repos/${username}/${repo}/git/refs/heads/${defaultBranch}`,
-    token
-  );
-  
-  if (!refResponse.ok) {
-    // If no commits yet, just use default branch
-    return defaultBranch;
-  }
-  
-  const refData = await refResponse.json();
-  
-  // Create new branch
-  const createBranchResponse = await githubRequest(
-    `/repos/${username}/${repo}/git/refs`,
-    token,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        ref: `refs/heads/${DATA_BRANCH}`,
-        sha: refData.object.sha,
-      }),
-    }
-  );
-  
-  if (createBranchResponse.ok) {
-    return DATA_BRANCH;
-  }
-  
-  // If branch creation fails, use default branch
-  return defaultBranch;
-}
-
-/**
- * Initialize GitHub sync - auto-detect everything
+ * Initialize - verify token has write access
  */
 export async function initializeGitHubSync(token: string): Promise<GitHubConfig & SyncResult> {
   try {
@@ -167,74 +127,61 @@ export async function initializeGitHubSync(token: string): Promise<GitHubConfig 
       };
     }
     
-    // Ensure repo exists
-    const repo = await ensureRepo(token, userInfo.username);
-    
-    // Ensure branch exists
-    const branch = await ensureBranch(token, userInfo.username, repo);
+    // Check write access to the data repo
+    const hasAccess = await checkWriteAccess(token, userInfo.username);
+    if (!hasAccess) {
+      return {
+        token,
+        username: userInfo.username,
+        success: false,
+        message: 'You need write access to the repository. Contact the owner.',
+      };
+    }
     
     return {
       token,
       username: userInfo.username,
-      repo,
-      branch,
       success: true,
-      message: `Connected as @${userInfo.username}`,
+      message: `Ready to save as @${userInfo.username}`,
     };
   } catch (error: any) {
     return {
       token,
       success: false,
-      message: error.message || 'Failed to initialize GitHub sync',
+      message: error.message || 'Failed to connect',
     };
   }
 }
 
 /**
- * Get file from GitHub
+ * Get file SHA from GitHub (needed for update)
  */
-async function getFile(token: string, username: string, repo: string, branch: string): Promise<{ content: string; sha: string } | null> {
+async function getFileSha(token: string): Promise<string | null> {
   const response = await githubRequest(
-    `/repos/${username}/${repo}/contents/${DATA_FILE}?ref=${branch}`,
+    `/repos/Ariyts/my-hub-data/contents/${DATA_FILE}?ref=${DATA_BRANCH}`,
     token
   );
   
-  if (response.status === 404) {
-    return null;
-  }
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch data');
-  }
+  if (!response.ok) return null;
   
   const data = await response.json();
-  const content = atob(data.content);
-  
-  return {
-    content,
-    sha: data.sha,
-  };
+  return data.sha;
 }
 
 /**
- * Save data to GitHub
+ * Save data to GitHub - REQUIRES TOKEN
  */
 export async function saveToGitHub(config: GitHubConfig, data: any): Promise<SyncResult> {
-  if (!config.token || !config.username || !config.repo || !config.branch) {
+  if (!config.token) {
     return {
       success: false,
-      message: 'GitHub not configured. Please connect first.',
+      message: 'Token required to save data. Go to Settings → Sync.',
     };
   }
   
   try {
-    // Get existing file to get SHA (if exists)
-    let existingFile: { content: string; sha: string } | null = null;
-    try {
-      existingFile = await getFile(config.token, config.username, config.repo, config.branch);
-    } catch {
-      // File doesn't exist yet
-    }
+    // Get existing file SHA
+    const sha = await getFileSha(config.token);
     
     const content = JSON.stringify(data, null, 2);
     const base64Content = btoa(unescape(encodeURIComponent(content)));
@@ -242,15 +189,15 @@ export async function saveToGitHub(config: GitHubConfig, data: any): Promise<Syn
     const body: any = {
       message: `Update data - ${new Date().toLocaleString()}`,
       content: base64Content,
-      branch: config.branch,
+      branch: DATA_BRANCH,
     };
     
-    if (existingFile) {
-      body.sha = existingFile.sha;
+    if (sha) {
+      body.sha = sha;
     }
     
     const response = await githubRequest(
-      `/repos/${config.username}/${config.repo}/contents/${DATA_FILE}`,
+      `/repos/Ariyts/my-hub-data/contents/${DATA_FILE}`,
       config.token,
       {
         method: 'PUT',
@@ -262,62 +209,19 @@ export async function saveToGitHub(config: GitHubConfig, data: any): Promise<Syn
       const error = await response.json();
       return {
         success: false,
-        message: error.message || 'Failed to save to GitHub',
+        message: error.message || 'Failed to save',
       };
     }
     
     return {
       success: true,
-      message: 'Data saved successfully!',
+      message: 'Saved successfully! Data will appear on all devices.',
       data: { lastSync: new Date().toISOString() },
     };
   } catch (error: any) {
     return {
       success: false,
-      message: error.message || 'Failed to save to GitHub',
+      message: error.message || 'Failed to save',
     };
   }
-}
-
-/**
- * Load data from GitHub
- */
-export async function loadFromGitHub(config: GitHubConfig): Promise<SyncResult> {
-  if (!config.token || !config.username || !config.repo || !config.branch) {
-    return {
-      success: false,
-      message: 'GitHub not configured',
-    };
-  }
-  
-  try {
-    const file = await getFile(config.token, config.username, config.repo, config.branch);
-    
-    if (!file) {
-      return {
-        success: false,
-        message: 'No saved data found. Save your data first.',
-      };
-    }
-    
-    const data = JSON.parse(file.content);
-    
-    return {
-      success: true,
-      message: 'Data loaded successfully!',
-      data,
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      message: error.message || 'Failed to load from GitHub',
-    };
-  }
-}
-
-/**
- * Check if config is complete
- */
-export function isConfigComplete(config: GitHubConfig): boolean {
-  return !!(config.token && config.username && config.repo && config.branch);
 }

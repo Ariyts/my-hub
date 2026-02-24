@@ -95,8 +95,6 @@ export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContai
 export interface GitHubSyncConfig {
   token: string;
   username?: string;
-  repo?: string;
-  branch?: string;
   lastSync?: string;
 }
 

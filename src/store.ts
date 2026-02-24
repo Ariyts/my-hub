@@ -6,10 +6,9 @@ import type {
   CommandItem, LinkItem, PromptItem, Settings, AnyItem
 } from './types';
 import {
+  loadPublicData,
   initializeGitHubSync,
   saveToGitHub,
-  loadFromGitHub,
-  isConfigComplete,
 } from './utils/githubSync';
 
 const defaultSettings: Settings = {
@@ -37,75 +36,15 @@ const sampleData = {
   ] as Folder[],
   notes: [
     {
-      id: 'n1', folderId: 'f1', title: 'Project Ideas', type: 'notes' as const,
-      content: '# Project Ideas\n\n## Knowledge Hub\nA personal knowledge management system with:\n- Notes with Markdown support\n- Command snippets\n- Link collections\n- AI prompt library\n\n## Features\n- **Sync** via GitHub\n- **Dark/Light** theme\n- **Offline** support with LocalStorage\n\n```javascript\nconst hub = new KnowledgeHub({\n  sync: true,\n  theme: "dark"\n});\n```\n\n> Start small, iterate fast.\n',
-      tags: ['project', 'ideas'], isFavorite: true,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'n2', folderId: 'f2', title: 'Goals 2025', type: 'notes' as const,
-      content: '# Goals 2025\n\n## Technical\n- [ ] Learn Rust\n- [ ] Build 3 open source projects\n- [ ] Write 12 blog posts\n\n## Personal\n- [ ] Read 24 books\n- [ ] Exercise 4x/week\n\n## Financial\n- [ ] Emergency fund\n- [ ] Investments\n',
-      tags: ['goals', 'personal'], isFavorite: false,
+      id: 'n1', folderId: 'f1', title: 'Welcome to Knowledge Hub', type: 'notes' as const,
+      content: '# Welcome! 👋\n\nThis is your personal knowledge hub.\n\n## Features\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## Cloud Sync\nYour data syncs automatically!\n- Data loads from cloud when you open this page\n- Go to **Settings → Sync** to enable saving\n\n---\n> Start organizing your knowledge!',
+      tags: ['welcome', 'guide'], isFavorite: true,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     },
   ] as NoteItem[],
-  commands: [
-    {
-      id: 'c1', folderId: 'f3', title: 'Git Essentials', type: 'commands' as const,
-      description: 'Essential git commands for daily workflow',
-      subItems: [
-        { id: 'ci1', command: 'git reset --hard HEAD~1', description: 'Undo last commit (destructive)', language: 'bash' as const, tags: ['reset', 'undo'], isFavorite: true },
-        { id: 'ci2', command: 'git stash && git pull && git stash pop', description: 'Pull with local changes saved', language: 'bash' as const, tags: ['stash', 'pull'], isFavorite: false },
-        { id: 'ci3', command: 'git log --oneline --graph --all', description: 'Visual branch history', language: 'bash' as const, tags: ['log', 'history'], isFavorite: true },
-        { id: 'ci4', command: 'git cherry-pick <commit-hash>', description: 'Apply specific commit to current branch', language: 'bash' as const, tags: ['cherry-pick'], isFavorite: false },
-      ],
-      tags: ['git', 'vcs'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), isExpanded: true,
-    },
-    {
-      id: 'c2', folderId: 'f4', title: 'Docker Commands', type: 'commands' as const,
-      description: 'Common Docker operations',
-      subItems: [
-        { id: 'ci5', command: 'docker ps -a', description: 'List all containers', language: 'bash' as const, tags: ['docker', 'containers'], isFavorite: false },
-        { id: 'ci6', command: 'docker-compose up -d --build', description: 'Rebuild and start services', language: 'bash' as const, tags: ['compose', 'build'], isFavorite: true },
-        { id: 'ci7', command: 'docker system prune -af', description: 'Remove all unused data', language: 'bash' as const, tags: ['cleanup'], isFavorite: false },
-      ],
-      tags: ['docker', 'containers'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), isExpanded: false,
-    },
-  ] as CommandContainer[],
-  links: [
-    {
-      id: 'l1', folderId: 'f5', title: 'Frontend Resources', type: 'links' as const,
-      subItems: [
-        { id: 'li1', url: 'https://react.dev', title: 'React Documentation', description: 'Official React docs', favicon: '⚛️', tags: ['react', 'docs'], isFavorite: true },
-        { id: 'li2', url: 'https://tailwindcss.com', title: 'Tailwind CSS', description: 'Utility-first CSS framework', favicon: '🎨', tags: ['css', 'tailwind'], isFavorite: true },
-        { id: 'li3', url: 'https://vitejs.dev', title: 'Vite', description: 'Next generation frontend tooling', favicon: '⚡', tags: ['build', 'vite'], isFavorite: false },
-      ],
-      tags: ['frontend', 'docs'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), isExpanded: true,
-    },
-  ] as LinkContainer[],
-  prompts: [
-    {
-      id: 'p1', folderId: 'f6', title: 'Code Review', type: 'prompts' as const,
-      category: 'Coding',
-      subItems: [
-        {
-          id: 'pi1', title: 'Code Review Prompt',
-          prompt: 'Please review the following {{language}} code and provide feedback on:\n1. Code quality and readability\n2. Performance optimizations\n3. Security concerns\n4. Best practices\n\n```{{language}}\n{{code}}\n```',
-          variables: ['{{language}}', '{{code}}'],
-          description: 'Comprehensive code review assistant',
-          tags: ['review', 'code'], isFavorite: true,
-        },
-        {
-          id: 'pi2', title: 'Bug Fix Assistant',
-          prompt: 'I have a bug in my {{language}} code. Here\'s the error:\n{{error}}\n\nHere\'s the relevant code:\n```{{language}}\n{{code}}\n```\n\nPlease help me identify and fix the issue.',
-          variables: ['{{language}}', '{{error}}', '{{code}}'],
-          description: 'Help debugging code issues',
-          tags: ['debug', 'fix'], isFavorite: false,
-        },
-      ],
-      tags: ['coding', 'review'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), isExpanded: true,
-    },
-  ] as PromptContainer[],
+  commands: [],
+  links: [],
+  prompts: [],
 };
 
 interface StoreActions {
@@ -158,15 +97,14 @@ interface StoreActions {
   clearAllData: () => void;
   getActiveItem: () => AnyItem | null;
 
-  // GitHub sync - simplified
-  syncStatus: 'idle' | 'connecting' | 'syncing' | 'success' | 'error';
+  // GitHub sync
+  syncStatus: 'idle' | 'loading' | 'connecting' | 'syncing' | 'success' | 'error';
   syncMessage: string;
-  isConnected: boolean;
+  canSave: boolean; // Has token with write access
+  loadFromCloud: () => Promise<void>;
   connectGitHub: (token: string) => Promise<boolean>;
   syncToCloud: () => Promise<void>;
-  loadFromCloud: () => Promise<void>;
   disconnectGitHub: () => void;
-  autoLoadFromCloud: () => Promise<void>;
 }
 
 const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
@@ -200,7 +138,6 @@ export const useStore = create<AppState & StoreActions>()(
       addFolder: (folder) => {
         const newFolder: Folder = { ...folder, id: genId(), createdAt: new Date().toISOString() };
         set((s) => ({ folders: [...s.folders, newFolder] }));
-        return newFolder.id;
       },
       updateFolder: (id, updates) => set((s) => ({
         folders: s.folders.map(f => f.id === id ? { ...f, ...updates } : f)
@@ -323,7 +260,6 @@ export const useStore = create<AppState & StoreActions>()(
           commands: state.commands,
           links: state.links,
           prompts: state.prompts,
-          settings: state.settings,
           exportedAt: new Date().toISOString(),
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -372,13 +308,33 @@ export const useStore = create<AppState & StoreActions>()(
         }
       },
 
-      // GitHub sync - simplified
+      // GitHub sync
       syncStatus: 'idle',
       syncMessage: '',
-      isConnected: false,
+      canSave: false,
+
+      loadFromCloud: async () => {
+        set({ syncStatus: 'loading' });
+        
+        const result = await loadPublicData();
+        
+        if (result.success && result.data) {
+          set({
+            folders: result.data.folders || sampleData.folders,
+            notes: result.data.notes || sampleData.notes,
+            commands: result.data.commands || sampleData.commands,
+            links: result.data.links || sampleData.links,
+            prompts: result.data.prompts || sampleData.prompts,
+            syncStatus: 'idle',
+          });
+        } else {
+          // If no cloud data, use sample data
+          set({ syncStatus: 'idle' });
+        }
+      },
 
       connectGitHub: async (token: string) => {
-        set({ syncStatus: 'connecting', syncMessage: 'Connecting to GitHub...' });
+        set({ syncStatus: 'connecting', syncMessage: 'Verifying token...' });
         
         const result = await initializeGitHubSync(token);
         
@@ -386,23 +342,15 @@ export const useStore = create<AppState & StoreActions>()(
           set({
             syncStatus: 'success',
             syncMessage: result.message,
-            isConnected: true,
+            canSave: true,
             settings: {
               ...get().settings,
               github: {
                 token: result.token,
                 username: result.username,
-                repo: result.repo,
-                branch: result.branch,
               },
             },
           });
-          
-          // Auto-load data from GitHub after connecting
-          setTimeout(() => {
-            get().loadFromCloud();
-          }, 500);
-          
           setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
           return true;
         } else {
@@ -414,14 +362,14 @@ export const useStore = create<AppState & StoreActions>()(
 
       syncToCloud: async () => {
         const state = get();
-        const config = state.settings.github;
         
-        if (!isConfigComplete(config)) {
-          set({ syncStatus: 'error', syncMessage: 'Not connected to GitHub' });
+        if (!state.canSave || !state.settings.github.token) {
+          set({ syncStatus: 'error', syncMessage: 'Connect with token first to save' });
+          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
           return;
         }
         
-        set({ syncStatus: 'syncing', syncMessage: 'Saving to GitHub...' });
+        set({ syncStatus: 'syncing', syncMessage: 'Saving to cloud...' });
         
         const data = {
           folders: state.folders,
@@ -432,95 +380,38 @@ export const useStore = create<AppState & StoreActions>()(
           exportedAt: new Date().toISOString(),
         };
         
-        const result = await saveToGitHub(config, data);
+        const result = await saveToGitHub(state.settings.github, data);
         
         if (result.success) {
           set({
             syncStatus: 'success',
-            syncMessage: 'Saved! Your data is now in the cloud.',
+            syncMessage: result.message,
             settings: {
               ...state.settings,
-              github: { ...config, lastSync: result.data?.lastSync || new Date().toISOString() },
+              github: { ...state.settings.github, lastSync: new Date().toISOString() },
             },
           });
         } else {
           set({ syncStatus: 'error', syncMessage: result.message });
         }
         
-        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
-      },
-
-      loadFromCloud: async () => {
-        const state = get();
-        const config = state.settings.github;
-        
-        if (!isConfigComplete(config)) {
-          return;
-        }
-        
-        set({ syncStatus: 'syncing', syncMessage: 'Loading from GitHub...' });
-        
-        const result = await loadFromGitHub(config);
-        
-        if (result.success && result.data) {
-          set({
-            folders: result.data.folders || [],
-            notes: result.data.notes || [],
-            commands: result.data.commands || [],
-            links: result.data.links || [],
-            prompts: result.data.prompts || [],
-            syncStatus: 'success',
-            syncMessage: 'Data loaded from cloud!',
-            settings: {
-              ...state.settings,
-              github: { ...config, lastSync: new Date().toISOString() },
-            },
-          });
-        }
-        
-        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 2000);
+        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 4000);
       },
 
       disconnectGitHub: () => {
         set({
-          isConnected: false,
+          canSave: false,
           settings: {
             ...get().settings,
             github: { token: '' },
           },
-          syncStatus: 'idle',
-          syncMessage: '',
         });
-      },
-
-      autoLoadFromCloud: async () => {
-        const state = get();
-        const config = state.settings.github;
-        
-        // Silently load data if connected
-        if (isConfigComplete(config)) {
-          const result = await loadFromGitHub(config);
-          if (result.success && result.data) {
-            set({
-              folders: result.data.folders || [],
-              notes: result.data.notes || [],
-              commands: result.data.commands || [],
-              links: result.data.links || [],
-              prompts: result.data.prompts || [],
-              isConnected: true,
-            });
-          }
-        }
       },
     }),
     {
       name: 'knowledge-hub-storage',
       partialize: (state) => ({
-        folders: state.folders,
-        notes: state.notes,
-        commands: state.commands,
-        links: state.links,
-        prompts: state.prompts,
+        // Only persist UI preferences, NOT data (data comes from cloud)
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
         activeType: state.activeType,

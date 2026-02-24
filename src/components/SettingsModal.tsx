@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Github, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Link } from 'lucide-react';
+import { X, Download, Upload, Trash2, Moon, Sun, Github, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Globe } from 'lucide-react';
 
 interface TabProps {
   active: boolean;
@@ -28,8 +28,8 @@ export function SettingsModal() {
   const { 
     setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, 
     exportData, importData, clearAllData,
-    syncStatus, syncMessage, isConnected,
-    connectGitHub, syncToCloud, disconnectGitHub, autoLoadFromCloud
+    syncStatus, syncMessage, canSave,
+    loadFromCloud, connectGitHub, syncToCloud, disconnectGitHub
   } = useStore();
   
   const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('sync');
@@ -37,9 +37,9 @@ export function SettingsModal() {
   const [token, setToken] = useState('');
   const [showToken, setShowToken] = useState(false);
 
-  // Auto-load from cloud on mount if connected
+  // Load data from cloud on mount
   useEffect(() => {
-    autoLoadFromCloud();
+    loadFromCloud();
   }, []);
 
   const handleSave = () => {
@@ -114,54 +114,60 @@ export function SettingsModal() {
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {activeTab === 'sync' && (
             <>
-              {/* GitHub Sync - Simplified */}
+              {/* Status Banner */}
+              <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: '#4CAF5015', border: '1px solid #4CAF5040' }}>
+                <Globe size={20} style={{ color: '#4CAF50' }} />
+                <div>
+                  <p className="text-sm font-medium" style={{ color: '#4CAF50' }}>Auto-sync enabled</p>
+                  <p className="text-xs" style={{ color: mutedColor }}>Your data loads automatically from cloud on every visit</p>
+                </div>
+              </div>
+
+              {/* Status Message */}
+              {syncMessage && (
+                <div 
+                  className="flex items-center gap-2 p-3 rounded-lg text-sm"
+                  style={{ 
+                    background: syncStatus === 'error' ? '#ef444415' : syncStatus === 'success' ? '#4CAF5015' : '#6366f115',
+                    color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
+                  }}
+                >
+                  {(syncStatus === 'loading' || syncStatus === 'connecting' || syncStatus === 'syncing') && (
+                    <RefreshCw size={14} className="animate-spin" />
+                  )}
+                  {syncStatus === 'success' && <Check size={14} />}
+                  {syncStatus === 'error' && <AlertCircle size={14} />}
+                  {syncMessage}
+                </div>
+              )}
+
+              {/* Save Section */}
               <div className="p-5 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#6366f115' }}>
-                    <Github size={20} style={{ color: '#6366f1' }} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: canSave ? '#4CAF5015' : '#6366f115' }}>
+                    {canSave ? (
+                      <Cloud size={20} style={{ color: '#4CAF50' }} />
+                    ) : (
+                      <Lock size={20} style={{ color: '#6366f1' }} />
+                    )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-sm" style={{ color: textColor }}>GitHub Cloud Sync</h3>
+                    <h3 className="font-semibold text-sm" style={{ color: textColor }}>
+                      {canSave ? 'Ready to Save' : 'Enable Saving'}
+                    </h3>
                     <p className="text-xs" style={{ color: mutedColor }}>
-                      {isConnected 
+                      {canSave 
                         ? `Connected as @${settings.github.username}` 
-                        : 'Save your notes to GitHub and access them anywhere'}
+                        : 'Enter token to save changes to cloud'}
                     </p>
                   </div>
-                  {isConnected && (
-                    <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full" style={{ background: '#4CAF5015', color: '#4CAF50' }}>
-                      <Cloud size={12} />
-                      Connected
-                    </span>
-                  )}
                 </div>
 
-                {/* Status Message */}
-                {syncMessage && (
-                  <div 
-                    className="flex items-center gap-2 p-3 rounded-lg text-sm mb-4"
-                    style={{ 
-                      background: syncStatus === 'error' ? '#ef444415' : syncStatus === 'success' ? '#4CAF5015' : '#6366f115',
-                      color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
-                    }}
-                  >
-                    {syncStatus === 'connecting' || syncStatus === 'syncing' ? (
-                      <RefreshCw size={14} className="animate-spin" />
-                    ) : syncStatus === 'success' ? (
-                      <Check size={14} />
-                    ) : syncStatus === 'error' ? (
-                      <AlertCircle size={14} />
-                    ) : null}
-                    {syncMessage}
-                  </div>
-                )}
-
-                {!isConnected ? (
-                  /* Connection Form */
+                {!canSave ? (
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-medium block mb-1.5" style={{ color: mutedColor }}>
-                        Personal Access Token
+                        GitHub Personal Access Token
                       </label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -189,82 +195,64 @@ export function SettingsModal() {
                           className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                           style={{ background: '#6366f1', color: 'white' }}
                         >
-                          {syncStatus === 'connecting' ? (
-                            <RefreshCw size={14} className="animate-spin" />
-                          ) : (
-                            'Connect'
-                          )}
+                          Connect
                         </button>
                       </div>
                     </div>
-                    
-                    <div className="p-3 rounded-lg" style={{ background: isDarkTheme ? '#0f172a' : '#f1f5f9' }}>
-                      <p className="text-xs" style={{ color: mutedColor }}>
-                        <strong style={{ color: textColor }}>How to get a token:</strong>
-                      </p>
-                      <ol className="text-xs mt-1 space-y-1 list-decimal list-inside" style={{ color: mutedColor }}>
-                        <li>Go to GitHub → Settings → Developer settings</li>
-                        <li>Personal access tokens → Tokens (classic)</li>
-                        <li>Generate new token with <code className="px-1 rounded" style={{ background: isDarkTheme ? '#1e293b' : '#e2e8f0' }}>repo</code> scope</li>
-                      </ol>
-                    </div>
+                    <p className="text-xs" style={{ color: mutedColor }}>
+                      Need a token? Go to GitHub → Settings → Developer settings → Personal access tokens → Generate (needs 'repo' scope)
+                    </p>
                   </div>
                 ) : (
-                  /* Connected State */
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: isDarkTheme ? '#0f172a' : '#f1f5f9' }}>
-                      <div className="flex items-center gap-2">
-                        <Link size={14} style={{ color: mutedColor }} />
-                        <span className="text-sm font-medium" style={{ color: textColor }}>
-                          {settings.github.repo}
-                        </span>
-                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#6366f115', color: '#6366f1' }}>
-                          {settings.github.branch}
-                        </span>
-                      </div>
-                      {settings.github.lastSync && (
-                        <span className="text-xs" style={{ color: mutedColor }}>
-                          Last: {new Date(settings.github.lastSync).toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-
                     <div className="flex gap-2">
                       <button
                         onClick={syncToCloud}
                         disabled={syncStatus === 'syncing'}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all"
                         style={{ background: '#4CAF50', color: 'white', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
                       >
-                        <Upload size={14} />
+                        <Upload size={16} />
                         Save to Cloud
                       </button>
                       <button
                         onClick={disconnectGitHub}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border"
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all border"
                         style={{ borderColor: border, color: mutedColor }}
                       >
-                        <CloudOff size={14} />
-                        Disconnect
+                        <CloudOff size={16} />
                       </button>
                     </div>
-
-                    <p className="text-xs text-center" style={{ color: mutedColor }}>
-                      Your data loads automatically when you open this page
-                    </p>
+                    {settings.github.lastSync && (
+                      <p className="text-xs text-center" style={{ color: mutedColor }}>
+                        Last saved: {new Date(settings.github.lastSync).toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Info Box */}
+              {/* Info */}
               <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
                 <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>💡 How it works</h4>
-                <ul className="text-xs space-y-1.5" style={{ color: mutedColor }}>
-                  <li>• Connect once with your GitHub token</li>
-                  <li>• We automatically create a repository for your data</li>
-                  <li>• Your notes sync automatically when you open the page</li>
-                  <li>• Click "Save to Cloud" to backup your changes</li>
-                </ul>
+                <div className="grid grid-cols-2 gap-3 text-xs" style={{ color: mutedColor }}>
+                  <div className="flex items-start gap-2">
+                    <Globe size={14} className="mt-0.5" style={{ color: '#4CAF50' }} />
+                    <span>Data loads automatically from public cloud</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Lock size={14} className="mt-0.5" style={{ color: '#6366f1' }} />
+                    <span>Token needed only for saving changes</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Cloud size={14} className="mt-0.5" style={{ color: '#2196F3' }} />
+                    <span>Works on all devices instantly</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <RefreshCw size={14} className="mt-0.5" style={{ color: '#FF9800' }} />
+                    <span>Refresh page to get latest data</span>
+                  </div>
+                </div>
               </div>
             </>
           )}
