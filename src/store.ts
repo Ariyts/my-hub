@@ -316,19 +316,25 @@ export const useStore = create<AppState & StoreActions>()(
       loadFromCloud: async () => {
         set({ syncStatus: 'loading' });
         
+        console.log('[Sync] Loading data from cloud...');
+        
         const result = await loadPublicData();
         
+        console.log('[Sync] Result:', result.success, result.message);
+        
         if (result.success && result.data) {
+          console.log('[Sync] Loaded', result.data.notes?.length || 0, 'notes');
           set({
-            folders: result.data.folders || sampleData.folders,
-            notes: result.data.notes || sampleData.notes,
-            commands: result.data.commands || sampleData.commands,
-            links: result.data.links || sampleData.links,
-            prompts: result.data.prompts || sampleData.prompts,
+            folders: result.data.folders || [],
+            notes: result.data.notes || [],
+            commands: result.data.commands || [],
+            links: result.data.links || [],
+            prompts: result.data.prompts || [],
             syncStatus: 'idle',
           });
         } else {
-          // If no cloud data, use sample data
+          // If no cloud data, keep current data
+          console.log('[Sync] No cloud data, keeping current state');
           set({ syncStatus: 'idle' });
         }
       },

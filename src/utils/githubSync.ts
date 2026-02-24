@@ -30,7 +30,10 @@ const PUBLIC_DATA_URL = 'https://raw.githubusercontent.com/Ariyts/my-hub-data/da
  */
 export async function loadPublicData(): Promise<SyncResult> {
   try {
-    const response = await fetch(PUBLIC_DATA_URL, {
+    // Add timestamp to bypass cache
+    const url = `${PUBLIC_DATA_URL}?t=${Date.now()}`;
+    
+    const response = await fetch(url, {
       cache: 'no-store', // Always get fresh data
     });
     
