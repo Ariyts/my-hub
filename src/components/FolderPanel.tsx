@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useStore } from '../store';
 import type { Folder, BaseDataType } from '../types';
 import {
@@ -58,7 +58,6 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: 'folder' | 'item'; itemId?: string } | null>(null);
   const [renaming, setRenaming] = useState<{ type: 'folder' | 'item'; itemId?: string } | null>(null);
   const [newName, setNewName] = useState(folder.name);
-  const [draggedItem, setDraggedItem] = useState<any>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   const baseType = getBaseType(activeType, settings);
@@ -118,12 +117,17 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, item: any) => {
-    setDraggedItem(item);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      id: item.id,
+      folderId: item.folderId,
+      title: item.title
+    }));
   };
 
   const handleDragOver = (e: React.DragEvent, targetFolderId: string) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
     setDropTarget(targetFolderId);
   };
 
@@ -133,16 +137,20 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
 
   const handleDrop = (e: React.DragEvent, targetFolderId: string) => {
     e.preventDefault();
-    if (draggedItem && draggedItem.folderId !== targetFolderId) {
-      // Move item to new folder
-      switch (baseType) {
-        case 'notes': updateNote(draggedItem.id, { folderId: targetFolderId }); break;
-        case 'commands': updateCommandContainer(draggedItem.id, { folderId: targetFolderId }); break;
-        case 'links': updateLinkContainer(draggedItem.id, { folderId: targetFolderId }); break;
-        case 'prompts': updatePromptContainer(draggedItem.id, { folderId: targetFolderId }); break;
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data && data.folderId !== targetFolderId) {
+        // Move item to new folder
+        switch (baseType) {
+          case 'notes': updateNote(data.id, { folderId: targetFolderId }); break;
+          case 'commands': updateCommandContainer(data.id, { folderId: targetFolderId }); break;
+          case 'links': updateLinkContainer(data.id, { folderId: targetFolderId }); break;
+          case 'prompts': updatePromptContainer(data.id, { folderId: targetFolderId }); break;
+        }
       }
+    } catch (err) {
+      console.error('Drop failed:', err);
     }
-    setDraggedItem(null);
     setDropTarget(null);
   };
 
@@ -344,7 +352,7 @@ export function FolderPanel() {
   const {
     activeType, folders, searchQuery, setSearchQuery, activeItemId,
     setActiveItemId, addFolder, addNote, addCommandContainer, addLinkContainer,
-    addPromptContainer, activeFolderId, setActiveFolderId, isDarkTheme, settings
+    addPromptContainer, setActiveFolderId, isDarkTheme, settings
   } = useStore();
 
   const [showNewFolder, setShowNewFolder] = useState(false);

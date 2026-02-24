@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type {
   AppState, ObjectType, Folder, NoteItem,
   CommandContainer, LinkContainer, PromptContainer,
-  CommandItem, LinkItem, PromptItem, Settings, AnyItem, CustomType
+  CommandItem, LinkItem, PromptItem, Settings, AnyItem
 } from './types';
 import {
   initializeGitHubSync,
@@ -26,6 +26,8 @@ const defaultSettings: Settings = {
     token: '',
   },
   customTypes: [],
+  typesOrder: [],
+  editedDefaultTypes: {},
 };
 
 interface StoreActions {

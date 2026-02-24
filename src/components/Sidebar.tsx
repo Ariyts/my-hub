@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import type { ObjectType, CustomType, BaseDataType } from '../types';
-import { Settings, Plus, MoreHorizontal, Edit2, Trash2, Check, X } from 'lucide-react';
+import type { CustomType, BaseDataType } from '../types';
+import { Settings, Plus, MoreHorizontal, Edit2, Trash2, GripVertical } from 'lucide-react';
 
 // Default types that can't be deleted
 const DEFAULT_TYPES: CustomType[] = [
@@ -28,9 +28,38 @@ export function Sidebar() {
   const [showEditModal, setShowEditModal] = useState<CustomType | null>(null);
   const [editingType, setEditingType] = useState<Partial<CustomType>>({});
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [draggedTypeId, setDraggedTypeId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   
-  // Merge default types with custom types from settings
-  const allTypes = [...DEFAULT_TYPES, ...(settings.customTypes || [])];
+  // Get edited default types from settings (for persistence)
+  const editedDefaultTypes: Record<string, Partial<CustomType>> = settings.editedDefaultTypes || {};
+  
+  // Apply edits to default types
+  const defaultTypesWithEdits = DEFAULT_TYPES.map(t => ({
+    ...t,
+    ...(editedDefaultTypes[t.id] || {})
+  }));
+  
+  // Get custom types order from settings
+  const typesOrder: string[] = settings.typesOrder || defaultTypesWithEdits.map(t => t.id);
+  const customTypes = settings.customTypes || [];
+  
+  // Build all types array respecting the order
+  const allTypesMap = new Map<string, CustomType>();
+  defaultTypesWithEdits.forEach(t => allTypesMap.set(t.id, t));
+  customTypes.forEach(t => allTypesMap.set(t.id, t));
+  
+  // Sort by saved order, then add any new types at the end
+  const allTypes: CustomType[] = [];
+  typesOrder.forEach(id => {
+    const t = allTypesMap.get(id);
+    if (t) {
+      allTypes.push(t);
+      allTypesMap.delete(id);
+    }
+  });
+  // Add any types not in the order (new custom types)
+  allTypesMap.forEach(t => allTypes.push(t));
 
   const handleAddType = (baseType: BaseDataType) => {
     const newType: CustomType = {
@@ -41,7 +70,12 @@ export function Sidebar() {
       baseType,
       isDefault: false,
     };
-    setSettings({ customTypes: [...(settings.customTypes || []), newType] });
+    const newCustomTypes = [...customTypes, newType];
+    const newOrder = [...typesOrder, newType.id];
+    setSettings({ 
+      customTypes: newCustomTypes,
+      typesOrder: newOrder
+    });
     setShowAddMenu(false);
     setActiveType(newType.id);
   };
@@ -57,23 +91,37 @@ export function Sidebar() {
     };
     
     if (type.isDefault) {
-      // Can't edit default types
-      setShowEditModal(null);
-      return;
+      // For default types, save edits in editedDefaultTypes
+      setSettings({
+        editedDefaultTypes: {
+          ...editedDefaultTypes,
+          [type.id]: {
+            label: updatedType.label,
+            icon: updatedType.icon,
+            color: updatedType.color,
+          }
+        }
+      });
+    } else {
+      // For custom types, update in customTypes array
+      const newCustomTypes = customTypes.map(t => 
+        t.id === type.id ? updatedType : t
+      );
+      setSettings({ customTypes: newCustomTypes });
     }
     
-    const newCustomTypes = (settings.customTypes || []).map(t => 
-      t.id === type.id ? updatedType : t
-    );
-    setSettings({ customTypes: newCustomTypes });
     setShowEditModal(null);
     setEditingType({});
   };
 
   const handleDeleteType = (type: CustomType) => {
     if (type.isDefault) return;
-    const newCustomTypes = (settings.customTypes || []).filter(t => t.id !== type.id);
-    setSettings({ customTypes: newCustomTypes });
+    const newCustomTypes = customTypes.filter(t => t.id !== type.id);
+    const newOrder = typesOrder.filter(id => id !== type.id);
+    setSettings({ 
+      customTypes: newCustomTypes,
+      typesOrder: newOrder
+    });
     if (activeType === type.id) {
       setActiveType('notes');
     }
@@ -84,6 +132,51 @@ export function Sidebar() {
     setEditingType({ ...type });
     setShowEditModal(type);
     setContextMenu(null);
+  };
+
+  // Drag & Drop for reordering
+  const handleDragStart = (e: React.DragEvent, typeId: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', typeId);
+    setDraggedTypeId(typeId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (draggedTypeId && draggedTypeId !== targetId) {
+      setDropTargetId(targetId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDropTargetId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedTypeId || draggedTypeId === targetId) {
+      setDraggedTypeId(null);
+      setDropTargetId(null);
+      return;
+    }
+
+    const newOrder = [...typesOrder];
+    const draggedIndex = newOrder.indexOf(draggedTypeId);
+    const targetIndex = newOrder.indexOf(targetId);
+    
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      newOrder.splice(draggedIndex, 1);
+      newOrder.splice(targetIndex, 0, draggedTypeId);
+      setSettings({ typesOrder: newOrder });
+    }
+    
+    setDraggedTypeId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTypeId(null);
+    setDropTargetId(null);
   };
 
   return (
@@ -111,8 +204,32 @@ export function Sidebar() {
       <nav className="flex flex-col gap-1 flex-1 w-full px-2 relative">
         {allTypes.map((type) => {
           const isActive = activeType === type.id;
+          const isDragging = draggedTypeId === type.id;
+          const isDropTarget = dropTargetId === type.id;
+          
           return (
-            <div key={type.id} className="relative group">
+            <div 
+              key={type.id} 
+              className="relative group"
+              draggable
+              onDragStart={(e) => handleDragStart(e, type.id)}
+              onDragOver={(e) => handleDragOver(e, type.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, type.id)}
+              onDragEnd={handleDragEnd}
+              style={{
+                opacity: isDragging ? 0.5 : 1,
+                transform: isDropTarget ? 'translateY(2px)' : 'none',
+              }}
+            >
+              {/* Drop indicator */}
+              {isDropTarget && (
+                <div 
+                  className="absolute left-0 right-0 h-0.5 bg-indigo-500 rounded"
+                  style={{ top: -2 }}
+                />
+              )}
+              
               <button
                 onClick={() => setActiveType(type.id)}
                 onContextMenu={(e) => {
@@ -139,6 +256,14 @@ export function Sidebar() {
                   {type.label.length > 6 ? type.label.slice(0, 5) + '.' : type.label}
                 </span>
               </button>
+              
+              {/* Drag handle - visible on hover */}
+              <div 
+                className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-60 transition-opacity cursor-grab"
+                style={{ paddingLeft: '2px' }}
+              >
+                <GripVertical size={10} className="text-slate-400" />
+              </div>
               
               {/* Context menu trigger (three dots) */}
               <button
@@ -210,7 +335,7 @@ export function Sidebar() {
             <button
               onClick={() => {
                 const type = allTypes.find(t => t.id === contextMenu.id);
-                if (type && !type.isDefault) openEditModal(type);
+                if (type) openEditModal(type);
               }}
               className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-slate-700 transition-colors"
               style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
@@ -244,9 +369,12 @@ export function Sidebar() {
             style={{ background: isDarkTheme ? '#1e293b' : '#fff', border: '1px solid #334155' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-semibold mb-4" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>
+            <h3 className="text-sm font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>
               Edit Category
             </h3>
+            {showEditModal?.isDefault && (
+              <p className="text-[10px] text-slate-400 mb-3">Default type - cannot change base type or delete</p>
+            )}
             
             <div className="space-y-3">
               <div>

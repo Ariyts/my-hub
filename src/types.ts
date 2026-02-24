@@ -119,6 +119,8 @@ export interface Settings {
   codeFont: string;
   github: GitHubSyncConfig;
   customTypes: CustomType[];
+  typesOrder?: string[]; // Order of types in sidebar
+  editedDefaultTypes?: Record<string, Partial<CustomType>>; // Edits to default types
 }
 
 export interface AppState {
