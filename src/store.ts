@@ -323,7 +323,8 @@ export const useStore = create<AppState & StoreActions>()(
         console.log('[Sync] Result:', result.success, result.message);
         
         if (result.success && result.data) {
-          console.log('[Sync] Loaded', result.data.notes?.length || 0, 'notes');
+          console.log('[Sync] Data exported at:', result.data.exportedAt);
+          console.log('[Sync] Loaded', result.data.notes?.length || 0, 'notes:', result.data.notes?.map((n: any) => n.title).join(', '));
           set({
             folders: result.data.folders || [],
             notes: result.data.notes || [],
