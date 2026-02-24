@@ -316,15 +316,16 @@ export const useStore = create<AppState & StoreActions>()(
       loadFromCloud: async () => {
         set({ syncStatus: 'loading' });
         
-        console.log('[Sync] Loading data from cloud...');
+        const buildTime = new Date().toISOString();
+        console.log('[Sync v2] Loading data from cloud...', buildTime);
         
         const result = await loadPublicData();
         
-        console.log('[Sync] Result:', result.success, result.message);
+        console.log('[Sync v2] Result:', result.success, result.message);
         
         if (result.success && result.data) {
-          console.log('[Sync] Data exported at:', result.data.exportedAt);
-          console.log('[Sync] Loaded', result.data.notes?.length || 0, 'notes:', result.data.notes?.map((n: any) => n.title).join(', '));
+          console.log('[Sync v2] Data exported at:', result.data.exportedAt);
+          console.log('[Sync v2] Loaded', result.data.notes?.length || 0, 'notes:', result.data.notes?.map((n: any) => n.title).join(', '));
           set({
             folders: result.data.folders || [],
             notes: result.data.notes || [],
@@ -335,7 +336,7 @@ export const useStore = create<AppState & StoreActions>()(
           });
         } else {
           // If no cloud data, keep current data
-          console.log('[Sync] No cloud data, keeping current state');
+          console.log('[Sync v2] No cloud data, keeping current state');
           set({ syncStatus: 'idle' });
         }
       },
