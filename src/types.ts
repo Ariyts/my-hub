@@ -92,6 +92,14 @@ export interface PromptContainer {
 
 export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContainer;
 
+export interface GitHubSyncConfig {
+  token: string;
+  username?: string;
+  repo?: string;
+  branch?: string;
+  lastSync?: string;
+}
+
 export interface Settings {
   theme: 'light' | 'dark' | 'system';
   fontSize: number;
@@ -101,23 +109,7 @@ export interface Settings {
   spellCheck: boolean;
   lineNumbers: boolean;
   codeFont: string;
-  googleDrive: {
-    enabled: boolean;
-    folderId: string;
-    folderPath: string;
-    autoSync: boolean;
-    syncInterval: number;
-    lastSync: string;
-  };
-  github: {
-    enabled: boolean;
-    token: string;
-    repo: string;
-    branch: string;
-    path: string;
-    autoSync: boolean;
-    lastSync: string;
-  };
+  github: GitHubSyncConfig;
 }
 
 export interface AppState {

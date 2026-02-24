@@ -6,10 +6,10 @@ import type {
   CommandItem, LinkItem, PromptItem, Settings, AnyItem
 } from './types';
 import {
-  syncToGitHub,
+  initializeGitHubSync,
+  saveToGitHub,
   loadFromGitHub,
-  testGitHubConnection,
-  isGitHubConfigValid,
+  isConfigComplete,
 } from './utils/githubSync';
 
 const defaultSettings: Settings = {
@@ -21,22 +21,8 @@ const defaultSettings: Settings = {
   spellCheck: false,
   lineNumbers: true,
   codeFont: 'Fira Code',
-  googleDrive: {
-    enabled: false,
-    folderId: '',
-    folderPath: '',
-    autoSync: false,
-    syncInterval: 5,
-    lastSync: '',
-  },
   github: {
-    enabled: false,
     token: '',
-    repo: '',
-    branch: 'main',
-    path: 'data/',
-    autoSync: false,
-    lastSync: '',
   },
 };
 
@@ -52,7 +38,7 @@ const sampleData = {
   notes: [
     {
       id: 'n1', folderId: 'f1', title: 'Project Ideas', type: 'notes' as const,
-      content: '# Project Ideas\n\n## Knowledge Hub\nA personal knowledge management system with:\n- Notes with Markdown support\n- Command snippets\n- Link collections\n- AI prompt library\n\n## Features\n- **Sync** via Google Drive & GitHub\n- **Dark/Light** theme\n- **Offline** support with IndexedDB\n\n```javascript\nconst hub = new KnowledgeHub({\n  sync: true,\n  theme: "dark"\n});\n```\n\n> Start small, iterate fast.\n',
+      content: '# Project Ideas\n\n## Knowledge Hub\nA personal knowledge management system with:\n- Notes with Markdown support\n- Command snippets\n- Link collections\n- AI prompt library\n\n## Features\n- **Sync** via GitHub\n- **Dark/Light** theme\n- **Offline** support with LocalStorage\n\n```javascript\nconst hub = new KnowledgeHub({\n  sync: true,\n  theme: "dark"\n});\n```\n\n> Start small, iterate fast.\n',
       tags: ['project', 'ideas'], isFavorite: true,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     },
@@ -172,12 +158,15 @@ interface StoreActions {
   clearAllData: () => void;
   getActiveItem: () => AnyItem | null;
 
-  // GitHub sync actions
-  syncStatus: 'idle' | 'syncing' | 'success' | 'error';
+  // GitHub sync - simplified
+  syncStatus: 'idle' | 'connecting' | 'syncing' | 'success' | 'error';
   syncMessage: string;
-  syncWithGitHub: () => Promise<void>;
-  loadFromGitHubRepo: () => Promise<void>;
-  testGitHub: () => Promise<boolean>;
+  isConnected: boolean;
+  connectGitHub: (token: string) => Promise<boolean>;
+  syncToCloud: () => Promise<void>;
+  loadFromCloud: () => Promise<void>;
+  disconnectGitHub: () => void;
+  autoLoadFromCloud: () => Promise<void>;
 }
 
 const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
@@ -383,21 +372,57 @@ export const useStore = create<AppState & StoreActions>()(
         }
       },
 
-      // GitHub sync state and actions
+      // GitHub sync - simplified
       syncStatus: 'idle',
       syncMessage: '',
+      isConnected: false,
 
-      syncWithGitHub: async () => {
+      connectGitHub: async (token: string) => {
+        set({ syncStatus: 'connecting', syncMessage: 'Connecting to GitHub...' });
+        
+        const result = await initializeGitHubSync(token);
+        
+        if (result.success) {
+          set({
+            syncStatus: 'success',
+            syncMessage: result.message,
+            isConnected: true,
+            settings: {
+              ...get().settings,
+              github: {
+                token: result.token,
+                username: result.username,
+                repo: result.repo,
+                branch: result.branch,
+              },
+            },
+          });
+          
+          // Auto-load data from GitHub after connecting
+          setTimeout(() => {
+            get().loadFromCloud();
+          }, 500);
+          
+          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
+          return true;
+        } else {
+          set({ syncStatus: 'error', syncMessage: result.message });
+          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 5000);
+          return false;
+        }
+      },
+
+      syncToCloud: async () => {
         const state = get();
-        const { settings } = state;
-
-        if (!isGitHubConfigValid(settings.github)) {
-          set({ syncStatus: 'error', syncMessage: 'GitHub configuration is incomplete' });
+        const config = state.settings.github;
+        
+        if (!isConfigComplete(config)) {
+          set({ syncStatus: 'error', syncMessage: 'Not connected to GitHub' });
           return;
         }
-
-        set({ syncStatus: 'syncing', syncMessage: 'Syncing to GitHub...' });
-
+        
+        set({ syncStatus: 'syncing', syncMessage: 'Saving to GitHub...' });
+        
         const data = {
           folders: state.folders,
           notes: state.notes,
@@ -406,38 +431,37 @@ export const useStore = create<AppState & StoreActions>()(
           prompts: state.prompts,
           exportedAt: new Date().toISOString(),
         };
-
-        const result = await syncToGitHub(settings.github, data);
-
+        
+        const result = await saveToGitHub(config, data);
+        
         if (result.success) {
           set({
             syncStatus: 'success',
-            syncMessage: result.message,
+            syncMessage: 'Saved! Your data is now in the cloud.',
             settings: {
-              ...settings,
-              github: { ...settings.github, lastSync: new Date().toISOString() },
+              ...state.settings,
+              github: { ...config, lastSync: result.data?.lastSync || new Date().toISOString() },
             },
           });
-          // Reset to idle after 3 seconds
-          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
         } else {
           set({ syncStatus: 'error', syncMessage: result.message });
         }
+        
+        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
       },
 
-      loadFromGitHubRepo: async () => {
+      loadFromCloud: async () => {
         const state = get();
-        const { settings } = state;
-
-        if (!isGitHubConfigValid(settings.github)) {
-          set({ syncStatus: 'error', syncMessage: 'GitHub configuration is incomplete' });
+        const config = state.settings.github;
+        
+        if (!isConfigComplete(config)) {
           return;
         }
-
+        
         set({ syncStatus: 'syncing', syncMessage: 'Loading from GitHub...' });
-
-        const result = await loadFromGitHub(settings.github);
-
+        
+        const result = await loadFromGitHub(config);
+        
         if (result.success && result.data) {
           set({
             folders: result.data.folders || [],
@@ -446,28 +470,47 @@ export const useStore = create<AppState & StoreActions>()(
             links: result.data.links || [],
             prompts: result.data.prompts || [],
             syncStatus: 'success',
-            syncMessage: result.message,
+            syncMessage: 'Data loaded from cloud!',
             settings: {
-              ...settings,
-              github: { ...settings.github, lastSync: new Date().toISOString() },
+              ...state.settings,
+              github: { ...config, lastSync: new Date().toISOString() },
             },
           });
-          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
-        } else {
-          set({ syncStatus: 'error', syncMessage: result.message });
         }
+        
+        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 2000);
       },
 
-      testGitHub: async () => {
+      disconnectGitHub: () => {
+        set({
+          isConnected: false,
+          settings: {
+            ...get().settings,
+            github: { token: '' },
+          },
+          syncStatus: 'idle',
+          syncMessage: '',
+        });
+      },
+
+      autoLoadFromCloud: async () => {
         const state = get();
-        const result = await testGitHubConnection(state.settings.github);
-        if (result.success) {
-          set({ syncMessage: result.message });
-          setTimeout(() => set({ syncMessage: '' }), 3000);
-        } else {
-          set({ syncStatus: 'error', syncMessage: result.message });
+        const config = state.settings.github;
+        
+        // Silently load data if connected
+        if (isConfigComplete(config)) {
+          const result = await loadFromGitHub(config);
+          if (result.success && result.data) {
+            set({
+              folders: result.data.folders || [],
+              notes: result.data.notes || [],
+              commands: result.data.commands || [],
+              links: result.data.links || [],
+              prompts: result.data.prompts || [],
+              isConnected: true,
+            });
+          }
         }
-        return result.success;
       },
     }),
     {

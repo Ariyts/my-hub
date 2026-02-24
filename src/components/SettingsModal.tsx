@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Github, HardDrive, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff } from 'lucide-react';
+import { X, Download, Upload, Trash2, Moon, Sun, Github, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Link } from 'lucide-react';
 
 interface TabProps {
   active: boolean;
@@ -25,13 +25,35 @@ function Tab({ active, onClick, children }: TabProps) {
 }
 
 export function SettingsModal() {
-  const { setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, exportData, importData, clearAllData, syncStatus, syncMessage, syncWithGitHub, loadFromGitHubRepo, testGitHub } = useStore();
-  const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('appearance');
+  const { 
+    setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, 
+    exportData, importData, clearAllData,
+    syncStatus, syncMessage, isConnected,
+    connectGitHub, syncToCloud, disconnectGitHub, autoLoadFromCloud
+  } = useStore();
+  
+  const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('sync');
   const [saved, setSaved] = useState(false);
+  const [token, setToken] = useState('');
+  const [showToken, setShowToken] = useState(false);
+
+  // Auto-load from cloud on mount if connected
+  useEffect(() => {
+    autoLoadFromCloud();
+  }, []);
 
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleConnect = async () => {
+    if (token.trim()) {
+      const success = await connectGitHub(token.trim());
+      if (success) {
+        setToken('');
+      }
+    }
   };
 
   const handleImport = () => {
@@ -82,14 +104,171 @@ export function SettingsModal() {
 
         {/* Tabs */}
         <div className="flex gap-1 px-4 pt-3 pb-1 border-b overflow-x-auto" style={{ borderColor: border }}>
+          <Tab active={activeTab === 'sync'} onClick={() => setActiveTab('sync')}>🔄 Sync</Tab>
           <Tab active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>🎨 Appearance</Tab>
           <Tab active={activeTab === 'editor'} onClick={() => setActiveTab('editor')}>📝 Editor</Tab>
-          <Tab active={activeTab === 'sync'} onClick={() => setActiveTab('sync')}>🔄 Sync</Tab>
           <Tab active={activeTab === 'data'} onClick={() => setActiveTab('data')}>💾 Data</Tab>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {activeTab === 'sync' && (
+            <>
+              {/* GitHub Sync - Simplified */}
+              <div className="p-5 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#6366f115' }}>
+                    <Github size={20} style={{ color: '#6366f1' }} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm" style={{ color: textColor }}>GitHub Cloud Sync</h3>
+                    <p className="text-xs" style={{ color: mutedColor }}>
+                      {isConnected 
+                        ? `Connected as @${settings.github.username}` 
+                        : 'Save your notes to GitHub and access them anywhere'}
+                    </p>
+                  </div>
+                  {isConnected && (
+                    <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full" style={{ background: '#4CAF5015', color: '#4CAF50' }}>
+                      <Cloud size={12} />
+                      Connected
+                    </span>
+                  )}
+                </div>
+
+                {/* Status Message */}
+                {syncMessage && (
+                  <div 
+                    className="flex items-center gap-2 p-3 rounded-lg text-sm mb-4"
+                    style={{ 
+                      background: syncStatus === 'error' ? '#ef444415' : syncStatus === 'success' ? '#4CAF5015' : '#6366f115',
+                      color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
+                    }}
+                  >
+                    {syncStatus === 'connecting' || syncStatus === 'syncing' ? (
+                      <RefreshCw size={14} className="animate-spin" />
+                    ) : syncStatus === 'success' ? (
+                      <Check size={14} />
+                    ) : syncStatus === 'error' ? (
+                      <AlertCircle size={14} />
+                    ) : null}
+                    {syncMessage}
+                  </div>
+                )}
+
+                {!isConnected ? (
+                  /* Connection Form */
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium block mb-1.5" style={{ color: mutedColor }}>
+                        Personal Access Token
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showToken ? 'text' : 'password'}
+                            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none pr-10"
+                            style={inputStyle}
+                            placeholder="ghp_xxxxxxxxxxxx"
+                            value={token}
+                            onChange={(e) => setToken(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowToken(!showToken)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
+                            style={{ color: mutedColor }}
+                          >
+                            {showToken ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                        <button
+                          onClick={handleConnect}
+                          disabled={!token.trim() || syncStatus === 'connecting'}
+                          className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+                          style={{ background: '#6366f1', color: 'white' }}
+                        >
+                          {syncStatus === 'connecting' ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            'Connect'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg" style={{ background: isDarkTheme ? '#0f172a' : '#f1f5f9' }}>
+                      <p className="text-xs" style={{ color: mutedColor }}>
+                        <strong style={{ color: textColor }}>How to get a token:</strong>
+                      </p>
+                      <ol className="text-xs mt-1 space-y-1 list-decimal list-inside" style={{ color: mutedColor }}>
+                        <li>Go to GitHub → Settings → Developer settings</li>
+                        <li>Personal access tokens → Tokens (classic)</li>
+                        <li>Generate new token with <code className="px-1 rounded" style={{ background: isDarkTheme ? '#1e293b' : '#e2e8f0' }}>repo</code> scope</li>
+                      </ol>
+                    </div>
+                  </div>
+                ) : (
+                  /* Connected State */
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: isDarkTheme ? '#0f172a' : '#f1f5f9' }}>
+                      <div className="flex items-center gap-2">
+                        <Link size={14} style={{ color: mutedColor }} />
+                        <span className="text-sm font-medium" style={{ color: textColor }}>
+                          {settings.github.repo}
+                        </span>
+                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#6366f115', color: '#6366f1' }}>
+                          {settings.github.branch}
+                        </span>
+                      </div>
+                      {settings.github.lastSync && (
+                        <span className="text-xs" style={{ color: mutedColor }}>
+                          Last: {new Date(settings.github.lastSync).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={syncToCloud}
+                        disabled={syncStatus === 'syncing'}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
+                        style={{ background: '#4CAF50', color: 'white', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
+                      >
+                        <Upload size={14} />
+                        Save to Cloud
+                      </button>
+                      <button
+                        onClick={disconnectGitHub}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border"
+                        style={{ borderColor: border, color: mutedColor }}
+                      >
+                        <CloudOff size={14} />
+                        Disconnect
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-center" style={{ color: mutedColor }}>
+                      Your data loads automatically when you open this page
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Info Box */}
+              <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
+                <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>💡 How it works</h4>
+                <ul className="text-xs space-y-1.5" style={{ color: mutedColor }}>
+                  <li>• Connect once with your GitHub token</li>
+                  <li>• We automatically create a repository for your data</li>
+                  <li>• Your notes sync automatically when you open the page</li>
+                  <li>• Click "Save to Cloud" to backup your changes</li>
+                </ul>
+              </div>
+            </>
+          )}
+
           {activeTab === 'appearance' && (
             <>
               <section>
@@ -190,170 +369,6 @@ export function SettingsModal() {
                     <option key={f} value={f}>{f}</option>
                   ))}
                 </select>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'sync' && (
-            <>
-              {/* GitHub */}
-              <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Github size={18} style={{ color: textColor }} />
-                    <span className="font-semibold text-sm" style={{ color: textColor }}>GitHub Integration</span>
-                    {settings.github.enabled && settings.github.lastSync && (
-                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#6366f115', color: '#6366f1' }}>
-                        <Cloud size={10} className="inline mr-1" />
-                        Synced
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setSettings({ github: { ...settings.github, enabled: !settings.github.enabled } })}
-                    className="relative w-11 h-6 rounded-full transition-colors"
-                    style={{ background: settings.github.enabled ? '#6366f1' : border }}
-                  >
-                    <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform" style={{ transform: settings.github.enabled ? 'translateX(20px)' : 'translateX(2px)' }} />
-                  </button>
-                </div>
-                {settings.github.enabled && (
-                  <div className="space-y-3">
-                    {[
-                      { key: 'token', label: 'Personal Access Token', type: 'password', placeholder: 'ghp_...' },
-                      { key: 'repo', label: 'Repository', type: 'text', placeholder: 'username/repo-name' },
-                      { key: 'branch', label: 'Branch', type: 'text', placeholder: 'main' },
-                      { key: 'path', label: 'Data Path', type: 'text', placeholder: 'data/' },
-                    ].map(({ key, label, type, placeholder }) => (
-                      <div key={key}>
-                        <label className="text-xs font-medium block mb-1" style={{ color: mutedColor }}>{label}</label>
-                        <input
-                          type={type}
-                          className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                          style={inputStyle}
-                          placeholder={placeholder}
-                          value={settings.github[key as keyof typeof settings.github] as string}
-                          onChange={(e) => setSettings({ github: { ...settings.github, [key]: e.target.value } })}
-                        />
-                      </div>
-                    ))}
-                    
-                    {/* Status Message */}
-                    {syncMessage && (
-                      <div 
-                        className="flex items-center gap-2 p-2 rounded-lg text-xs"
-                        style={{ 
-                          background: syncStatus === 'error' ? '#ef444415' : syncStatus === 'success' ? '#4CAF5015' : '#6366f115',
-                          color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
-                        }}
-                      >
-                        {syncStatus === 'syncing' && <RefreshCw size={12} className="animate-spin" />}
-                        {syncStatus === 'success' && <Check size={12} />}
-                        {syncStatus === 'error' && <AlertCircle size={12} />}
-                        {syncMessage}
-                      </div>
-                    )}
-                    
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2">
-                      <button
-                        onClick={testGitHub}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: '#6366f115', color: '#6366f1' }}
-                      >
-                        <RefreshCw size={12} />
-                        Test Connection
-                      </button>
-                      <button
-                        onClick={syncWithGitHub}
-                        disabled={syncStatus === 'syncing'}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: '#4CAF5015', color: '#4CAF50', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
-                      >
-                        <Upload size={12} />
-                        Push to GitHub
-                      </button>
-                      <button
-                        onClick={loadFromGitHubRepo}
-                        disabled={syncStatus === 'syncing'}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all"
-                        style={{ background: '#2196F315', color: '#2196F3', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
-                      >
-                        <Download size={12} />
-                        Pull from GitHub
-                      </button>
-                    </div>
-                    
-                    {/* Auto-sync toggle */}
-                    <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: border }}>
-                      <span className="text-xs" style={{ color: mutedColor }}>Auto-sync on changes</span>
-                      <button
-                        onClick={() => setSettings({ github: { ...settings.github, autoSync: !settings.github.autoSync } })}
-                        className="relative w-9 h-5 rounded-full transition-colors"
-                        style={{ background: settings.github.autoSync ? '#6366f1' : border }}
-                      >
-                        <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ transform: settings.github.autoSync ? 'translateX(16px)' : 'translateX(2px)' }} />
-                      </button>
-                    </div>
-                    
-                    {settings.github.lastSync && (
-                      <p className="text-xs text-center" style={{ color: mutedColor }}>
-                        Last sync: {new Date(settings.github.lastSync).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Google Drive */}
-              <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <HardDrive size={18} style={{ color: '#4CAF50' }} />
-                    <span className="font-semibold text-sm" style={{ color: textColor }}>Google Drive</span>
-                  </div>
-                  <button
-                    onClick={() => setSettings({ googleDrive: { ...settings.googleDrive, enabled: !settings.googleDrive.enabled } })}
-                    className="relative w-11 h-6 rounded-full transition-colors"
-                    style={{ background: settings.googleDrive.enabled ? '#4CAF50' : border }}
-                  >
-                    <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform" style={{ transform: settings.googleDrive.enabled ? 'translateX(20px)' : 'translateX(2px)' }} />
-                  </button>
-                </div>
-                {settings.googleDrive.enabled && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-medium block mb-1" style={{ color: mutedColor }}>Folder Path</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                          style={inputStyle}
-                          placeholder="/KnowledgeHub"
-                          value={settings.googleDrive.folderPath}
-                          onChange={(e) => setSettings({ googleDrive: { ...settings.googleDrive, folderPath: e.target.value } })}
-                        />
-                        <button className="px-3 py-2 rounded-lg text-xs font-medium" style={{ background: '#4CAF5015', color: '#4CAF50' }}>Browse</button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-medium" style={{ color: textColor }}>Auto-sync interval</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <input type="range" min="1" max="60" value={settings.googleDrive.syncInterval} onChange={(e) => setSettings({ googleDrive: { ...settings.googleDrive, syncInterval: parseInt(e.target.value) } })} className="w-24 accent-green-500" />
-                          <span className="text-xs" style={{ color: mutedColor }}>{settings.googleDrive.syncInterval} min</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setSettings({ googleDrive: { ...settings.googleDrive, autoSync: !settings.googleDrive.autoSync } })}
-                        className="relative w-9 h-5 rounded-full transition-colors"
-                        style={{ background: settings.googleDrive.autoSync ? '#4CAF50' : border }}
-                      >
-                        <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style={{ transform: settings.googleDrive.autoSync ? 'translateX(16px)' : 'translateX(2px)' }} />
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             </>
           )}
