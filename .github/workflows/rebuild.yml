@@ -13,47 +13,45 @@ jobs:
   rebuild:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
-      - name: Get data from data branch
+
+      - name: Fetch data from data branch
         run: |
-          git checkout data -- knowledge-hub-data.json || echo "No data file yet"
-          if [ -f knowledge-hub-data.json ]; then
-            mkdir -p src
-            mv knowledge-hub-data.json src/data.json
-            echo "✅ Data loaded from data branch"
-          else
-            echo "⚠️ No data file found, will use default"
-          fi
-      
+          git fetch origin data
+          git show origin/data:knowledge-hub-data.json > src/data.json
+          echo "✅ Data loaded from data branch"
+          echo "Data preview:"
+          head -20 src/data.json
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build site
         run: npm run build
-      
+
       - name: Deploy to GitHub Pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           # Save build output
           cp dist/index.html /tmp/index.html
-          
+
           # Switch to gh-pages and update
           git checkout gh-pages || git checkout --orphan gh-pages
           git reset --hard
           cp /tmp/index.html index.html
-          
+
           git add index.html
           git commit -m "Auto-rebuild: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || echo "No changes"
           git push origin gh-pages --force
