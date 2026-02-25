@@ -110,6 +110,25 @@ export async function initializeGitHubSync(token: string): Promise<GitHubConfig 
 }
 
 /**
+ * Trigger rebuild workflow
+ */
+async function triggerRebuild(token: string): Promise<boolean> {
+  try {
+    const response = await githubRequest(
+      `/repos/${REPO}/actions/workflows/rebuild.yml/dispatches`,
+      token,
+      {
+        method: 'POST',
+        body: JSON.stringify({ ref: 'main' }),
+      }
+    );
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Ensure data branch exists
  */
 async function ensureDataBranch(token: string): Promise<void> {
@@ -155,7 +174,7 @@ async function getFileSha(token: string): Promise<string | null> {
 }
 
 /**
- * Save data to GitHub - triggers rebuild
+ * Save data to GitHub - triggers rebuild automatically
  */
 export async function saveToGitHub(config: GitHubConfig, data: any): Promise<SyncResult> {
   if (!config.token) {
@@ -202,11 +221,22 @@ export async function saveToGitHub(config: GitHubConfig, data: any): Promise<Syn
       };
     }
     
-    return {
-      success: true,
-      message: 'Saved! Site rebuilding... (takes ~1 min)',
-      data: { lastSync: new Date().toISOString() },
-    };
+    // Trigger rebuild automatically
+    const rebuildTriggered = await triggerRebuild(config.token);
+    
+    if (rebuildTriggered) {
+      return {
+        success: true,
+        message: 'Saved! Site rebuilding... (~1 min)',
+        data: { lastSync: new Date().toISOString() },
+      };
+    } else {
+      return {
+        success: true,
+        message: 'Saved! Go to Actions to rebuild manually.',
+        data: { lastSync: new Date().toISOString() },
+      };
+    }
   } catch (error: any) {
     return {
       success: false,
