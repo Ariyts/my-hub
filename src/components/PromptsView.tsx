@@ -1,26 +1,22 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { PromptContainer, PromptItem } from '../types';
-import { Plus, Search, Copy, Edit3, Trash2, ChevronDown, ChevronRight, MessageSquare, Star, Check, Variable } from 'lucide-react';
+import { Plus, Search, Copy, Edit3, Trash2, ChevronDown, ChevronRight, MessageSquare, Star, Check, Variable, GripVertical, X } from 'lucide-react';
 
-interface PromptCardProps {
+interface PromptRowProps {
   item: PromptItem;
   containerId: string;
   isDark: boolean;
+  index: number;
 }
 
-function PromptCard({ item, containerId, isDark }: PromptCardProps) {
+function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
   const { updatePromptItem, deletePromptItem } = useStore();
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ ...item });
+  const [showVars, setShowVars] = useState(false);
   const [varValues, setVarValues] = useState<Record<string, string>>({});
-  const [showVarModal, setShowVarModal] = useState(false);
-
-  const border = isDark ? '#1e293b' : '#e2e8f0';
-  const bg = isDark ? '#1e293b' : '#f8fafc';
-  const textColor = isDark ? '#e2e8f0' : '#1e293b';
-  const mutedColor = isDark ? '#64748b' : '#94a3b8';
 
   const extractVariables = (text: string) => {
     const matches = text.match(/\{\{([^}]+)\}\}/g) || [];
@@ -46,100 +42,174 @@ function PromptCard({ item, containerId, isDark }: PromptCardProps) {
     setEditing(false);
   };
 
+  const border = isDark ? '#1e293b' : '#e2e8f0';
+  const bg = isDark ? '#0f172a' : '#f8fafc';
+  const codeBg = isDark ? '#1e1e2e' : '#f0f4f8';
+
   if (editing) {
     return (
-      <div className="rounded-xl border p-4 space-y-2" style={{ background: bg, borderColor: border }}>
-        <input className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: textColor }} value={editData.title} onChange={(e) => setEditData({ ...editData, title: e.target.value })} placeholder="Title..." autoFocus />
-        <textarea className="w-full text-sm px-3 py-2 rounded-lg border outline-none font-mono resize-y min-h-[120px]" style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: textColor, fontFamily: 'monospace' }} value={editData.prompt} onChange={(e) => setEditData({ ...editData, prompt: e.target.value })} placeholder="Prompt text... Use {{variable}} for variables" />
-        <input className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: textColor }} value={editData.description || ''} onChange={(e) => setEditData({ ...editData, description: e.target.value })} placeholder="Description..." />
-        <input className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: textColor }} value={editData.tags.join(', ')} onChange={(e) => setEditData({ ...editData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })} placeholder="tags, comma, separated" />
-        <div className="flex gap-2">
-          <button onClick={handleSave} className="px-3 py-1 rounded text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>Save</button>
-          <button onClick={() => setEditing(false)} className="px-3 py-1 rounded text-xs font-medium" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
-        </div>
-      </div>
+      <tr style={{ background: isDark ? '#1e293b30' : '#f8fafc' }}>
+        <td colSpan={6} className="p-3">
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                className="flex-1 text-sm px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: bg, borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }}
+                value={editData.title}
+                onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                placeholder="Title..."
+                autoFocus
+              />
+              <input
+                className="w-40 text-xs px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: bg, borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }}
+                value={editData.description || ''}
+                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                placeholder="Description..."
+              />
+            </div>
+            <textarea
+              className="w-full text-xs px-3 py-2 rounded-lg border outline-none font-mono resize-none"
+              style={{ background: codeBg, borderColor: border, color: isDark ? '#c4b5fd' : '#6b21a8', minHeight: '80px' }}
+              value={editData.prompt}
+              onChange={(e) => setEditData({ ...editData, prompt: e.target.value })}
+              placeholder="Prompt... Use {{variable}} for variables"
+            />
+            <div className="flex gap-2">
+              <button onClick={handleSave} className="px-3 py-1 rounded text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>Save</button>
+              <button onClick={() => setEditing(false)} className="px-3 py-1 rounded text-xs" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
+            </div>
+          </div>
+        </td>
+      </tr>
     );
   }
 
   return (
-    <div className="rounded-xl border transition-all duration-150 overflow-hidden" style={{ background: bg, borderColor: border }}>
-      <div className="px-4 py-3">
-        <div className="flex items-start gap-2 mb-2">
-          <h4 className="font-semibold text-sm flex-1" style={{ color: textColor }}>{item.title}</h4>
-          <button onClick={() => updatePromptItem(containerId, item.id, { isFavorite: !item.isFavorite })}>
-            <Star size={12} className={item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300'} />
-          </button>
-        </div>
-        {item.description && <p className="text-xs mb-2" style={{ color: mutedColor }}>{item.description}</p>}
-
-        {/* Prompt preview */}
-        <div
-          className="text-sm p-3 rounded-lg mb-3 font-mono leading-relaxed overflow-hidden max-h-32 relative"
-          style={{ background: isDark ? '#0f172a' : '#f1f5f9', color: isDark ? '#a5f3fc' : '#0369a1', fontSize: '12px', fontFamily: 'monospace' }}
-        >
-          {item.prompt}
-          <div className="absolute bottom-0 left-0 right-0 h-8" style={{ background: `linear-gradient(transparent, ${isDark ? '#0f172a' : '#f1f5f9'})` }} />
-        </div>
-
-        {/* Variables */}
-        {variables.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center gap-1 mb-1">
-              <Variable size={11} style={{ color: '#9C27B0' }} />
-              <span className="text-xs font-medium" style={{ color: '#9C27B0' }}>Variables</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {variables.map(v => (
-                <span key={v} className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ background: '#9C27B015', color: '#9C27B0' }}>{v}</span>
-              ))}
-            </div>
+    <>
+      <tr 
+        className="group hover:bg-purple-500/5 transition-colors"
+        style={{ borderBottom: `1px solid ${border}` }}
+      >
+        {/* Number */}
+        <td className="px-2 py-2 text-center w-8">
+          <span className="text-xs font-mono" style={{ color: isDark ? '#475569' : '#94a3b8' }}>{index + 1}</span>
+        </td>
+        
+        {/* Title */}
+        <td className="px-2 py-2 min-w-[150px]">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm truncate" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>{item.title}</span>
+            {item.isFavorite && <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
-        )}
-
-        {/* Variable inputs when modal open */}
-        {showVarModal && variables.length > 0 && (
-          <div className="mb-3 p-3 rounded-lg border space-y-2" style={{ borderColor: '#9C27B030', background: '#9C27B008' }}>
-            <p className="text-xs font-medium" style={{ color: '#9C27B0' }}>Fill variables before copying:</p>
-            {variables.map(v => {
-              const key = v.replace(/\{\{|\}\}/g, '');
-              return (
-                <div key={v} className="flex items-center gap-2">
-                  <span className="text-xs font-mono w-24 flex-shrink-0" style={{ color: '#9C27B0' }}>{v}</span>
-                  <input
-                    className="flex-1 text-xs px-2 py-1 rounded border outline-none"
-                    style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: textColor }}
-                    value={varValues[key] || ''}
-                    onChange={(e) => setVarValues({ ...varValues, [key]: e.target.value })}
-                    placeholder={`Enter ${key}...`}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {item.tags.map(tag => (
-            <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>#{tag}</span>
-          ))}
-          <div className="flex-1" />
-          <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-2 py-1 rounded text-xs" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>
-            <Edit3 size={10} /> Edit
-          </button>
-          {variables.length > 0 && (
-            <button onClick={() => setShowVarModal(!showVarModal)} className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium" style={{ background: showVarModal ? '#9C27B020' : isDark ? '#334155' : '#f1f5f9', color: showVarModal ? '#9C27B0' : '#64748b' }}>
-              <Variable size={10} /> Vars
-            </button>
+          {item.description && (
+            <p className="text-[11px] truncate mt-0.5" style={{ color: '#94a3b8' }}>{item.description}</p>
           )}
-          <button onClick={handleCopy} className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium" style={{ background: copied ? '#4CAF5020' : '#9C27B015', color: copied ? '#4CAF50' : '#9C27B0' }}>
-            {copied ? <Check size={10} /> : <Copy size={10} />} {copied ? 'Copied!' : 'Copy'}
-          </button>
-          <button onClick={() => deletePromptItem(containerId, item.id)} className="p-1 rounded hover:bg-red-50">
-            <Trash2 size={11} className="text-red-400" />
-          </button>
-        </div>
-      </div>
-    </div>
+        </td>
+        
+        {/* Prompt preview */}
+        <td className="px-2 py-2 min-w-[250px]">
+          <div 
+            className="font-mono text-xs px-3 py-1.5 rounded truncate cursor-pointer hover:bg-purple-500/10"
+            style={{ background: codeBg, color: isDark ? '#c4b5fd' : '#7c3aed', maxWidth: '300px' }}
+            onClick={handleCopy}
+            title="Click to copy"
+          >
+            {item.prompt.length > 60 ? item.prompt.slice(0, 60) + '...' : item.prompt}
+          </div>
+        </td>
+        
+        {/* Variables */}
+        <td className="px-2 py-2 w-32 hidden md:table-cell">
+          {variables.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {variables.slice(0, 3).map(v => (
+                <span key={v} className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{ background: '#9C27B015', color: '#9C27B0' }}>
+                  {v.replace(/\{\{|\}\}/g, '')}
+                </span>
+              ))}
+              {variables.length > 3 && (
+                <span className="text-[10px]" style={{ color: '#94a3b8' }}>+{variables.length - 3}</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-[10px]" style={{ color: '#64748b' }}>—</span>
+          )}
+        </td>
+        
+        {/* Tags */}
+        <td className="px-2 py-2 hidden lg:table-cell">
+          <div className="flex flex-wrap gap-1">
+            {item.tags.slice(0, 2).map(tag => (
+              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </td>
+        
+        {/* Actions */}
+        <td className="px-2 py-2 w-36">
+          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {variables.length > 0 && (
+              <button 
+                onClick={() => setShowVars(!showVars)}
+                className="p-1 rounded"
+                style={{ background: showVars ? '#9C27B020' : 'transparent' }}
+              >
+                <Variable size={11} style={{ color: showVars ? '#9C27B0' : '#64748b' }} />
+              </button>
+            )}
+            <button 
+              onClick={handleCopy}
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs"
+              style={{ background: copied ? '#4CAF5020' : '#9C27B015', color: copied ? '#4CAF50' : '#9C27B0' }}
+            >
+              {copied ? <Check size={10} /> : <Copy size={10} />}
+            </button>
+            <button onClick={() => setEditing(true)} className="p-1 rounded hover:bg-slate-500/20">
+              <Edit3 size={11} className="text-slate-400" />
+            </button>
+            <button onClick={() => deletePromptItem(containerId, item.id)} className="p-1 rounded hover:bg-red-500/20">
+              <Trash2 size={11} className="text-red-400" />
+            </button>
+          </div>
+        </td>
+      </tr>
+      
+      {/* Variable inputs row */}
+      {showVars && variables.length > 0 && (
+        <tr style={{ background: isDark ? '#1e1b4b30' : '#faf5ff' }}>
+          <td colSpan={6} className="px-4 py-3">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <span className="text-xs font-medium" style={{ color: '#9C27B0' }}>Variables:</span>
+              </div>
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {variables.map(v => {
+                  const key = v.replace(/\{\{|\}\}/g, '');
+                  return (
+                    <div key={v} className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono w-16 truncate" style={{ color: '#9C27B0' }}>{key}</span>
+                      <input
+                        className="flex-1 text-xs px-2 py-1 rounded border outline-none"
+                        style={{ background: isDark ? '#0f172a' : '#fff', borderColor: '#9C27B050', color: isDark ? '#e2e8f0' : '#1e293b' }}
+                        value={varValues[key] || ''}
+                        onChange={(e) => setVarValues({ ...varValues, [key]: e.target.value })}
+                        placeholder="..."
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <button onClick={() => setShowVars(false)} className="p-1">
+                <X size={12} className="text-slate-400" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
@@ -162,7 +232,7 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
 
   const border = isDark ? '#1e293b' : '#e2e8f0';
   const bg = isDark ? '#111827' : '#ffffff';
-  const headBg = isDark ? '#1e293b' : '#f8fafc';
+  const headBg = isDark ? '#1e1b4b30' : '#faf5ff';
 
   const handleAdd = () => {
     if (newItem.title.trim() && newItem.prompt.trim()) {
@@ -174,50 +244,101 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
   };
 
   return (
-    <div className="rounded-2xl border overflow-hidden shadow-sm" style={{ background: bg, borderColor: border }}>
+    <div className="rounded-xl border overflow-hidden shadow-sm" style={{ background: bg, borderColor: border }}>
       <div
-        className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-        style={{ background: headBg, borderBottom: localExpanded ? `1px solid ${border}` : 'none' }}
+        className="flex items-center gap-3 px-4 py-2.5 cursor-pointer"
+        style={{ background: headBg }}
         onClick={() => setLocalExpanded(!localExpanded)}
       >
-        <button className="flex-shrink-0">
-          {localExpanded ? <ChevronDown size={16} style={{ color: '#9C27B0' }} /> : <ChevronRight size={16} style={{ color: '#9C27B0' }} />}
-        </button>
-        <MessageSquare size={16} style={{ color: '#9C27B0' }} />
-        <span className="flex-1 font-semibold text-sm" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>{container.title}</span>
-        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>{container.category}</span>
-        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>{container.subItems.length}</span>
-        <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete?')) deletePromptContainer(container.id); }} className="p-1 rounded hover:bg-red-50">
-          <Trash2 size={13} className="text-red-400 opacity-0 group-hover:opacity-100" />
+        {localExpanded ? <ChevronDown size={14} style={{ color: '#9C27B0' }} /> : <ChevronRight size={14} style={{ color: '#9C27B0' }} />}
+        <MessageSquare size={14} style={{ color: '#9C27B0' }} />
+        <span className="font-medium text-sm" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>{container.title}</span>
+        <span className="text-xs px-2 py-0.5 rounded" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>{container.category}</span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium ml-auto" style={{ background: '#9C27B015', color: '#9C27B0' }}>
+          {container.subItems.length}
+        </span>
+        <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete?')) deletePromptContainer(container.id); }} className="p-1 rounded hover:bg-red-500/20">
+          <Trash2 size={12} className="text-red-400" />
         </button>
       </div>
+      
       {localExpanded && (
-        <div className="p-4 space-y-3">
-          <div className="flex gap-2">
+        <div className="border-t" style={{ borderColor: border }}>
+          {/* Toolbar */}
+          <div className="flex gap-2 p-3 border-b" style={{ borderColor: border }}>
             <div className="relative flex-1">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg border outline-none" style={{ background: isDark ? '#1e293b' : '#f8fafc', borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }} placeholder="Search prompts..." value={searchQ} onChange={(e) => setSearchQ(e.target.value)} />
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border outline-none"
+                style={{ background: isDark ? '#1e293b' : '#f8fafc', borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }}
+                placeholder="Search prompts..."
+                value={searchQ}
+                onChange={(e) => setSearchQ(e.target.value)}
+              />
             </div>
-            <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>
-              <Plus size={14} /> Add
+            <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>
+              <Plus size={12} /> Add Prompt
             </button>
           </div>
+
+          {/* Add new prompt form */}
           {adding && (
-            <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: '#9C27B050', background: '#9C27B008' }}>
-              <input autoFocus className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDark ? '#0f172a' : '#f8fafc', borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }} placeholder="Prompt title..." value={newItem.title} onChange={(e) => setNewItem({ ...newItem, title: e.target.value })} />
-              <textarea className="w-full text-sm px-3 py-2 rounded-lg border outline-none font-mono resize-y min-h-[80px]" style={{ background: isDark ? '#0f172a' : '#f8fafc', borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b', fontFamily: 'monospace' }} placeholder="Prompt text... Use {{variable}} for variables" value={newItem.prompt} onChange={(e) => setNewItem({ ...newItem, prompt: e.target.value })} />
-              <div className="flex gap-2">
+            <div className="p-3 border-b" style={{ borderColor: '#9C27B050', background: '#9C27B008' }}>
+              <div className="flex gap-2 mb-2">
+                <input
+                  autoFocus
+                  className="flex-1 text-sm px-3 py-1.5 rounded-lg border outline-none"
+                  style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }}
+                  placeholder="Prompt title..."
+                  value={newItem.title}
+                  onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
+                />
+                <input
+                  className="w-48 text-xs px-3 py-1.5 rounded-lg border outline-none"
+                  style={{ background: isDark ? '#0f172a' : '#fff', borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }}
+                  placeholder="Description..."
+                  value={newItem.description}
+                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                />
+              </div>
+              <textarea
+                className="w-full text-xs px-3 py-2 rounded-lg border outline-none font-mono resize-none"
+                style={{ background: isDark ? '#1e1e2e' : '#f0f4f8', borderColor: border, color: isDark ? '#c4b5fd' : '#6b21a8', minHeight: '60px' }}
+                placeholder="Prompt text... Use {{variable}} for dynamic values"
+                value={newItem.prompt}
+                onChange={(e) => setNewItem({ ...newItem, prompt: e.target.value })}
+              />
+              <div className="flex gap-2 mt-2">
                 <button onClick={handleAdd} className="px-3 py-1 rounded text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>Add</button>
-                <button onClick={() => setAdding(false)} className="px-3 py-1 rounded text-xs font-medium" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
+                <button onClick={() => setAdding(false)} className="px-3 py-1 rounded text-xs" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
               </div>
             </div>
           )}
-          {filtered.length === 0 && !adding && (
-            <div className="text-center py-4 text-sm" style={{ color: '#94a3b8' }}>No prompts yet. <button onClick={() => setAdding(true)} className="text-purple-400 hover:underline">Add one</button></div>
+
+          {/* Prompts table */}
+          {filtered.length > 0 ? (
+            <table className="w-full">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-wider" style={{ color: '#64748b', background: isDark ? '#1e293b50' : '#f8fafc' }}>
+                  <th className="px-2 py-1.5 text-center w-8">#</th>
+                  <th className="px-2 py-1.5 text-left">Title</th>
+                  <th className="px-2 py-1.5 text-left">Prompt</th>
+                  <th className="px-2 py-1.5 text-left hidden md:table-cell">Vars</th>
+                  <th className="px-2 py-1.5 text-left hidden lg:table-cell">Tags</th>
+                  <th className="px-2 py-1.5 w-36"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item, idx) => (
+                  <PromptRow key={item.id} item={item} containerId={container.id} isDark={isDark} index={idx} />
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-8 text-xs" style={{ color: '#94a3b8' }}>
+              No prompts. <button onClick={() => setAdding(true)} className="text-purple-400 hover:underline">Add one</button>
+            </div>
           )}
-          <div className="space-y-2">
-            {filtered.map(item => <PromptCard key={item.id} item={item} containerId={container.id} isDark={isDark} />)}
-          </div>
         </div>
       )}
     </div>
@@ -263,16 +384,16 @@ export function PromptsView({ folderId }: Props) {
           <Plus size={15} /> New Collection
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-3">
         {adding && (
-          <div className="rounded-2xl border p-4 space-y-2" style={{ borderColor: '#9C27B050', background: isDarkTheme ? '#1e293b' : '#fff' }}>
+          <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: '#9C27B050', background: isDarkTheme ? '#1e293b' : '#fff' }}>
             <input autoFocus className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} placeholder="Collection name..." value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAdding(false); }} />
             <select className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} value={newCat} onChange={(e) => setNewCat(e.target.value)}>
               {['General', 'Coding', 'Writing', 'Analysis', 'Design', 'Research'].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <div className="flex gap-2">
               <button onClick={handleAdd} className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>Create</button>
-              <button onClick={() => setAdding(false)} className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
+              <button onClick={() => setAdding(false)} className="px-3 py-1.5 rounded text-xs" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
             </div>
           </div>
         )}
