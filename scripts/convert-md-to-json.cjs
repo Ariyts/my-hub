@@ -43,14 +43,24 @@ const result = {
   version: "3.0"
 };
 
-// Load metadata if exists
-if (fs.existsSync("metadata.json")) {
+// Load metadata if exists (check both locations)
+if (fs.existsSync("data/metadata.json")) {
+  try {
+    const metadata = JSON.parse(fs.readFileSync("data/metadata.json", "utf8"));
+    result.workspaces = metadata.workspaces || [];
+    result.categories = metadata.categories || [];
+    result.folders = metadata.folders || [];
+    console.log("Loaded metadata from data/metadata.json:", result.workspaces.length, "workspaces,", result.categories.length, "categories,", result.folders.length, "folders");
+  } catch (e) {
+    console.error("Failed to parse data/metadata.json:", e);
+  }
+} else if (fs.existsSync("metadata.json")) {
   try {
     const metadata = JSON.parse(fs.readFileSync("metadata.json", "utf8"));
     result.workspaces = metadata.workspaces || [];
     result.categories = metadata.categories || [];
     result.folders = metadata.folders || [];
-    console.log("Loaded metadata:", result.workspaces.length, "workspaces,", result.categories.length, "categories,", result.folders.length, "folders");
+    console.log("Loaded metadata from metadata.json:", result.workspaces.length, "workspaces,", result.categories.length, "categories,", result.folders.length, "folders");
   } catch (e) {
     console.error("Failed to parse metadata.json:", e);
   }
