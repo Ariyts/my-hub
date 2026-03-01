@@ -799,11 +799,25 @@ export const useStore = create<AppState & StoreActions>()(
     {
       name: 'knowledge-hub-storage',
       partialize: (state) => ({
-        // Only persist UI preferences
+        // Only persist UI preferences (NOT data - data comes from embedded data.json)
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
-        activeWorkspaceId: state.activeWorkspaceId,
+        // Don't persist activeWorkspaceId - it should be derived from embedded data
       }),
+      // On rehydration, ensure we have valid data
+      onRehydrateStorage: () => (state) => {
+        if (state && (!state.workspaces || state.workspaces.length === 0)) {
+          // If no workspaces from embedded data, reset to initial
+          state.workspaces = initialData.workspaces || [];
+          state.categories = initialData.categories || [];
+          state.folders = initialData.folders || [];
+          state.notes = initialData.notes || [];
+          state.commands = initialData.commands || [];
+          state.links = initialData.links || [];
+          state.prompts = initialData.prompts || [];
+          state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
+        }
+      },
     }
   )
 );
