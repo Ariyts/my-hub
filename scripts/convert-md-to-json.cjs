@@ -164,6 +164,7 @@ if (fs.existsSync(dataDir)) {
               content: body.trim(),
               tags: frontmatter.tags || [],
               isFavorite: frontmatter.isFavorite || false,
+              order: frontmatter.order ?? result.notes.filter(n => n.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
               updatedAt: frontmatter.updatedAt || new Date().toISOString(),
               type: "notes"
@@ -176,6 +177,7 @@ if (fs.existsSync(dataDir)) {
               description: frontmatter.description || "",
               subItems: frontmatter.subItems || [],
               tags: frontmatter.tags || [],
+              order: frontmatter.order ?? result.commands.filter(c => c.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
               updatedAt: frontmatter.updatedAt || new Date().toISOString(),
               type: "commands"
@@ -187,6 +189,7 @@ if (fs.existsSync(dataDir)) {
               title,
               subItems: frontmatter.subItems || [],
               tags: frontmatter.tags || [],
+              order: frontmatter.order ?? result.links.filter(l => l.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
               updatedAt: frontmatter.updatedAt || new Date().toISOString(),
               type: "links"
@@ -199,6 +202,7 @@ if (fs.existsSync(dataDir)) {
               category: frontmatter.category || "",
               subItems: frontmatter.subItems || [],
               tags: frontmatter.tags || [],
+              order: frontmatter.order ?? result.prompts.filter(p => p.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
               updatedAt: frontmatter.updatedAt || new Date().toISOString(),
               type: "prompts"

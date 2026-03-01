@@ -60,6 +60,7 @@ export interface NoteItem {
   content: string;
   tags: string[];
   isFavorite: boolean;
+  order: number;
   createdAt: string;
   updatedAt: string;
   type: 'notes';
@@ -81,6 +82,7 @@ export interface CommandContainer {
   description?: string;
   subItems: CommandItem[];
   tags: string[];
+  order: number;
   createdAt: string;
   updatedAt: string;
   type: 'commands';
@@ -103,6 +105,7 @@ export interface LinkContainer {
   title: string;
   subItems: LinkItem[];
   tags: string[];
+  order: number;
   createdAt: string;
   updatedAt: string;
   type: 'links';
@@ -126,6 +129,7 @@ export interface PromptContainer {
   subItems: PromptItem[];
   category: string;
   tags: string[];
+  order: number;
   createdAt: string;
   updatedAt: string;
   type: 'prompts';

@@ -97,6 +97,7 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               title: note.title,
               tags: note.tags,
               isFavorite: note.isFavorite,
+              order: note.order,
               createdAt: note.createdAt,
               updatedAt: note.updatedAt,
             });
@@ -117,6 +118,7 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               title: cmd.title,
               description: cmd.description || '',
               tags: cmd.tags,
+              order: cmd.order,
               createdAt: cmd.createdAt,
               updatedAt: cmd.updatedAt,
             });
@@ -150,6 +152,7 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               id: link.id,
               title: link.title,
               tags: link.tags,
+              order: link.order,
               createdAt: link.createdAt,
               updatedAt: link.updatedAt,
             });
@@ -180,6 +183,7 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               title: prompt.title,
               category: prompt.category,
               tags: prompt.tags,
+              order: prompt.order,
               createdAt: prompt.createdAt,
               updatedAt: prompt.updatedAt,
             });

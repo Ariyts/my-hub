@@ -293,9 +293,12 @@ export const useStore = create<AppState & StoreActions>()(
       // NOTE ACTIONS
       // ============================================
       addNote: (note) => {
+        const state = get();
+        const maxOrder = Math.max(0, ...state.notes.filter(n => n.folderId === note.folderId).map(n => n.order || 0));
         const newNote: NoteItem = { 
           ...note, 
           id: genId(), 
+          order: maxOrder + 1,
           createdAt: new Date().toISOString(), 
           updatedAt: new Date().toISOString() 
         };
@@ -340,9 +343,12 @@ export const useStore = create<AppState & StoreActions>()(
       // COMMAND CONTAINER ACTIONS
       // ============================================
       addCommandContainer: (container) => {
+        const state = get();
+        const maxOrder = Math.max(0, ...state.commands.filter(c => c.folderId === container.folderId).map(c => c.order || 0));
         const newC: CommandContainer = { 
           ...container, 
           id: genId(), 
+          order: maxOrder + 1,
           createdAt: new Date().toISOString(), 
           updatedAt: new Date().toISOString() 
         };
@@ -411,9 +417,12 @@ export const useStore = create<AppState & StoreActions>()(
       // LINK CONTAINER ACTIONS
       // ============================================
       addLinkContainer: (container) => {
+        const state = get();
+        const maxOrder = Math.max(0, ...state.links.filter(l => l.folderId === container.folderId).map(l => l.order || 0));
         const newC: LinkContainer = { 
           ...container, 
           id: genId(), 
+          order: maxOrder + 1,
           createdAt: new Date().toISOString(), 
           updatedAt: new Date().toISOString() 
         };
@@ -481,9 +490,12 @@ export const useStore = create<AppState & StoreActions>()(
       // PROMPT CONTAINER ACTIONS
       // ============================================
       addPromptContainer: (container) => {
+        const state = get();
+        const maxOrder = Math.max(0, ...state.prompts.filter(p => p.folderId === container.folderId).map(p => p.order || 0));
         const newC: PromptContainer = { 
           ...container, 
           id: genId(), 
+          order: maxOrder + 1,
           createdAt: new Date().toISOString(), 
           updatedAt: new Date().toISOString() 
         };

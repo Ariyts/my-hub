@@ -58,13 +58,16 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
   // Get child folders
   const childFolders = folders.filter(f => f.parentId === folder.id).sort((a, b) => a.order - b.order);
 
-  // Get items in this folder
+  // Get items in this folder (sorted by order)
   const getItems = () => {
+    const sortByOrder = (items: any[]) => 
+      [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    
     switch (baseType) {
-      case 'notes': return notes.filter(n => n.folderId === folder.id);
-      case 'commands': return commands.filter(c => c.folderId === folder.id);
-      case 'links': return links.filter(l => l.folderId === folder.id);
-      case 'prompts': return prompts.filter(p => p.folderId === folder.id);
+      case 'notes': return sortByOrder(notes.filter(n => n.folderId === folder.id));
+      case 'commands': return sortByOrder(commands.filter(c => c.folderId === folder.id));
+      case 'links': return sortByOrder(links.filter(l => l.folderId === folder.id));
+      case 'prompts': return sortByOrder(prompts.filter(p => p.folderId === folder.id));
     }
   };
 
