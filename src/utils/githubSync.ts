@@ -220,48 +220,75 @@ async function updateHead(token: string, commitSha: string): Promise<boolean> {
 }
 
 /**
- * Get local preview of files (no token required)
+ * Calculate simple hash of content
+ */
+function simpleHash(content: string): string {
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+/**
+ * Get stored sync state from localStorage
+ */
+function getStoredSyncState(): Map<string, string> {
+  try {
+    const stored = localStorage.getItem('sync-state-hashes');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Map(Object.entries(parsed));
+    }
+  } catch {}
+  return new Map();
+}
+
+/**
+ * Save sync state to localStorage
+ */
+export function saveSyncState(files: FileStructure[]): void {
+  const hashes: Record<string, string> = {};
+  for (const file of files) {
+    hashes[file.path] = simpleHash(file.content);
+  }
+  localStorage.setItem('sync-state-hashes', JSON.stringify(hashes));
+  localStorage.setItem('sync-state-time', new Date().toISOString());
+}
+
+/**
+ * Get local preview with change detection (no token required)
  */
 export function getLocalPreview(data: DataFile): SyncPreview {
   const newFiles = dataToFiles(data);
   const allPaths = newFiles.map(f => f.path);
-  
-  return {
-    filesToCreate: [],  // Unknown without GitHub comparison
-    filesToUpdate: [],  // Unknown without GitHub comparison
-    filesToDelete: [],  // Unknown without GitHub comparison
-    totalFiles: newFiles.length,
-    allFiles: allPaths,
-  };
-}
-
-/**
- * Preview what will be synced
- */
-export async function previewSync(config: GitHubConfig, data: DataFile): Promise<SyncPreview> {
-  const newFiles = dataToFiles(data);
-  const newPaths = new Set(newFiles.map(f => f.path));
-  
-  let existingFiles: Map<string, string>;
-  try {
-    existingFiles = await listDataFiles(config.token);
-  } catch {
-    existingFiles = new Map();
-  }
+  const storedHashes = getStoredSyncState();
   
   const filesToCreate: string[] = [];
   const filesToUpdate: string[] = [];
   const filesToDelete: string[] = [];
   
+  // Check each file against stored state
+  const newPaths = new Set(newFiles.map(f => f.path));
+  
   for (const file of newFiles) {
-    if (existingFiles.has(file.path)) {
-      filesToUpdate.push(file.path);
-    } else {
+    const storedHash = storedHashes.get(file.path);
+    const currentHash = simpleHash(file.content);
+    
+    if (!storedHash) {
+      // File doesn't exist in stored state = NEW
       filesToCreate.push(file.path);
+    } else if (storedHash !== currentHash) {
+      // File exists but hash changed = UPDATED
+      filesToUpdate.push(file.path);
     }
+    // If hash matches = no change, don't include
   }
   
-  for (const [path] of existingFiles) {
+  // Check for deleted files (exist in stored but not in current)
+  for (const [path] of storedHashes) {
     if (!newPaths.has(path)) {
       filesToDelete.push(path);
     }
@@ -272,8 +299,16 @@ export async function previewSync(config: GitHubConfig, data: DataFile): Promise
     filesToUpdate,
     filesToDelete,
     totalFiles: newFiles.length,
-    allFiles: newFiles.map(f => f.path),
+    allFiles: allPaths,
   };
+}
+
+/**
+ * Preview what will be synced (uses local state for comparison)
+ */
+export async function previewSync(config: GitHubConfig, data: DataFile): Promise<SyncPreview> {
+  // Use local preview - it already has change detection
+  return getLocalPreview(data);
 }
 
 /**
@@ -336,6 +371,9 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
     if (!success) {
       return { success: false, message: 'Failed to update branch' };
     }
+    
+    // Save sync state locally for future change detection
+    saveSyncState(newFiles);
     
     const stats = {
       created: newFiles.filter(f => !existingFiles.has(f.path)).length,

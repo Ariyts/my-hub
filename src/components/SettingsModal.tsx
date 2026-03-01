@@ -270,27 +270,64 @@ export function SettingsModal() {
 
                 {!canSave ? (
                   <div className="space-y-3">
-                    {/* Local Preview - shows before token */}
-                    {preview && preview.allFiles.length > 0 && (
+                    {/* Local Preview - shows changes before token */}
+                    {preview && (
                       <div className="p-3 rounded-lg text-xs" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium" style={{ color: textColor }}>
-                            Files to commit ({preview.totalFiles}):
-                          </span>
-                        </div>
-                        <div className="max-h-32 overflow-y-auto space-y-1">
-                          {preview.allFiles.slice(0, 10).map((path, i) => (
-                            <div key={i} className="flex items-center gap-1.5 py-0.5" style={{ color: mutedColor }}>
-                              <File size={10} />
-                              <span className="truncate">{getShortPath(path)}</span>
+                        {/* Has changes */}
+                        {(preview.filesToCreate.length > 0 || preview.filesToUpdate.length > 0 || preview.filesToDelete.length > 0) ? (
+                          <>
+                            <div className="font-medium mb-2" style={{ color: textColor }}>
+                              Changes to commit:
                             </div>
-                          ))}
-                          {preview.allFiles.length > 10 && (
-                            <div className="text-center py-1" style={{ color: mutedColor }}>
-                              +{preview.allFiles.length - 10} more files...
+                            
+                            {/* Summary */}
+                            <div className="grid grid-cols-3 gap-2 text-center mb-2">
+                              <div className="flex items-center justify-center gap-1" style={{ color: '#4CAF50' }}>
+                                <Plus size={12} />
+                                <span>{preview.filesToCreate.length}</span>
+                              </div>
+                              <div className="flex items-center justify-center gap-1" style={{ color: '#2196F3' }}>
+                                <Edit size={12} />
+                                <span>{preview.filesToUpdate.length}</span>
+                              </div>
+                              <div className="flex items-center justify-center gap-1" style={{ color: '#ef4444' }}>
+                                <Trash size={12} />
+                                <span>{preview.filesToDelete.length}</span>
+                              </div>
                             </div>
-                          )}
-                        </div>
+                            
+                            {/* Changed files list */}
+                            <div className="max-h-40 overflow-y-auto space-y-0.5 border-t pt-2" style={{ borderColor: border }}>
+                              {preview.filesToCreate.map((path, i) => (
+                                <div key={`new-${i}`} className="flex items-center gap-1.5 py-0.5" style={{ color: '#4CAF50' }}>
+                                  <Plus size={9} />
+                                  <span className="truncate">{getShortPath(path)}</span>
+                                </div>
+                              ))}
+                              {preview.filesToUpdate.map((path, i) => (
+                                <div key={`upd-${i}`} className="flex items-center gap-1.5 py-0.5" style={{ color: '#2196F3' }}>
+                                  <Edit size={9} />
+                                  <span className="truncate">{getShortPath(path)}</span>
+                                </div>
+                              ))}
+                              {preview.filesToDelete.map((path, i) => (
+                                <div key={`del-${i}`} className="flex items-center gap-1.5 py-0.5 line-through opacity-60" style={{ color: '#ef4444' }}>
+                                  <Trash size={9} />
+                                  <span className="truncate">{getShortPath(path)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          /* No changes */
+                          <div className="text-center py-2">
+                            <Check size={20} className="mx-auto mb-1" style={{ color: '#4CAF50' }} />
+                            <div style={{ color: '#4CAF50' }}>No changes to commit</div>
+                            <div className="mt-1" style={{ color: mutedColor, fontSize: '10px' }}>
+                              All files are in sync
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                     
