@@ -1,11 +1,10 @@
 /**
  * GitHub Sync Service
- * Saves data as .md files to the 'data' branch of the same repository
- * File structure: data/{workspace}/{category}/{folder}/{note}.md
- * Triggers automatic rebuild via GitHub Actions
+ * Saves data as .md files to data/ folder in main branch
+ * Structure: data/{workspace}/{category}/{folder}/{note}.md
  */
 
-import { dataToFiles, FileStructure } from './mdStorage';
+import { dataToFiles } from './mdStorage';
 import type { DataFile } from '../types';
 
 export interface GitHubConfig {
@@ -22,7 +21,7 @@ export interface SyncResult {
 
 const GITHUB_API = 'https://api.github.com';
 const REPO = 'Ariyts/my-hub';
-const DATA_BRANCH = 'data';
+const MAIN_BRANCH = 'main';
 
 /**
  * Make an authenticated request to GitHub API
@@ -113,208 +112,101 @@ export async function initializeGitHubSync(token: string): Promise<GitHubConfig 
 }
 
 /**
- * Get base branch ref
+ * Get file SHA
  */
-async function getBranchRef(token: string, branch: string): Promise<{ sha: string }> {
-  const response = await githubRequest(`/repos/${REPO}/git/refs/heads/${branch}`, token);
-  if (!response.ok) throw new Error(`Cannot get branch ref: ${branch}`);
-  const data = await response.json();
-  return { sha: data.object.sha };
-}
-
-/**
- * Ensure data branch exists
- */
-async function ensureDataBranch(token: string): Promise<string> {
-  // Check if branch exists
-  const checkResponse = await githubRequest(`/repos/${REPO}/branches/${DATA_BRANCH}`, token);
-  if (checkResponse.ok) {
-    const ref = await getBranchRef(token, DATA_BRANCH);
-    return ref.sha;
-  }
+async function getFileSha(token: string, path: string): Promise<string | null> {
+  const response = await githubRequest(
+    `/repos/${REPO}/contents/${path}?ref=${MAIN_BRANCH}`,
+    token
+  );
   
-  // Get default branch SHA
-  const repoResponse = await githubRequest(`/repos/${REPO}`, token);
-  if (!repoResponse.ok) throw new Error('Cannot access repo');
-  
-  const repoData = await repoResponse.json();
-  const defaultBranch = repoData.default_branch;
-  
-  const refResponse = await githubRequest(`/repos/${REPO}/git/refs/heads/${defaultBranch}`, token);
-  if (!refResponse.ok) throw new Error('Cannot get branch ref');
-  
-  const refData = await refResponse.json();
-  
-  // Create orphan branch (empty)
-  // First create a tree with no files
-  const treeResponse = await githubRequest(`/repos/${REPO}/git/trees`, token, {
-    method: 'POST',
-    body: JSON.stringify({
-      base_tree: refData.object.sha,
-      tree: [],
-    }),
-  });
-  
-  if (!treeResponse.ok) {
-    // Just create branch from default
-    await githubRequest(`/repos/${REPO}/git/refs`, token, {
-      method: 'POST',
-      body: JSON.stringify({
-        ref: `refs/heads/${DATA_BRANCH}`,
-        sha: refData.object.sha,
-      }),
-    });
-    return refData.object.sha;
-  }
-  
-  const treeData = await treeResponse.json();
-  
-  // Create commit
-  const commitResponse = await githubRequest(`/repos/${REPO}/git/commits`, token, {
-    method: 'POST',
-    body: JSON.stringify({
-      message: 'Initialize data branch',
-      tree: treeData.sha,
-      parents: [],
-    }),
-  });
-  
-  if (!commitResponse.ok) throw new Error('Cannot create initial commit');
-  const commitData = await commitResponse.json();
-  
-  // Create branch
-  await githubRequest(`/repos/${REPO}/git/refs`, token, {
-    method: 'POST',
-    body: JSON.stringify({
-      ref: `refs/heads/${DATA_BRANCH}`,
-      sha: commitData.sha,
-    }),
-  });
-  
-  return commitData.sha;
-}
-
-/**
- * Create blobs for all files
- */
-async function createBlobs(token: string, files: FileStructure[]): Promise<string[]> {
-  const blobs: string[] = [];
-  
-  // Process in batches of 20 (GitHub API limit)
-  const batchSize = 20;
-  for (let i = 0; i < files.length; i += batchSize) {
-    const batch = files.slice(i, i + batchSize);
-    const promises = batch.map(async (file) => {
-      const response = await githubRequest(`/repos/${REPO}/git/blobs`, token, {
-        method: 'POST',
-        body: JSON.stringify({
-          content: btoa(unescape(encodeURIComponent(file.content))),
-          encoding: 'base64',
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to create blob for ${file.path}`);
-      }
-      
-      const data = await response.json();
-      return data.sha;
-    });
-    
-    const batchBlobs = await Promise.all(promises);
-    blobs.push(...batchBlobs);
-  }
-  
-  return blobs;
-}
-
-/**
- * Create tree with all files
- */
-async function createTree(token: string, files: FileStructure[], blobShas: string[]): Promise<string> {
-  const tree = files.map((file, index) => ({
-    path: file.path,
-    mode: '100644',
-    type: 'blob',
-    sha: blobShas[index],
-  }));
-  
-  const response = await githubRequest(`/repos/${REPO}/git/trees`, token, {
-    method: 'POST',
-    body: JSON.stringify({ tree }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to create tree: ${error.message}`);
-  }
+  if (!response.ok) return null;
   
   const data = await response.json();
   return data.sha;
 }
 
 /**
- * Create commit
+ * Create or update a file
  */
-async function createCommit(
+async function upsertFile(
   token: string, 
-  treeSha: string, 
-  parentSha: string
-): Promise<string> {
-  const response = await githubRequest(`/repos/${REPO}/git/commits`, token, {
-    method: 'POST',
-    body: JSON.stringify({
-      message: `Update data - ${new Date().toLocaleString()}`,
-      tree: treeSha,
-      parents: [parentSha],
-    }),
-  });
+  path: string, 
+  content: string, 
+  message: string
+): Promise<boolean> {
+  const sha = await getFileSha(token, path);
   
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to create commit: ${error.message}`);
+  const base64Content = btoa(unescape(encodeURIComponent(content)));
+  
+  const body: any = {
+    message,
+    content: base64Content,
+    branch: MAIN_BRANCH,
+  };
+  
+  if (sha) {
+    body.sha = sha;
   }
+  
+  const response = await githubRequest(
+    `/repos/${REPO}/contents/${path}`,
+    token,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }
+  );
+  
+  return response.ok;
+}
+
+/**
+ * Delete a file
+ */
+async function deleteFile(
+  token: string,
+  path: string,
+  message: string
+): Promise<boolean> {
+  const sha = await getFileSha(token, path);
+  if (!sha) return true; // Already deleted
+  
+  const response = await githubRequest(
+    `/repos/${REPO}/contents/${path}`,
+    token,
+    {
+      method: 'DELETE',
+      body: JSON.stringify({
+        message,
+        sha,
+        branch: MAIN_BRANCH,
+      }),
+    }
+  );
+  
+  return response.ok;
+}
+
+/**
+ * Get list of files in a directory
+ */
+async function listFiles(token: string, path: string): Promise<string[]> {
+  const response = await githubRequest(
+    `/repos/${REPO}/contents/${path}?ref=${MAIN_BRANCH}`,
+    token
+  );
+  
+  if (!response.ok) return [];
   
   const data = await response.json();
-  return data.sha;
-}
-
-/**
- * Update branch ref
- */
-async function updateBranchRef(token: string, commitSha: string): Promise<void> {
-  const response = await githubRequest(`/repos/${REPO}/git/refs/heads/${DATA_BRANCH}`, token, {
-    method: 'PATCH',
-    body: JSON.stringify({ sha: commitSha }),
-  });
+  if (!Array.isArray(data)) return [];
   
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to update branch: ${error.message}`);
-  }
+  return data.map((item: any) => item.name);
 }
 
 /**
- * Trigger rebuild workflow
- */
-async function triggerRebuild(token: string): Promise<boolean> {
-  try {
-    const response = await githubRequest(
-      `/repos/${REPO}/actions/workflows/rebuild.yml/dispatches`,
-      token,
-      {
-        method: 'POST',
-        body: JSON.stringify({ ref: 'main' }),
-      }
-    );
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Save data to GitHub as .md files
+ * Save data to GitHub as .md files in data/ folder
  */
 export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promise<SyncResult> {
   if (!config.token) {
@@ -325,49 +217,54 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
   }
   
   try {
-    // Convert data to files
     const files = dataToFiles(data);
+    const timestamp = new Date().toLocaleString();
     
-    if (files.length === 0) {
+    console.log(`Saving ${files.length} files...`);
+    
+    // Process files in batches
+    const batchSize = 10;
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+      
+      const results = await Promise.all(
+        batch.map(async (file) => {
+          const success = await upsertFile(
+            config.token,
+            file.path,
+            file.content,
+            `Update ${file.path}`
+          );
+          return { path: file.path, success };
+        })
+      );
+      
+      for (const r of results) {
+        if (r.success) successCount++;
+        else failCount++;
+      }
+      
+      // Small delay between batches
+      if (i + batchSize < files.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    if (failCount > 0) {
       return {
         success: false,
-        message: 'No data to save',
+        message: `Saved ${successCount} files, failed ${failCount}`,
       };
     }
     
-    console.log(`Saving ${files.length} files to GitHub...`);
-    
-    // Ensure data branch exists and get current SHA
-    const parentSha = await ensureDataBranch(config.token);
-    
-    // Create blobs
-    const blobShas = await createBlobs(config.token, files);
-    
-    // Create tree
-    const treeSha = await createTree(config.token, files, blobShas);
-    
-    // Create commit
-    const commitSha = await createCommit(config.token, treeSha, parentSha);
-    
-    // Update branch
-    await updateBranchRef(config.token, commitSha);
-    
-    // Trigger rebuild
-    const rebuildTriggered = await triggerRebuild(config.token);
-    
-    if (rebuildTriggered) {
-      return {
-        success: true,
-        message: `Saved ${files.length} files! Site rebuilding... (~1 min)`,
-        data: { lastSync: new Date().toISOString() },
-      };
-    } else {
-      return {
-        success: true,
-        message: `Saved ${files.length} files! Go to Actions to rebuild manually.`,
-        data: { lastSync: new Date().toISOString() },
-      };
-    }
+    return {
+      success: true,
+      message: `Saved ${successCount} files! Site rebuilding... (~1 min)`,
+      data: { lastSync: new Date().toISOString() },
+    };
   } catch (error: any) {
     console.error('GitHub save error:', error);
     return {
