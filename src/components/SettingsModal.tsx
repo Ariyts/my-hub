@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap } from 'lucide-react';
+import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap, FileText, Edit, Trash, Plus } from 'lucide-react';
+import { previewSync, type SyncPreview } from '../utils/githubSync';
 
 interface TabProps {
   active: boolean;
@@ -29,13 +30,44 @@ export function SettingsModal() {
     setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, 
     exportData, importData, clearAllData,
     syncStatus, syncMessage, canSave, dataExportedAt,
-    connectGitHub, syncToCloud, disconnectGitHub
+    connectGitHub, syncToCloud, disconnectGitHub,
+    workspaces, categories, folders, notes, commands, links, prompts
   } = useStore();
   
   const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('sync');
   const [saved, setSaved] = useState(false);
   const [token, setToken] = useState('');
   const [showToken, setShowToken] = useState(false);
+  const [preview, setPreview] = useState<SyncPreview | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+  // Load preview when tab opens
+  useEffect(() => {
+    if (activeTab === 'sync' && canSave && settings.github.token) {
+      loadPreview();
+    }
+  }, [activeTab, canSave]);
+
+  const loadPreview = async () => {
+    setLoadingPreview(true);
+    try {
+      const result = await previewSync(settings.github, {
+        workspaces,
+        categories,
+        folders,
+        notes,
+        commands,
+        links,
+        prompts,
+        exportedAt: new Date().toISOString(),
+        version: '3.0',
+      });
+      setPreview(result);
+    } catch (e) {
+      console.error('Preview error:', e);
+    }
+    setLoadingPreview(false);
+  };
 
   const handleSave = () => {
     setSaved(true);
@@ -47,8 +79,16 @@ export function SettingsModal() {
       const success = await connectGitHub(token.trim());
       if (success) {
         setToken('');
+        // Load preview after connecting
+        setTimeout(() => loadPreview(), 500);
       }
     }
+  };
+
+  const handleSync = async () => {
+    await syncToCloud();
+    // Reload preview after sync
+    setTimeout(() => loadPreview(), 1000);
   };
 
   const handleImport = () => {
@@ -83,6 +123,17 @@ export function SettingsModal() {
     border: `1px solid ${border}`,
   };
 
+  // Count data
+  const dataStats = {
+    workspaces: workspaces.length,
+    categories: categories.length,
+    folders: folders.length,
+    notes: notes.length,
+    commands: commands.length,
+    links: links.length,
+    prompts: prompts.length,
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
       <div
@@ -106,13 +157,38 @@ export function SettingsModal() {
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {activeTab === 'sync' && (
             <>
+              {/* Data Summary */}
+              <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
+                <h4 className="text-sm font-medium mb-3" style={{ color: textColor }}>📊 Current Data</h4>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  {[
+                    { label: 'Workspaces', value: dataStats.workspaces },
+                    { label: 'Categories', value: dataStats.categories },
+                    { label: 'Folders', value: dataStats.folders },
+                    { label: 'Notes', value: dataStats.notes },
+                  ].map(item => (
+                    <div key={item.label} className="p-2 rounded-lg" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
+                      <div className="text-lg font-bold" style={{ color: '#6366f1' }}>{item.value}</div>
+                      <div className="text-[10px]" style={{ color: mutedColor }}>{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {(dataStats.commands + dataStats.links + dataStats.prompts) > 0 && (
+                  <div className="mt-2 pt-2 border-t flex justify-center gap-4 text-xs" style={{ borderColor: border, color: mutedColor }}>
+                    <span>Commands: {dataStats.commands}</span>
+                    <span>Links: {dataStats.links}</span>
+                    <span>Prompts: {dataStats.prompts}</span>
+                  </div>
+                )}
+              </div>
+
               {/* Info Banner */}
               <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: '#6366f115', border: '1px solid #6366f140' }}>
                 <Zap size={20} style={{ color: '#6366f1' }} />
                 <div>
                   <p className="text-sm font-medium" style={{ color: '#6366f1' }}>Auto-rebuild enabled</p>
                   <p className="text-xs" style={{ color: mutedColor }}>
-                    Site rebuilds automatically when you save (takes ~1 min)
+                    One commit → site rebuilds (~1 min)
                   </p>
                 </div>
               </div>
@@ -160,7 +236,7 @@ export function SettingsModal() {
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-medium block mb-1.5" style={{ color: mutedColor }}>
-                        GitHub Token
+                        GitHub Token (repo scope)
                       </label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -192,21 +268,48 @@ export function SettingsModal() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs" style={{ color: mutedColor }}>
-                      Need token? GitHub → Settings → Developer settings → Personal access tokens → Generate (repo scope)
-                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    {/* Preview */}
+                    {preview && (
+                      <div className="p-3 rounded-lg text-xs" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
+                        <div className="font-medium mb-2" style={{ color: textColor }}>Changes to commit:</div>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="flex items-center justify-center gap-1" style={{ color: '#4CAF50' }}>
+                            <Plus size={12} />
+                            <span>{preview.filesToCreate.length} new</span>
+                          </div>
+                          <div className="flex items-center justify-center gap-1" style={{ color: '#2196F3' }}>
+                            <Edit size={12} />
+                            <span>{preview.filesToUpdate.length} update</span>
+                          </div>
+                          <div className="flex items-center justify-center gap-1" style={{ color: '#ef4444' }}>
+                            <Trash size={12} />
+                            <span>{preview.filesToDelete.length} delete</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2">
                       <button
-                        onClick={syncToCloud}
+                        onClick={handleSync}
                         disabled={syncStatus === 'syncing'}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all"
                         style={{ background: '#4CAF50', color: 'white', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
                       >
-                        <Upload size={16} />
-                        Save & Rebuild Site
+                        {syncStatus === 'syncing' ? (
+                          <>
+                            <RefreshCw size={16} className="animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={16} />
+                            Save to GitHub
+                          </>
+                        )}
                       </button>
                       <button
                         onClick={disconnectGitHub}
@@ -218,7 +321,7 @@ export function SettingsModal() {
                     </div>
                     {dataExportedAt && (
                       <p className="text-xs text-center" style={{ color: mutedColor }}>
-                        Data: {new Date(dataExportedAt).toLocaleString()}
+                        Last sync: {new Date(dataExportedAt).toLocaleString()}
                       </p>
                     )}
                   </div>
@@ -227,19 +330,19 @@ export function SettingsModal() {
 
               {/* How it works */}
               <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>🔄 How sync works</h4>
+                <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>🔄 How it works</h4>
                 <div className="space-y-2 text-xs" style={{ color: mutedColor }}>
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>1</span>
-                    <span>Click "Save & Rebuild Site"</span>
+                    <span>Add/edit notes, commands, links, prompts</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>2</span>
-                    <span>Data saved to GitHub, site rebuilds (~1 min)</span>
+                    <span>Click "Save to GitHub" → ONE commit created</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>3</span>
-                    <span>Refresh page to see changes on any device</span>
+                    <span>Site auto-rebuilds (~1 min) → refresh to see</span>
                   </div>
                 </div>
               </div>
