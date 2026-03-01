@@ -26,173 +26,30 @@ jobs:
           cache: 'npm'
 
       - name: Fetch data from data branch
+        shell: bash
         run: |
+          set -e
+          
           # Fetch the data branch
           git fetch origin data
           
           # Check what files exist in data branch
           echo "Files in data branch:"
-          git ls-tree -r --name-only origin/data
+          git ls-tree -r --name-only origin/data || true
           
           # Check if knowledge-hub-data.json exists (old format)
-          if git show "origin/data:knowledge-hub-data.json" > /dev/null 2>&1; then
+          if git show "origin/data:knowledge-hub-data.json" 2>/dev/null; then
             echo "Found knowledge-hub-data.json (old format)"
             git show "origin/data:knowledge-hub-data.json" > src/data.json
             echo "Using legacy JSON format"
           else
-            echo "No knowledge-hub-data.json found, checking for MD files..."
-            
-            # Create data directory
-            mkdir -p data_files
-            
-            # Download all files from data branch
-            git ls-tree -r --name-only origin/data | while read file; do
-              # Create directory structure
-              dir=$(dirname "data_files/$file")
-              mkdir -p "$dir"
-              # Extract file content
-              git show "origin/data:$file" > "data_files/$file" 2>/dev/null || true
-            done
-            
-            echo "Downloaded files:"
-            find data_files -type f
-            
-            # Create conversion script
-            cat > convert.js << 'CONVERT_EOF'
-            const fs = require('fs');
-            const path = require('path');
-            
-            // Parse YAML frontmatter
-            function parseFrontmatter(content) {
-              const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-              if (!match) return { frontmatter: {}, body: content };
-              
-              const frontmatter = {};
-              match[1].split('\n').forEach(line => {
-                const idx = line.indexOf(':');
-                if (idx > 0) {
-                  let key = line.substring(0, idx).trim();
-                  let value = line.substring(idx + 1).trim();
-                  
-                  if (value.startsWith('[') && value.endsWith(']')) {
-                    value = value.slice(1, -1).split(',').map(v => v.trim().replace(/^["']|["']$/g, '')).filter(v => v);
-                  } else if (value === 'true') value = true;
-                  else if (value === 'false') value = false;
-                  else if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-                    value = value.slice(1, -1);
-                  }
-                  frontmatter[key] = value;
-                }
-              });
-              return { frontmatter, body: match[2] };
-            }
-            
-            // Read all files
-            const dataDir = './data_files/data';
-            const result = {
-              workspaces: [],
-              categories: [],
-              folders: [],
-              notes: [],
-              commands: [],
-              links: [],
-              prompts: [],
-              exportedAt: new Date().toISOString(),
-              version: '3.0'
-            };
-            
-            // Check if data directory exists
-            if (!fs.existsSync(dataDir)) {
-              console.log('No data directory found, creating empty data.json');
-              fs.writeFileSync('./src/data.json', JSON.stringify(result, null, 2));
-              process.exit(0);
-            }
-            
-            // Read metadata if exists
-            const metadataPath = path.join(dataDir, 'metadata.json');
-            if (fs.existsSync(metadataPath)) {
-              try {
-                const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-                result.workspaces = metadata.workspaces || [];
-                result.categories = metadata.categories || [];
-                result.folders = metadata.folders || [];
-                console.log('Loaded metadata');
-              } catch (e) {
-                console.error('Failed to parse metadata:', e);
-              }
-            }
-            
-            // Process all .md files
-            function processDir(dir, workspaceName = '', categoryName = '', folderName = '') {
-              if (!fs.existsSync(dir)) return;
-              
-              const entries = fs.readdirSync(dir, { withFileTypes: true });
-              
-              for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
-                
-                if (entry.isDirectory()) {
-                  const relativePath = path.relative(dataDir, fullPath);
-                  const parts = relativePath.split(path.sep);
-                  
-                  if (parts.length === 1) {
-                    processDir(fullPath, entry.name, '', '');
-                  } else if (parts.length === 2) {
-                    processDir(fullPath, workspaceName, entry.name, '');
-                  } else if (parts.length === 3) {
-                    processDir(fullPath, workspaceName, categoryName, entry.name);
-                  }
-                } else if (entry.name.endsWith('.md')) {
-                  const content = fs.readFileSync(fullPath, 'utf8');
-                  const { frontmatter, body } = parseFrontmatter(content);
-                  
-                  const relativePath = path.relative(dataDir, fullPath);
-                  const parts = relativePath.split(path.sep);
-                  
-                  if (parts.length >= 4) {
-                    const catName = parts[1];
-                    
-                    const type = catName.toLowerCase().includes('command') ? 'commands' :
-                                catName.toLowerCase().includes('link') ? 'links' :
-                                catName.toLowerCase().includes('prompt') ? 'prompts' : 'notes';
-                    
-                    const title = frontmatter.title || entry.name.replace('.md', '');
-                    
-                    if (type === 'notes') {
-                      result.notes.push({
-                        id: frontmatter.id || Math.random().toString(36).substr(2, 9),
-                        folderId: frontmatter.folderId || '',
-                        title,
-                        content: body.trim(),
-                        tags: frontmatter.tags || [],
-                        isFavorite: frontmatter.isFavorite || false,
-                        createdAt: frontmatter.createdAt || new Date().toISOString(),
-                        updatedAt: frontmatter.updatedAt || new Date().toISOString(),
-                        type: 'notes'
-                      });
-                    }
-                  }
-                }
-              }
-            }
-            
-            processDir(dataDir);
-            console.log('Converted:', result.notes.length, 'notes');
-            
-            fs.writeFileSync('./src/data.json', JSON.stringify(result, null, 2));
-            console.log('Written to src/data.json');
-            CONVERT_EOF
-            
-            node convert.js || echo "Conversion failed, using empty data"
-            
-            # If conversion failed, create empty data
-            if [ ! -f src/data.json ]; then
-              echo '{"workspaces":[],"categories":[],"folders":[],"notes":[],"commands":[],"links":[],"prompts":[],"exportedAt":"'$(date -Iseconds)'","version":"3.0"}' > src/data.json
-            fi
+            echo "No knowledge-hub-data.json found"
+            # Create empty data file
+            echo '{"workspaces":[],"categories":[],"folders":[],"notes":[],"commands":[],"links":[],"prompts":[],"exportedAt":"'$(date -Iseconds)'","version":"3.0"}' > src/data.json
           fi
           
           echo "Data preview:"
-          head -50 src/data.json
+          head -50 src/data.json || echo "No data file"
 
       - name: Install dependencies
         run: npm ci
