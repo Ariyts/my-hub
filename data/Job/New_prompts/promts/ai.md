@@ -4,5 +4,10 @@ title: "ai"
 category: "General"
 tags: []
 createdAt: "2026-03-01T13:26:39.949Z"
-updatedAt: "2026-03-01T13:26:42.788Z"
+updatedAt: "2026-03-01T14:02:53.625Z"
 ---
+### первый
+```
+первый
+```
+
