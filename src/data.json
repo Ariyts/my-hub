@@ -1,44 +1,598 @@
 {
   "workspaces": [
-    { 
-      "id": "ws1", 
-      "name": "My Workspace", 
-      "icon": "🏠", 
-      "color": "#6366f1",
+    {
+      "id": "ws1",
+      "name": "Job",
+      "icon": "💼",
+      "color": "#E91E63",
       "createdAt": "2026-02-24T00:00:00.000Z",
-      "updatedAt": "2026-02-24T00:00:00.000Z"
+      "updatedAt": "2026-02-25T09:12:26.878Z"
+    },
+    {
+      "name": "My",
+      "icon": "🏠",
+      "color": "#4CAF50",
+      "id": "vfbldd4jdmm1tg9x0",
+      "createdAt": "2026-02-25T09:12:35.892Z",
+      "updatedAt": "2026-02-25T09:12:35.892Z"
     }
   ],
   "categories": [
-    { "id": "cat1", "workspaceId": "ws1", "name": "Notes", "icon": "📝", "color": "#4CAF50", "baseType": "notes", "order": 0, "isDefault": true },
-    { "id": "cat2", "workspaceId": "ws1", "name": "Commands", "icon": "⌘", "color": "#2196F3", "baseType": "commands", "order": 1, "isDefault": true },
-    { "id": "cat3", "workspaceId": "ws1", "name": "Links", "icon": "🔗", "color": "#FF9800", "baseType": "links", "order": 2, "isDefault": true },
-    { "id": "cat4", "workspaceId": "ws1", "name": "Prompts", "icon": "💬", "color": "#9C27B0", "baseType": "prompts", "order": 3, "isDefault": true }
+    {
+      "id": "cat1",
+      "workspaceId": "ws1",
+      "name": "Notes",
+      "icon": "📝",
+      "color": "#4CAF50",
+      "baseType": "notes",
+      "order": 0,
+      "isDefault": true
+    },
+    {
+      "id": "cat2",
+      "workspaceId": "ws1",
+      "name": "Commands",
+      "icon": "⌘",
+      "color": "#2196F3",
+      "baseType": "commands",
+      "order": 1,
+      "isDefault": true
+    },
+    {
+      "id": "cat3",
+      "workspaceId": "ws1",
+      "name": "Links",
+      "icon": "🔗",
+      "color": "#FF9800",
+      "baseType": "links",
+      "order": 2,
+      "isDefault": true
+    },
+    {
+      "id": "cat4",
+      "workspaceId": "ws1",
+      "name": "Prompts",
+      "icon": "💬",
+      "color": "#9C27B0",
+      "baseType": "prompts",
+      "order": 3,
+      "isDefault": true
+    },
+    {
+      "workspaceId": "ws1",
+      "name": "4pda",
+      "icon": "📁",
+      "color": "#FF5722",
+      "baseType": "notes",
+      "isDefault": false,
+      "id": "gmr9poyrsmm1tbehr",
+      "order": 4
+    },
+    {
+      "id": "exz3v0xvlmm1tg9x0",
+      "workspaceId": "vfbldd4jdmm1tg9x0",
+      "name": "Notes",
+      "icon": "📝",
+      "color": "#4CAF50",
+      "baseType": "notes",
+      "order": 0,
+      "isDefault": true
+    },
+    {
+      "id": "12ez1mehmmm1tg9x0",
+      "workspaceId": "vfbldd4jdmm1tg9x0",
+      "name": "Commands",
+      "icon": "⌘",
+      "color": "#2196F3",
+      "baseType": "commands",
+      "order": 1,
+      "isDefault": true
+    },
+    {
+      "id": "6k0658ap0mm1tg9x0",
+      "workspaceId": "vfbldd4jdmm1tg9x0",
+      "name": "Links",
+      "icon": "🔗",
+      "color": "#FF9800",
+      "baseType": "links",
+      "order": 2,
+      "isDefault": true
+    },
+    {
+      "id": "q29is2h7wmm1tg9x0",
+      "workspaceId": "vfbldd4jdmm1tg9x0",
+      "name": "Prompts",
+      "icon": "💬",
+      "color": "#9C27B0",
+      "baseType": "prompts",
+      "order": 3,
+      "isDefault": true
+    }
   ],
   "folders": [
-    { "id": "f1", "categoryId": "cat1", "parentId": null, "name": "Work", "color": "#4CAF50", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" },
-    { "id": "f2", "categoryId": "cat1", "parentId": null, "name": "Personal", "color": "#2196F3", "order": 1, "isExpanded": false, "createdAt": "2026-02-24T00:00:00.000Z" },
-    { "id": "f3", "categoryId": "cat2", "parentId": null, "name": "Git", "color": "#FF9800", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" },
-    { "id": "f4", "categoryId": "cat2", "parentId": null, "name": "Docker", "color": "#9C27B0", "order": 1, "isExpanded": false, "createdAt": "2026-02-24T00:00:00.000Z" },
-    { "id": "f5", "categoryId": "cat3", "parentId": null, "name": "Dev Resources", "color": "#FF5722", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" },
-    { "id": "f6", "categoryId": "cat4", "parentId": null, "name": "Coding", "color": "#607D8B", "order": 0, "isExpanded": true, "createdAt": "2026-02-24T00:00:00.000Z" }
+    {
+      "id": "f1",
+      "categoryId": "cat1",
+      "parentId": null,
+      "name": "Work",
+      "color": "#4CAF50",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "id": "f2",
+      "categoryId": "cat1",
+      "parentId": null,
+      "name": "Personal",
+      "color": "#2196F3",
+      "order": 1,
+      "isExpanded": false,
+      "createdAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "id": "f3",
+      "categoryId": "cat2",
+      "parentId": null,
+      "name": "Git",
+      "color": "#FF9800",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "id": "f4",
+      "categoryId": "cat2",
+      "parentId": null,
+      "name": "Docker",
+      "color": "#9C27B0",
+      "order": 1,
+      "isExpanded": true,
+      "createdAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "id": "f5",
+      "categoryId": "cat3",
+      "parentId": null,
+      "name": "Dev Resources",
+      "color": "#FF5722",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "id": "f6",
+      "categoryId": "cat4",
+      "parentId": null,
+      "name": "Coding",
+      "color": "#607D8B",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "name": "123",
+      "categoryId": "gmr9poyrsmm1tbehr",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "y91zgx4qjmm1tbxyw",
+      "order": 1,
+      "createdAt": "2026-02-25T09:09:13.784Z"
+    },
+    {
+      "name": "123",
+      "categoryId": "exz3v0xvlmm1tg9x0",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "g091mlq1mmm1tgdpo",
+      "order": 1,
+      "createdAt": "2026-02-25T09:12:40.812Z"
+    },
+    {
+      "name": "123",
+      "categoryId": "12ez1mehmmm1tg9x0",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "8zrgrjmylmm1tggpo",
+      "order": 1,
+      "createdAt": "2026-02-25T09:12:44.700Z"
+    },
+    {
+      "name": "123",
+      "categoryId": "6k0658ap0mm1tg9x0",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "9wmwp03d1mm1tgj0d",
+      "order": 1,
+      "createdAt": "2026-02-25T09:12:47.677Z"
+    },
+    {
+      "name": "123",
+      "categoryId": "q29is2h7wmm1tg9x0",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "grb5ff5z1mm1tgl44",
+      "order": 1,
+      "createdAt": "2026-02-25T09:12:50.404Z"
+    }
   ],
   "notes": [
     {
-      "id": "n1", 
-      "folderId": "f1", 
-      "title": "Welcome to Knowledge Hub", 
+      "id": "n1",
+      "folderId": "f1",
+      "title": "Welcome to Knowledge Hub",
       "type": "notes",
       "content": "# Welcome! 👋\n\nThis is your personal knowledge hub with workspace support.\n\n## Architecture\n\n```\nWorkspace (главный уровень)\n├── Notes (категория в Sidebar)\n│   ├── Work (папка в FolderPanel)\n│   │   └── Заметки\n│   └── Personal (папка)\n├── Commands (категория)\n│   ├── Git (папка)\n│   └── Docker (папка)\n└── Links, Prompts...\n```\n\n## Features\n- 📁 **Workspaces** - Organize different projects/areas\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## How to save\n1. Click **Settings** (⚙️)\n2. Go to **Sync** tab\n3. Enter your GitHub token\n4. Click **Save to Cloud**\n\nYour data will be automatically synced!\n\n---\n> Start organizing your knowledge!",
-      "tags": ["welcome", "guide"], 
+      "tags": [
+        "welcome",
+        "guide"
+      ],
       "isFavorite": true,
-      "createdAt": "2026-02-24T00:00:00.000Z", 
+      "createdAt": "2026-02-24T00:00:00.000Z",
       "updatedAt": "2026-02-24T00:00:00.000Z"
+    },
+    {
+      "folderId": "f1",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "20dyzc24zmm1tb2av",
+      "createdAt": "2026-02-25T09:08:32.743Z",
+      "updatedAt": "2026-02-25T09:08:32.744Z"
+    },
+    {
+      "folderId": "f1",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "21xfge2jwmm1tb2fb",
+      "createdAt": "2026-02-25T09:08:32.903Z",
+      "updatedAt": "2026-02-25T09:08:32.903Z"
+    },
+    {
+      "folderId": "f1",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "c54xwps5zmm1tb2jr",
+      "createdAt": "2026-02-25T09:08:33.063Z",
+      "updatedAt": "2026-02-25T09:08:33.063Z"
+    },
+    {
+      "folderId": "f1",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "i1f5aqjg6mm1tb2nz",
+      "createdAt": "2026-02-25T09:08:33.215Z",
+      "updatedAt": "2026-02-25T09:08:33.215Z"
+    },
+    {
+      "folderId": "g091mlq1mmm1tgdpo",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "3tkpvryujmm1tgqlx",
+      "createdAt": "2026-02-25T09:12:57.525Z",
+      "updatedAt": "2026-02-25T09:12:57.525Z"
+    },
+    {
+      "folderId": "g091mlq1mmm1tgdpo",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "lz2tcsi00mm1tgr5w",
+      "createdAt": "2026-02-25T09:12:58.244Z",
+      "updatedAt": "2026-02-25T09:12:58.244Z"
+    },
+    {
+      "folderId": "g091mlq1mmm1tgdpo",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "kgwfq2ms1mm1tgr9o",
+      "createdAt": "2026-02-25T09:12:58.380Z",
+      "updatedAt": "2026-02-25T09:12:58.380Z"
+    },
+    {
+      "folderId": "y91zgx4qjmm1tbxyw",
+      "title": "5",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "type": "notes",
+      "id": "kpgiuk7b4mm1zujvt",
+      "createdAt": "2026-02-25T12:11:39.689Z",
+      "updatedAt": "2026-02-25T12:11:48.065Z"
     }
   ],
-  "commands": [],
-  "links": [],
-  "prompts": [],
-  "exportedAt": "2026-02-24T00:00:00.000Z",
+  "commands": [
+    {
+      "folderId": "f3",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "lf23lb8vdmm1tb41r",
+      "createdAt": "2026-02-25T09:08:35.007Z",
+      "updatedAt": "2026-02-25T09:08:35.007Z"
+    },
+    {
+      "folderId": "f3",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "efd835oz2mm1tb4jr",
+      "createdAt": "2026-02-25T09:08:35.655Z",
+      "updatedAt": "2026-02-25T09:08:35.655Z"
+    },
+    {
+      "folderId": "f4",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "tivcmpx3omm1tb4nz",
+      "createdAt": "2026-02-25T09:08:35.807Z",
+      "updatedAt": "2026-02-25T09:08:36.906Z"
+    },
+    {
+      "folderId": "f4",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "rl37zdlx6mm1tb6hz",
+      "createdAt": "2026-02-25T09:08:38.183Z",
+      "updatedAt": "2026-02-25T09:08:38.183Z"
+    },
+    {
+      "folderId": "f4",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "a88bdoeanmm1tb6lz",
+      "createdAt": "2026-02-25T09:08:38.327Z",
+      "updatedAt": "2026-02-25T09:08:38.327Z"
+    },
+    {
+      "folderId": "f4",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "d2fmv4uafmm1tb6qf",
+      "createdAt": "2026-02-25T09:08:38.487Z",
+      "updatedAt": "2026-02-25T09:08:38.487Z"
+    },
+    {
+      "folderId": "8zrgrjmylmm1tggpo",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "qzsba9l94mm1tgsb2",
+      "createdAt": "2026-02-25T09:12:59.726Z",
+      "updatedAt": "2026-02-25T09:12:59.726Z"
+    },
+    {
+      "folderId": "8zrgrjmylmm1tggpo",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "swrybo6vjmm1tgsfo",
+      "createdAt": "2026-02-25T09:12:59.892Z",
+      "updatedAt": "2026-02-25T09:12:59.892Z"
+    },
+    {
+      "folderId": "8zrgrjmylmm1tggpo",
+      "title": "New Commands",
+      "subItems": [],
+      "tags": [],
+      "type": "commands",
+      "isExpanded": true,
+      "id": "2rpooxmf7mm1tgsk5",
+      "createdAt": "2026-02-25T09:13:00.053Z",
+      "updatedAt": "2026-02-25T09:13:00.053Z"
+    }
+  ],
+  "links": [
+    {
+      "folderId": "9wmwp03d1mm1tgj0d",
+      "title": "New Links",
+      "subItems": [],
+      "tags": [],
+      "type": "links",
+      "isExpanded": true,
+      "id": "9y8e28zy2mm1tgtvh",
+      "createdAt": "2026-02-25T09:13:01.757Z",
+      "updatedAt": "2026-02-25T09:13:01.757Z"
+    },
+    {
+      "folderId": "9wmwp03d1mm1tgj0d",
+      "title": "New Links",
+      "subItems": [],
+      "tags": [],
+      "type": "links",
+      "isExpanded": true,
+      "id": "iahe42ebmmm1tgu0c",
+      "createdAt": "2026-02-25T09:13:01.932Z",
+      "updatedAt": "2026-02-25T09:13:01.932Z"
+    },
+    {
+      "folderId": "9wmwp03d1mm1tgj0d",
+      "title": "New Links",
+      "subItems": [],
+      "tags": [],
+      "type": "links",
+      "isExpanded": true,
+      "id": "83rdpjul1mm1tgu4l",
+      "createdAt": "2026-02-25T09:13:02.085Z",
+      "updatedAt": "2026-02-25T09:13:02.086Z"
+    },
+    {
+      "folderId": "f5",
+      "title": "warp",
+      "subItems": [
+        {
+          "url": "https://warp.llimonix.pw/",
+          "title": "warp",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "9behl7kq5mm204eno"
+        },
+        {
+          "url": "https://github.com/Flowseal/zapret-discord-youtube/discussions/3423",
+          "title": "github.com",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "58qefz0pymm204lz9"
+        },
+        {
+          "url": "https://warp-generator.github.io/warp/",
+          "title": "warp-generator.github.io",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "1ovintvb4mm204tqm"
+        }
+      ],
+      "tags": [],
+      "type": "links",
+      "isExpanded": true,
+      "id": "ue9q2y98tmm2036tl",
+      "createdAt": "2026-02-25T12:18:22.665Z",
+      "updatedAt": "2026-02-25T12:19:39.022Z"
+    },
+    {
+      "folderId": "f5",
+      "title": "New Links",
+      "subItems": [
+        {
+          "url": "https://github.com/vavkamil/awesome-bugbounty-tools",
+          "title": "СTF Tool bugbounty 2026",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "jkj0ymvk7mm205t1c"
+        },
+        {
+          "url": "https://github.com/0x4D31/awesome-oscp?tab=readme-ov-file#Active-Directory",
+          "title": "CTF ресурсы для обязательного прохождения",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "knvbvvrsnmm20663e"
+        },
+        {
+          "url": "https://www.youtube.com/@CyberYozh/streams",
+          "title": "прикольный типок можно смотреть",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "764e3s53smm206g1l"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=b9uWGk1tRFs",
+          "title": "способ ускорения телеги (warg + zapret) +канал с его видосиками https://www.youtube.com/@vavankaban",
+          "description": "",
+          "favicon": "🔗",
+          "tags": [],
+          "isFavorite": false,
+          "id": "dl669d6pwmm207ptx"
+        }
+      ],
+      "tags": [],
+      "type": "links",
+      "isExpanded": true,
+      "id": "zoevus0tqmm2059h2",
+      "createdAt": "2026-02-25T12:19:59.415Z",
+      "updatedAt": "2026-02-25T12:21:53.925Z"
+    }
+  ],
+  "prompts": [
+    {
+      "folderId": "f6",
+      "title": "New Prompts",
+      "subItems": [],
+      "tags": [],
+      "category": "General",
+      "type": "prompts",
+      "isExpanded": true,
+      "id": "2zb5icb52mm1tbc9j",
+      "createdAt": "2026-02-25T09:08:45.655Z",
+      "updatedAt": "2026-02-25T09:08:45.655Z"
+    },
+    {
+      "folderId": "grb5ff5z1mm1tgl44",
+      "title": "New Prompts",
+      "subItems": [],
+      "tags": [],
+      "category": "General",
+      "type": "prompts",
+      "isExpanded": true,
+      "id": "wd1anx3zfmm1tgv90",
+      "createdAt": "2026-02-25T09:13:03.540Z",
+      "updatedAt": "2026-02-25T09:13:03.540Z"
+    },
+    {
+      "folderId": "grb5ff5z1mm1tgl44",
+      "title": "New Prompts",
+      "subItems": [],
+      "tags": [],
+      "category": "General",
+      "type": "prompts",
+      "isExpanded": true,
+      "id": "pwmzbz81cmm1tgve4",
+      "createdAt": "2026-02-25T09:13:03.724Z",
+      "updatedAt": "2026-02-25T09:13:03.724Z"
+    },
+    {
+      "folderId": "grb5ff5z1mm1tgl44",
+      "title": "New Prompts",
+      "subItems": [],
+      "tags": [],
+      "category": "General",
+      "type": "prompts",
+      "isExpanded": true,
+      "id": "c9zl8sgqbmm1tgvi5",
+      "createdAt": "2026-02-25T09:13:03.869Z",
+      "updatedAt": "2026-02-25T09:13:03.869Z"
+    }
+  ],
+  "exportedAt": "2026-02-25T12:22:02.775Z",
   "version": "2.0"
 }
