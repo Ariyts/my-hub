@@ -26,30 +26,21 @@ jobs:
           cache: 'npm'
 
       - name: Fetch data from data branch
-        shell: bash
         run: |
-          set -e
-          
           # Fetch the data branch
           git fetch origin data
           
-          # Check what files exist in data branch
-          echo "Files in data branch:"
-          git ls-tree -r --name-only origin/data || true
-          
           # Check if knowledge-hub-data.json exists (old format)
-          if git show "origin/data:knowledge-hub-data.json" 2>/dev/null; then
-            echo "Found knowledge-hub-data.json (old format)"
+          if git show "origin/data:knowledge-hub-data.json" > /dev/null 2>&1; then
+            echo "Found knowledge-hub-data.json"
             git show "origin/data:knowledge-hub-data.json" > src/data.json
-            echo "Using legacy JSON format"
           else
-            echo "No knowledge-hub-data.json found"
-            # Create empty data file
-            echo '{"workspaces":[],"categories":[],"folders":[],"notes":[],"commands":[],"links":[],"prompts":[],"exportedAt":"'$(date -Iseconds)'","version":"3.0"}' > src/data.json
+            echo "No knowledge-hub-data.json, keeping data.json from main branch"
+            # The data.json from main branch already has the data
           fi
           
           echo "Data preview:"
-          head -50 src/data.json || echo "No data file"
+          head -30 src/data.json
 
       - name: Install dependencies
         run: npm ci
