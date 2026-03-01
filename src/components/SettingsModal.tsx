@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap, FileText, Edit, Trash, Plus } from 'lucide-react';
-import { previewSync, type SyncPreview } from '../utils/githubSync';
+import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap, FileText, Edit, Trash, Plus, ChevronDown, ChevronRight, File } from 'lucide-react';
+import { previewSync, getLocalPreview, type SyncPreview } from '../utils/githubSync';
 
 interface TabProps {
   active: boolean;
@@ -40,15 +40,40 @@ export function SettingsModal() {
   const [showToken, setShowToken] = useState(false);
   const [preview, setPreview] = useState<SyncPreview | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<{new: boolean, update: boolean, delete: boolean, all: boolean}>({
+    new: false, update: false, delete: false, all: false
+  });
 
-  // Load preview when tab opens
+  // Load preview when tab opens (local preview works without token)
   useEffect(() => {
-    if (activeTab === 'sync' && canSave && settings.github.token) {
-      loadPreview();
+    if (activeTab === 'sync') {
+      loadLocalPreview();
+      if (canSave && settings.github.token) {
+        loadRemotePreview();
+      }
     }
   }, [activeTab, canSave]);
 
-  const loadPreview = async () => {
+  const loadLocalPreview = () => {
+    try {
+      const result = getLocalPreview({
+        workspaces,
+        categories,
+        folders,
+        notes,
+        commands,
+        links,
+        prompts,
+        exportedAt: new Date().toISOString(),
+        version: '3.0',
+      });
+      setPreview(result);
+    } catch (e) {
+      console.error('Local preview error:', e);
+    }
+  };
+
+  const loadRemotePreview = async () => {
     setLoadingPreview(true);
     try {
       const result = await previewSync(settings.github, {
@@ -64,7 +89,7 @@ export function SettingsModal() {
       });
       setPreview(result);
     } catch (e) {
-      console.error('Preview error:', e);
+      console.error('Remote preview error:', e);
     }
     setLoadingPreview(false);
   };
@@ -79,8 +104,8 @@ export function SettingsModal() {
       const success = await connectGitHub(token.trim());
       if (success) {
         setToken('');
-        // Load preview after connecting
-        setTimeout(() => loadPreview(), 500);
+        // Load remote preview after connecting
+        setTimeout(() => loadRemotePreview(), 500);
       }
     }
   };
@@ -88,7 +113,18 @@ export function SettingsModal() {
   const handleSync = async () => {
     await syncToCloud();
     // Reload preview after sync
-    setTimeout(() => loadPreview(), 1000);
+    setTimeout(() => loadRemotePreview(), 1000);
+  };
+  
+  const toggleSection = (section: 'new' | 'update' | 'delete' | 'all') => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+  
+  // Helper to get short filename from path
+  const getShortPath = (path: string) => {
+    const parts = path.split('/');
+    // Show: workspace/category/folder/file.md
+    return parts.slice(-4).join('/');
   };
 
   const handleImport = () => {
@@ -234,6 +270,30 @@ export function SettingsModal() {
 
                 {!canSave ? (
                   <div className="space-y-3">
+                    {/* Local Preview - shows before token */}
+                    {preview && preview.allFiles.length > 0 && (
+                      <div className="p-3 rounded-lg text-xs" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium" style={{ color: textColor }}>
+                            Files to commit ({preview.totalFiles}):
+                          </span>
+                        </div>
+                        <div className="max-h-32 overflow-y-auto space-y-1">
+                          {preview.allFiles.slice(0, 10).map((path, i) => (
+                            <div key={i} className="flex items-center gap-1.5 py-0.5" style={{ color: mutedColor }}>
+                              <File size={10} />
+                              <span className="truncate">{getShortPath(path)}</span>
+                            </div>
+                          ))}
+                          {preview.allFiles.length > 10 && (
+                            <div className="text-center py-1" style={{ color: mutedColor }}>
+                              +{preview.allFiles.length - 10} more files...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div>
                       <label className="text-xs font-medium block mb-1.5" style={{ color: mutedColor }}>
                         GitHub Token (repo scope)
@@ -271,11 +331,13 @@ export function SettingsModal() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {/* Preview */}
+                    {/* Remote Preview - with detailed changes */}
                     {preview && (
                       <div className="p-3 rounded-lg text-xs" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
                         <div className="font-medium mb-2" style={{ color: textColor }}>Changes to commit:</div>
-                        <div className="grid grid-cols-3 gap-2 text-center">
+                        
+                        {/* Summary */}
+                        <div className="grid grid-cols-3 gap-2 text-center mb-2">
                           <div className="flex items-center justify-center gap-1" style={{ color: '#4CAF50' }}>
                             <Plus size={12} />
                             <span>{preview.filesToCreate.length} new</span>
@@ -289,6 +351,113 @@ export function SettingsModal() {
                             <span>{preview.filesToDelete.length} delete</span>
                           </div>
                         </div>
+                        
+                        {/* New files */}
+                        {preview.filesToCreate.length > 0 && (
+                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
+                            <button 
+                              onClick={() => toggleSection('new')}
+                              className="flex items-center gap-1 w-full text-left"
+                              style={{ color: '#4CAF50' }}
+                            >
+                              {expandedSections.new ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              <Plus size={10} />
+                              <span>New files ({preview.filesToCreate.length})</span>
+                            </button>
+                            {expandedSections.new && (
+                              <div className="mt-1 ml-4 space-y-0.5 max-h-24 overflow-y-auto">
+                                {preview.filesToCreate.map((path, i) => (
+                                  <div key={i} className="flex items-center gap-1 py-0.5" style={{ color: mutedColor }}>
+                                    <File size={9} />
+                                    <span className="truncate">{getShortPath(path)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Updated files */}
+                        {preview.filesToUpdate.length > 0 && (
+                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
+                            <button 
+                              onClick={() => toggleSection('update')}
+                              className="flex items-center gap-1 w-full text-left"
+                              style={{ color: '#2196F3' }}
+                            >
+                              {expandedSections.update ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              <Edit size={10} />
+                              <span>Updated ({preview.filesToUpdate.length})</span>
+                            </button>
+                            {expandedSections.update && (
+                              <div className="mt-1 ml-4 space-y-0.5 max-h-24 overflow-y-auto">
+                                {preview.filesToUpdate.map((path, i) => (
+                                  <div key={i} className="flex items-center gap-1 py-0.5" style={{ color: mutedColor }}>
+                                    <File size={9} />
+                                    <span className="truncate">{getShortPath(path)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Deleted files */}
+                        {preview.filesToDelete.length > 0 && (
+                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
+                            <button 
+                              onClick={() => toggleSection('delete')}
+                              className="flex items-center gap-1 w-full text-left"
+                              style={{ color: '#ef4444' }}
+                            >
+                              {expandedSections.delete ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              <Trash size={10} />
+                              <span>Deleted ({preview.filesToDelete.length})</span>
+                            </button>
+                            {expandedSections.delete && (
+                              <div className="mt-1 ml-4 space-y-0.5 max-h-24 overflow-y-auto">
+                                {preview.filesToDelete.map((path, i) => (
+                                  <div key={i} className="flex items-center gap-1 py-0.5 line-through opacity-60" style={{ color: mutedColor }}>
+                                    <File size={9} />
+                                    <span className="truncate">{getShortPath(path)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* All files (when no remote comparison) */}
+                        {preview.filesToCreate.length === 0 && preview.filesToUpdate.length === 0 && preview.filesToDelete.length === 0 && preview.allFiles.length > 0 && (
+                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
+                            <button 
+                              onClick={() => toggleSection('all')}
+                              className="flex items-center gap-1 w-full text-left"
+                              style={{ color: mutedColor }}
+                            >
+                              {expandedSections.all ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              <File size={10} />
+                              <span>All files ({preview.allFiles.length})</span>
+                            </button>
+                            {expandedSections.all && (
+                              <div className="mt-1 ml-4 space-y-0.5 max-h-32 overflow-y-auto">
+                                {preview.allFiles.map((path, i) => (
+                                  <div key={i} className="flex items-center gap-1 py-0.5" style={{ color: mutedColor }}>
+                                    <File size={9} />
+                                    <span className="truncate">{getShortPath(path)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {loadingPreview && (
+                      <div className="flex items-center justify-center gap-2 p-2 text-xs" style={{ color: mutedColor }}>
+                        <RefreshCw size={12} className="animate-spin" />
+                        Loading preview...
                       </div>
                     )}
                     

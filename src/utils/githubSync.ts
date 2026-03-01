@@ -24,6 +24,7 @@ export interface SyncPreview {
   filesToUpdate: string[];
   filesToDelete: string[];
   totalFiles: number;
+  allFiles: string[];  // New: all file paths
 }
 
 const GITHUB_API = 'https://api.github.com';
@@ -219,6 +220,22 @@ async function updateHead(token: string, commitSha: string): Promise<boolean> {
 }
 
 /**
+ * Get local preview of files (no token required)
+ */
+export function getLocalPreview(data: DataFile): SyncPreview {
+  const newFiles = dataToFiles(data);
+  const allPaths = newFiles.map(f => f.path);
+  
+  return {
+    filesToCreate: [],  // Unknown without GitHub comparison
+    filesToUpdate: [],  // Unknown without GitHub comparison
+    filesToDelete: [],  // Unknown without GitHub comparison
+    totalFiles: newFiles.length,
+    allFiles: allPaths,
+  };
+}
+
+/**
  * Preview what will be synced
  */
 export async function previewSync(config: GitHubConfig, data: DataFile): Promise<SyncPreview> {
@@ -255,6 +272,7 @@ export async function previewSync(config: GitHubConfig, data: DataFile): Promise
     filesToUpdate,
     filesToDelete,
     totalFiles: newFiles.length,
+    allFiles: newFiles.map(f => f.path),
   };
 }
 
