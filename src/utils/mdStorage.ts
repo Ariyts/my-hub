@@ -22,47 +22,6 @@ function sanitizeFilename(name: string): string {
     .substring(0, 100);
 }
 
-// Parse YAML frontmatter from markdown
-function parseFrontmatter(content: string): { frontmatter: Record<string, any>; body: string } {
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
-  const match = content.match(frontmatterRegex);
-  
-  if (!match) {
-    return { frontmatter: {}, body: content };
-  }
-  
-  const frontmatterLines = match[1].split('\n');
-  const frontmatter: Record<string, any> = {};
-  
-  for (const line of frontmatterLines) {
-    const colonIndex = line.indexOf(':');
-    if (colonIndex > 0) {
-      const key = line.substring(0, colonIndex).trim();
-      let value = line.substring(colonIndex + 1).trim();
-      
-      // Parse arrays (e.g., tags: [tag1, tag2])
-      if (value.startsWith('[') && value.endsWith(']')) {
-        value = value.slice(1, -1)
-          .split(',')
-          .map(v => v.trim().replace(/^["']|["']$/g, ''))
-          .filter(v => v);
-      }
-      // Parse booleans
-      else if (value === 'true') value = true;
-      else if (value === 'false') value = false;
-      // Remove quotes from strings
-      else if ((value.startsWith('"') && value.endsWith('"')) ||
-               (value.startsWith("'") && value.endsWith("'"))) {
-        value = value.slice(1, -1);
-      }
-      
-      frontmatter[key] = value;
-    }
-  }
-  
-  return { frontmatter, body: match[2] };
-}
-
 // Create YAML frontmatter from object
 function createFrontmatter(data: Record<string, any>): string {
   const lines: string[] = ['---'];
@@ -140,7 +99,6 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               isFavorite: note.isFavorite,
               createdAt: note.createdAt,
               updatedAt: note.updatedAt,
-              folderId: note.folderId,
             });
             
             const content = `${frontmatter}\n${note.content}`;
@@ -161,8 +119,6 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               tags: cmd.tags,
               createdAt: cmd.createdAt,
               updatedAt: cmd.updatedAt,
-              folderId: cmd.folderId,
-              type: 'commands',
             });
             
             // Format commands as markdown code blocks
@@ -196,8 +152,6 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               tags: link.tags,
               createdAt: link.createdAt,
               updatedAt: link.updatedAt,
-              folderId: link.folderId,
-              type: 'links',
             });
             
             // Format links as markdown list
@@ -228,8 +182,6 @@ export function dataToFiles(data: DataFile): FileStructure[] {
               tags: prompt.tags,
               createdAt: prompt.createdAt,
               updatedAt: prompt.updatedAt,
-              folderId: prompt.folderId,
-              type: 'prompts',
             });
             
             // Format prompts
@@ -256,202 +208,5 @@ export function dataToFiles(data: DataFile): FileStructure[] {
     }
   }
   
-  // Add metadata file
-  const metadata = {
-    workspaces: data.workspaces,
-    categories: data.categories,
-    folders: data.folders,
-    exportedAt: data.exportedAt,
-    version: '3.0',
-  };
-  
-  files.push({
-    path: 'data/metadata.json',
-    content: JSON.stringify(metadata, null, 2),
-  });
-  
   return files;
-}
-
-// ============================================
-// IMPORT FROM FILES
-// ============================================
-
-interface ParsedFiles {
-  metadata: {
-    workspaces: Workspace[];
-    categories: Category[];
-    folders: Folder[];
-    exportedAt: string;
-    version: string;
-  } | null;
-  notes: NoteItem[];
-  commands: CommandContainer[];
-  links: LinkContainer[];
-  prompts: PromptContainer[];
-}
-
-export function filesToData(files: FileStructure[]): ParsedFiles {
-  const result: ParsedFiles = {
-    metadata: null,
-    notes: [],
-    commands: [],
-    links: [],
-    prompts: [],
-  };
-  
-  for (const file of files) {
-    // Parse metadata
-    if (file.path === 'data/metadata.json') {
-      try {
-        result.metadata = JSON.parse(file.content);
-      } catch (e) {
-        console.error('Failed to parse metadata:', e);
-      }
-      continue;
-    }
-    
-    // Skip non-md files
-    if (!file.path.endsWith('.md')) continue;
-    
-    // Parse frontmatter
-    const { frontmatter, body } = parseFrontmatter(file.content);
-    
-    // Determine type from path or frontmatter
-    const pathParts = file.path.split('/');
-    const type = frontmatter.type || guessTypeFromPath(pathParts);
-    
-    if (type === 'notes' || !frontmatter.type) {
-      // It's a note
-      result.notes.push({
-        id: frontmatter.id || generateId(),
-        folderId: frontmatter.folderId || '',
-        title: frontmatter.title || pathParts[pathParts.length - 1].replace('.md', ''),
-        content: body.trim(),
-        tags: frontmatter.tags || [],
-        isFavorite: frontmatter.isFavorite || false,
-        createdAt: frontmatter.createdAt || new Date().toISOString(),
-        updatedAt: frontmatter.updatedAt || new Date().toISOString(),
-        type: 'notes',
-      });
-    } else if (type === 'commands') {
-      // Parse commands from body
-      const subItems = parseCommandsFromMarkdown(body);
-      result.commands.push({
-        id: frontmatter.id || generateId(),
-        folderId: frontmatter.folderId || '',
-        title: frontmatter.title || pathParts[pathParts.length - 1].replace('.md', ''),
-        description: frontmatter.description || '',
-        subItems,
-        tags: frontmatter.tags || [],
-        createdAt: frontmatter.createdAt || new Date().toISOString(),
-        updatedAt: frontmatter.updatedAt || new Date().toISOString(),
-        type: 'commands',
-      });
-    } else if (type === 'links') {
-      // Parse links from body
-      const subItems = parseLinksFromMarkdown(body);
-      result.links.push({
-        id: frontmatter.id || generateId(),
-        folderId: frontmatter.folderId || '',
-        title: frontmatter.title || pathParts[pathParts.length - 1].replace('.md', ''),
-        subItems,
-        tags: frontmatter.tags || [],
-        createdAt: frontmatter.createdAt || new Date().toISOString(),
-        updatedAt: frontmatter.updatedAt || new Date().toISOString(),
-        type: 'links',
-      });
-    } else if (type === 'prompts') {
-      // Parse prompts from body
-      const subItems = parsePromptsFromMarkdown(body);
-      result.prompts.push({
-        id: frontmatter.id || generateId(),
-        folderId: frontmatter.folderId || '',
-        title: frontmatter.title || pathParts[pathParts.length - 1].replace('.md', ''),
-        subItems,
-        category: frontmatter.category || '',
-        tags: frontmatter.tags || [],
-        createdAt: frontmatter.createdAt || new Date().toISOString(),
-        updatedAt: frontmatter.updatedAt || new Date().toISOString(),
-        type: 'prompts',
-      });
-    }
-  }
-  
-  return result;
-}
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
-}
-
-function guessTypeFromPath(pathParts: string[]): string {
-  // Try to guess type from category name in path
-  const categoryName = pathParts[2]?.toLowerCase() || '';
-  if (categoryName.includes('note')) return 'notes';
-  if (categoryName.includes('command')) return 'commands';
-  if (categoryName.includes('link')) return 'links';
-  if (categoryName.includes('prompt')) return 'prompts';
-  return 'notes'; // Default
-}
-
-function parseCommandsFromMarkdown(body: string): any[] {
-  const items: any[] = [];
-  const codeBlockRegex = /###\s*(\S+)\s*\n```(\w+)\n([\s\S]*?)```/g;
-  let match;
-  
-  while ((match = codeBlockRegex.exec(body)) !== null) {
-    items.push({
-      id: match[1],
-      command: match[3].trim(),
-      language: match[2] || 'bash',
-      description: '',
-      tags: [],
-      isFavorite: false,
-    });
-  }
-  
-  return items;
-}
-
-function parseLinksFromMarkdown(body: string): any[] {
-  const items: any[] = [];
-  const linkRegex = /-\s*\[([^\]]+)\]\(([^)]+)\)(?:\s*-\s*(.+))?/g;
-  let match;
-  
-  while ((match = linkRegex.exec(body)) !== null) {
-    items.push({
-      id: generateId(),
-      url: match[2],
-      title: match[1],
-      description: match[3] || '',
-      tags: [],
-      isFavorite: false,
-    });
-  }
-  
-  return items;
-}
-
-function parsePromptsFromMarkdown(body: string): any[] {
-  const items: any[] = [];
-  const promptRegex = /###\s*(.+?)\n(?:_(.+?)_\n\n)?```[\s\S]*?```/g;
-  let match;
-  
-  while ((match = promptRegex.exec(body)) !== null) {
-    // Extract prompt content from code block
-    const codeBlockMatch = body.substring(match.index).match(/```\n([\s\S]*?)```/);
-    
-    items.push({
-      id: generateId(),
-      title: match[1].trim(),
-      description: match[2] || '',
-      prompt: codeBlockMatch ? codeBlockMatch[1].trim() : '',
-      variables: [],
-      tags: [],
-      isFavorite: false,
-    });
-  }
-  
-  return items;
 }

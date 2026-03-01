@@ -1,225 +1,87 @@
 {
   "workspaces": [
     {
-      "id": "ws1",
+      "id": "ws_1llp",
       "name": "Job",
-      "icon": "💼",
-      "color": "#E91E63",
-      "createdAt": "2026-02-24T00:00:00.000Z",
-      "updatedAt": "2026-02-25T09:12:26.878Z"
+      "icon": "📁",
+      "color": "#6366f1",
+      "createdAt": "2026-03-01T12:41:58.866Z",
+      "updatedAt": "2026-03-01T12:41:58.866Z"
     },
     {
+      "id": "ws_1xo",
       "name": "My",
-      "icon": "🏠",
-      "color": "#4CAF50",
-      "id": "vfbldd4jdmm1tg9x0",
-      "createdAt": "2026-02-25T09:12:35.892Z",
-      "updatedAt": "2026-02-25T09:12:35.892Z"
+      "icon": "📁",
+      "color": "#6366f1",
+      "createdAt": "2026-03-01T12:41:58.867Z",
+      "updatedAt": "2026-03-01T12:41:58.867Z"
     }
   ],
   "categories": [
     {
-      "id": "cat1",
-      "workspaceId": "ws1",
-      "name": "Notes",
-      "icon": "📝",
-      "color": "#4CAF50",
-      "baseType": "notes",
-      "order": 0,
-      "isDefault": true
-    },
-    {
-      "id": "cat2",
-      "workspaceId": "ws1",
-      "name": "Commands",
-      "icon": "⌘",
-      "color": "#2196F3",
-      "baseType": "commands",
-      "order": 1,
-      "isDefault": true
-    },
-    {
-      "id": "cat3",
-      "workspaceId": "ws1",
-      "name": "Links",
-      "icon": "🔗",
-      "color": "#FF9800",
-      "baseType": "links",
-      "order": 2,
-      "isDefault": true
-    },
-    {
-      "id": "cat4",
-      "workspaceId": "ws1",
-      "name": "Prompts",
-      "icon": "💬",
-      "color": "#9C27B0",
-      "baseType": "prompts",
-      "order": 3,
-      "isDefault": true
-    },
-    {
-      "workspaceId": "ws1",
+      "id": "cat_qeli1h",
+      "workspaceId": "ws_1llp",
       "name": "4pda",
-      "icon": "📁",
-      "color": "#FF5722",
+      "icon": "📝",
+      "color": "#4CAF50",
       "baseType": "notes",
-      "isDefault": false,
-      "id": "gmr9poyrsmm1tbehr",
-      "order": 4
+      "order": 0,
+      "isDefault": false
     },
     {
-      "id": "exz3v0xvlmm1tg9x0",
-      "workspaceId": "vfbldd4jdmm1tg9x0",
+      "id": "cat_y74gxb",
+      "workspaceId": "ws_1llp",
+      "name": "Notes",
+      "icon": "📝",
+      "color": "#4CAF50",
+      "baseType": "notes",
+      "order": 1,
+      "isDefault": false
+    },
+    {
+      "id": "cat_twar1e",
+      "workspaceId": "ws_1xo",
       "name": "Notes",
       "icon": "📝",
       "color": "#4CAF50",
       "baseType": "notes",
       "order": 0,
-      "isDefault": true
-    },
-    {
-      "id": "12ez1mehmmm1tg9x0",
-      "workspaceId": "vfbldd4jdmm1tg9x0",
-      "name": "Commands",
-      "icon": "⌘",
-      "color": "#2196F3",
-      "baseType": "commands",
-      "order": 1,
-      "isDefault": true
-    },
-    {
-      "id": "6k0658ap0mm1tg9x0",
-      "workspaceId": "vfbldd4jdmm1tg9x0",
-      "name": "Links",
-      "icon": "🔗",
-      "color": "#FF9800",
-      "baseType": "links",
-      "order": 2,
-      "isDefault": true
-    },
-    {
-      "id": "q29is2h7wmm1tg9x0",
-      "workspaceId": "vfbldd4jdmm1tg9x0",
-      "name": "Prompts",
-      "icon": "💬",
-      "color": "#9C27B0",
-      "baseType": "prompts",
-      "order": 3,
-      "isDefault": true
+      "isDefault": false
     }
   ],
   "folders": [
     {
-      "id": "f1",
-      "categoryId": "cat1",
+      "id": "f_w3y3ke",
+      "categoryId": "cat_qeli1h",
+      "parentId": null,
+      "name": "123",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-01T12:41:58.866Z"
+    },
+    {
+      "id": "f_u6y9ox",
+      "categoryId": "cat_y74gxb",
       "parentId": null,
       "name": "Work",
-      "color": "#4CAF50",
       "order": 0,
       "isExpanded": true,
-      "createdAt": "2026-02-24T00:00:00.000Z"
+      "createdAt": "2026-03-01T12:41:58.867Z"
     },
     {
-      "id": "f2",
-      "categoryId": "cat1",
+      "id": "f_u4n7ep",
+      "categoryId": "cat_twar1e",
       "parentId": null,
-      "name": "Personal",
-      "color": "#2196F3",
-      "order": 1,
-      "isExpanded": false,
-      "createdAt": "2026-02-24T00:00:00.000Z"
-    },
-    {
-      "id": "f3",
-      "categoryId": "cat2",
-      "parentId": null,
-      "name": "Git",
-      "color": "#FF9800",
+      "name": "123",
       "order": 0,
       "isExpanded": true,
-      "createdAt": "2026-02-24T00:00:00.000Z"
-    },
-    {
-      "id": "f4",
-      "categoryId": "cat2",
-      "parentId": null,
-      "name": "Docker",
-      "color": "#9C27B0",
-      "order": 1,
-      "isExpanded": true,
-      "createdAt": "2026-02-24T00:00:00.000Z"
-    },
-    {
-      "id": "f5",
-      "categoryId": "cat3",
-      "parentId": null,
-      "name": "Dev Resources",
-      "color": "#FF5722",
-      "order": 0,
-      "isExpanded": true,
-      "createdAt": "2026-02-24T00:00:00.000Z"
-    },
-    {
-      "id": "f6",
-      "categoryId": "cat4",
-      "parentId": null,
-      "name": "Coding",
-      "color": "#607D8B",
-      "order": 0,
-      "isExpanded": true,
-      "createdAt": "2026-02-24T00:00:00.000Z"
-    },
-    {
-      "name": "123",
-      "categoryId": "gmr9poyrsmm1tbehr",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "y91zgx4qjmm1tbxyw",
-      "order": 1,
-      "createdAt": "2026-02-25T09:09:13.784Z"
-    },
-    {
-      "name": "123",
-      "categoryId": "exz3v0xvlmm1tg9x0",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "g091mlq1mmm1tgdpo",
-      "order": 1,
-      "createdAt": "2026-02-25T09:12:40.812Z"
-    },
-    {
-      "name": "123",
-      "categoryId": "12ez1mehmmm1tg9x0",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "8zrgrjmylmm1tggpo",
-      "order": 1,
-      "createdAt": "2026-02-25T09:12:44.700Z"
-    },
-    {
-      "name": "123",
-      "categoryId": "6k0658ap0mm1tg9x0",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "9wmwp03d1mm1tgj0d",
-      "order": 1,
-      "createdAt": "2026-02-25T09:12:47.677Z"
-    },
-    {
-      "name": "123",
-      "categoryId": "q29is2h7wmm1tg9x0",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "grb5ff5z1mm1tgl44",
-      "order": 1,
-      "createdAt": "2026-02-25T09:12:50.404Z"
+      "createdAt": "2026-03-01T12:41:58.867Z"
     }
   ],
   "notes": [
     {
       "id": "kpgiuk7b4mm1zujvt",
-      "folderId": "y91zgx4qjmm1tbxyw",
+      "folderId": "f_w3y3ke",
       "title": "5",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -230,7 +92,7 @@
     },
     {
       "id": "20dyzc24zmm1tb2av",
-      "folderId": "f1",
+      "folderId": "f_u6y9ox",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -241,7 +103,7 @@
     },
     {
       "id": "21xfge2jwmm1tb2fb",
-      "folderId": "f1",
+      "folderId": "f_u6y9ox",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -252,7 +114,7 @@
     },
     {
       "id": "c54xwps5zmm1tb2jr",
-      "folderId": "f1",
+      "folderId": "f_u6y9ox",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -263,7 +125,7 @@
     },
     {
       "id": "i1f5aqjg6mm1tb2nz",
-      "folderId": "f1",
+      "folderId": "f_u6y9ox",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -274,7 +136,7 @@
     },
     {
       "id": "n1",
-      "folderId": "f1",
+      "folderId": "f_u6y9ox",
       "title": "Welcome to Knowledge Hub",
       "content": "# Welcome! 👋\n\nThis is your personal knowledge hub with workspace support.\n\n## Architecture\n\n```\nWorkspace (главный уровень)\n├── Notes (категория в Sidebar)\n│   ├── Work (папка в FolderPanel)\n│   │   └── Заметки\n│   └── Personal (папка)\n├── Commands (категория)\n│   ├── Git (папка)\n│   └── Docker (папка)\n└── Links, Prompts...\n```\n\n## Features\n- 📁 **Workspaces** - Organize different projects/areas\n- 📝 **Notes** - Write in Markdown\n- 💻 **Commands** - Store code snippets\n- 🔗 **Links** - Bookmark resources\n- 🤖 **Prompts** - AI prompt templates\n\n## How to save\n1. Click **Settings** (⚙️)\n2. Go to **Sync** tab\n3. Enter your GitHub token\n4. Click **Save to Cloud**\n\nYour data will be automatically synced!\n\n---\n> Start organizing your knowledge!",
       "tags": [
@@ -288,7 +150,7 @@
     },
     {
       "id": "3tkpvryujmm1tgqlx",
-      "folderId": "g091mlq1mmm1tgdpo",
+      "folderId": "f_u4n7ep",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -299,7 +161,7 @@
     },
     {
       "id": "lz2tcsi00mm1tgr5w",
-      "folderId": "g091mlq1mmm1tgdpo",
+      "folderId": "f_u4n7ep",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -310,7 +172,7 @@
     },
     {
       "id": "kgwfq2ms1mm1tgr9o",
-      "folderId": "g091mlq1mmm1tgdpo",
+      "folderId": "f_u4n7ep",
       "title": "New Note",
       "content": "# New Note\n\nStart writing...",
       "tags": [],
@@ -323,6 +185,6 @@
   "commands": [],
   "links": [],
   "prompts": [],
-  "exportedAt": "2026-03-01T12:33:01.409Z",
+  "exportedAt": "2026-03-01T12:41:58.866Z",
   "version": "3.0"
 }

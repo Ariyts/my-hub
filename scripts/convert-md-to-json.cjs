@@ -26,9 +26,37 @@ function parseFrontmatter(content) {
   return { frontmatter, body: match[2] };
 }
 
-// Sanitize for matching
-function sanitize(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]/g, "_");
+// Generate deterministic ID from string
+function hashId(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+// Generate ID from path (deterministic)
+function genId(prefix, path) {
+  return prefix + "_" + hashId(path);
+}
+
+// Category type icons and colors
+const CATEGORY_CONFIG = {
+  notes: { icon: "📝", color: "#4CAF50" },
+  commands: { icon: "⌘", color: "#2196F3" },
+  links: { icon: "🔗", color: "#FF9800" },
+  prompts: { icon: "💬", color: "#9C27B0" }
+};
+
+// Determine type from category name
+function getCategoryType(name) {
+  const lower = name.toLowerCase();
+  if (lower.includes("command")) return "commands";
+  if (lower.includes("link")) return "links";
+  if (lower.includes("prompt")) return "prompts";
+  return "notes";
 }
 
 const result = {
@@ -43,121 +71,94 @@ const result = {
   version: "3.0"
 };
 
-// Load metadata if exists (check both locations)
-if (fs.existsSync("data/metadata.json")) {
-  try {
-    const metadata = JSON.parse(fs.readFileSync("data/metadata.json", "utf8"));
-    result.workspaces = metadata.workspaces || [];
-    result.categories = metadata.categories || [];
-    result.folders = metadata.folders || [];
-    console.log("Loaded metadata from data/metadata.json:", result.workspaces.length, "workspaces,", result.categories.length, "categories,", result.folders.length, "folders");
-  } catch (e) {
-    console.error("Failed to parse data/metadata.json:", e);
-  }
-} else if (fs.existsSync("metadata.json")) {
-  try {
-    const metadata = JSON.parse(fs.readFileSync("metadata.json", "utf8"));
-    result.workspaces = metadata.workspaces || [];
-    result.categories = metadata.categories || [];
-    result.folders = metadata.folders || [];
-    console.log("Loaded metadata from metadata.json:", result.workspaces.length, "workspaces,", result.categories.length, "categories,", result.folders.length, "folders");
-  } catch (e) {
-    console.error("Failed to parse metadata.json:", e);
-  }
-}
+// Lookup maps
+const workspaceMap = new Map();  // name -> workspace
+const categoryMap = new Map();   // workspaceId_name -> category
+const folderMap = new Map();     // categoryId_name -> folder
 
-// Build lookup maps from metadata
-const workspaceMap = new Map();
-const categoryMap = new Map();
-const folderMap = new Map();
-
-result.workspaces.forEach(w => workspaceMap.set(sanitize(w.name), w));
-result.categories.forEach(c => categoryMap.set(sanitize(c.name), c));
-result.folders.forEach(f => folderMap.set(sanitize(f.name), f));
-
-// Process MD files
 const dataDir = "./data";
+
 if (fs.existsSync(dataDir)) {
-  function processDir(dir) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+  // Get all workspaces (top level directories)
+  const workspaceEntries = fs.readdirSync(dataDir, { withFileTypes: true })
+    .filter(e => e.isDirectory());
+  
+  for (const wsEntry of workspaceEntries) {
+    const wsName = wsEntry.name;
+    const wsPath = path.join(dataDir, wsName);
     
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
+    // Create workspace
+    const workspace = {
+      id: genId("ws", wsName),
+      name: wsName,
+      icon: "📁",
+      color: "#6366f1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    result.workspaces.push(workspace);
+    workspaceMap.set(wsName, workspace);
+    
+    // Get categories for this workspace
+    const categoryEntries = fs.readdirSync(wsPath, { withFileTypes: true })
+      .filter(e => e.isDirectory());
+    
+    for (const catEntry of categoryEntries) {
+      const catName = catEntry.name;
+      const catPath = path.join(wsPath, catName);
+      const baseType = getCategoryType(catName);
+      const config = CATEGORY_CONFIG[baseType];
       
-      if (entry.isDirectory()) {
-        processDir(fullPath);
-      } else if (entry.name.endsWith(".md")) {
-        const content = fs.readFileSync(fullPath, "utf8");
-        const { frontmatter, body } = parseFrontmatter(content);
+      // Create category
+      const category = {
+        id: genId("cat", `${wsName}/${catName}`),
+        workspaceId: workspace.id,
+        name: catName,
+        icon: config.icon,
+        color: config.color,
+        baseType: baseType,
+        order: result.categories.filter(c => c.workspaceId === workspace.id).length,
+        isDefault: false
+      };
+      result.categories.push(category);
+      categoryMap.set(`${workspace.id}_${catName}`, category);
+      
+      // Get folders for this category
+      const folderEntries = fs.readdirSync(catPath, { withFileTypes: true })
+        .filter(e => e.isDirectory());
+      
+      for (const fldEntry of folderEntries) {
+        const fldName = fldEntry.name;
+        const fldPath = path.join(catPath, fldName);
         
-        const relativePath = path.relative(dataDir, fullPath);
-        const parts = relativePath.split(path.sep);
+        // Create folder
+        const folder = {
+          id: genId("f", `${wsName}/${catName}/${fldName}`),
+          categoryId: category.id,
+          parentId: null,
+          name: fldName,
+          order: result.folders.filter(f => f.categoryId === category.id).length,
+          isExpanded: true,
+          createdAt: new Date().toISOString()
+        };
+        result.folders.push(folder);
+        folderMap.set(`${category.id}_${fldName}`, folder);
         
-        if (parts.length >= 4) {
-          const wsName = parts[0];
-          const catName = parts[1];
-          const folderName = parts[2];
+        // Get notes in this folder
+        const noteEntries = fs.readdirSync(fldPath, { withFileTypes: true })
+          .filter(e => e.isFile() && e.name.endsWith(".md"));
+        
+        for (const noteEntry of noteEntries) {
+          const notePath = path.join(fldPath, noteEntry.name);
+          const content = fs.readFileSync(notePath, "utf8");
+          const { frontmatter, body } = parseFrontmatter(content);
           
-          // Find or create workspace
-          let workspace = workspaceMap.get(sanitize(wsName));
-          if (!workspace) {
-            workspace = {
-              id: "ws_" + Math.random().toString(36).substr(2, 9),
-              name: wsName,
-              icon: "📁",
-              color: "#6366f1",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            result.workspaces.push(workspace);
-            workspaceMap.set(sanitize(wsName), workspace);
-          }
+          const title = frontmatter.title || noteEntry.name.replace(".md", "");
+          const notePathForId = `${wsName}/${catName}/${fldName}/${noteEntry.name}`;
           
-          // Determine type from category name
-          const type = catName.toLowerCase().includes("command") ? "commands" :
-                      catName.toLowerCase().includes("link") ? "links" :
-                      catName.toLowerCase().includes("prompt") ? "prompts" : "notes";
-          
-          // Find or create category
-          let category = result.categories.find(c => 
-            c.workspaceId === workspace.id && sanitize(c.name) === sanitize(catName)
-          );
-          if (!category) {
-            category = {
-              id: "cat_" + Math.random().toString(36).substr(2, 9),
-              workspaceId: workspace.id,
-              name: catName,
-              icon: type === "notes" ? "📝" : type === "commands" ? "⌘" : type === "links" ? "🔗" : "💬",
-              color: "#6366f1",
-              baseType: type,
-              order: result.categories.filter(c => c.workspaceId === workspace.id).length,
-              isDefault: false
-            };
-            result.categories.push(category);
-          }
-          
-          // Find or create folder
-          let folder = result.folders.find(f => 
-            f.categoryId === category.id && sanitize(f.name) === sanitize(folderName)
-          );
-          if (!folder) {
-            folder = {
-              id: "f_" + Math.random().toString(36).substr(2, 9),
-              categoryId: category.id,
-              parentId: null,
-              name: folderName,
-              order: result.folders.filter(f => f.categoryId === category.id).length,
-              isExpanded: true,
-              createdAt: new Date().toISOString()
-            };
-            result.folders.push(folder);
-          }
-          
-          const title = frontmatter.title || entry.name.replace(".md", "");
-          
-          if (type === "notes") {
+          if (baseType === "notes") {
             result.notes.push({
-              id: frontmatter.id || "n_" + Math.random().toString(36).substr(2, 9),
+              id: frontmatter.id || genId("n", notePathForId),
               folderId: folder.id,
               title,
               content: body.trim(),
@@ -167,16 +168,56 @@ if (fs.existsSync(dataDir)) {
               updatedAt: frontmatter.updatedAt || new Date().toISOString(),
               type: "notes"
             });
+          } else if (baseType === "commands") {
+            result.commands.push({
+              id: frontmatter.id || genId("cmd"),
+              folderId: folder.id,
+              title,
+              description: frontmatter.description || "",
+              subItems: frontmatter.subItems || [],
+              tags: frontmatter.tags || [],
+              createdAt: frontmatter.createdAt || new Date().toISOString(),
+              updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+              type: "commands"
+            });
+          } else if (baseType === "links") {
+            result.links.push({
+              id: frontmatter.id || genId("lnk"),
+              folderId: folder.id,
+              title,
+              subItems: frontmatter.subItems || [],
+              tags: frontmatter.tags || [],
+              createdAt: frontmatter.createdAt || new Date().toISOString(),
+              updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+              type: "links"
+            });
+          } else if (baseType === "prompts") {
+            result.prompts.push({
+              id: frontmatter.id || genId("prm"),
+              folderId: folder.id,
+              title,
+              category: frontmatter.category || "",
+              subItems: frontmatter.subItems || [],
+              tags: frontmatter.tags || [],
+              createdAt: frontmatter.createdAt || new Date().toISOString(),
+              updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+              type: "prompts"
+            });
           }
         }
       }
     }
   }
-  
-  processDir(dataDir);
 }
 
-console.log("Converted:", result.notes.length, "notes,", result.commands.length, "commands,", result.links.length, "links,", result.prompts.length, "prompts");
+console.log("Scanned data/ folder:");
+console.log("- Workspaces:", result.workspaces.length);
+console.log("- Categories:", result.categories.length);
+console.log("- Folders:", result.folders.length);
+console.log("- Notes:", result.notes.length);
+console.log("- Commands:", result.commands.length);
+console.log("- Links:", result.links.length);
+console.log("- Prompts:", result.prompts.length);
 
 fs.writeFileSync("./src/data.json", JSON.stringify(result, null, 2));
 console.log("Written to src/data.json");
