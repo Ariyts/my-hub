@@ -28,7 +28,9 @@ export function Sidebar() {
     notes,
     commands,
     links,
-    prompts
+    prompts,
+    trash,
+    setShowTrash
   } = useStore();
   
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -354,8 +356,28 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Bottom - Settings */}
+      {/* Bottom - Trash & Settings */}
       <div className="p-2 border-t" style={{ borderColor: isDarkTheme ? '#1e293b' : '#0f172a' }}>
+        {/* Trash button */}
+        <button
+          onClick={() => setShowTrash(true)}
+          className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 mb-1"
+          style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}
+        >
+          <div className="flex items-center gap-2">
+            <Trash2 size={14} />
+            <span>Trash</span>
+          </div>
+          {trash.length > 0 && (
+            <span 
+              className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"
+            >
+              {trash.length}
+            </span>
+          )}
+        </button>
+        
+        {/* Settings button */}
         <button
           onClick={() => setShowSettings(true)}
           className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700"

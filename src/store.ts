@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type {
   AppState, Workspace, Category, Folder, NoteItem,
   CommandContainer, LinkContainer, PromptContainer,
-  CommandItem, LinkItem, PromptItem, Settings, AnyItem
+  CommandItem, LinkItem, PromptItem, Settings, AnyItem, TrashItem
 } from './types';
 import {
   initializeGitHubSync,
@@ -82,6 +82,12 @@ interface StoreActions {
   updatePromptItem: (containerId: string, itemId: string, updates: Partial<PromptItem>) => void;
   deletePromptItem: (containerId: string, itemId: string) => void;
 
+  // Trash actions
+  setShowTrash: (show: boolean) => void;
+  restoreFromTrash: (trashId: string) => void;
+  permanentlyDelete: (trashId: string) => void;
+  clearTrash: () => void;
+
   // UI actions
   setSearchQuery: (query: string) => void;
   setShowSettings: (show: boolean) => void;
@@ -130,6 +136,10 @@ export const useStore = create<AppState & StoreActions>()(
       links: initialData.links || [],
       prompts: initialData.prompts || [],
       activeItemId: null,
+      
+      // Trash
+      trash: [],
+      showTrash: false,
       
       settings: defaultSettings,
       searchQuery: '',
@@ -296,10 +306,35 @@ export const useStore = create<AppState & StoreActions>()(
         notes: s.notes.map(n => n.id === id ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n)
       })),
       
-      deleteNote: (id) => set((s) => ({
-        notes: s.notes.filter(n => n.id !== id),
-        activeItemId: s.activeItemId === id ? null : s.activeItemId,
-      })),
+      deleteNote: (id) => set((s) => {
+        const note = s.notes.find(n => n.id === id);
+        if (!note) return s;
+        
+        // Find folder, category and workspace info
+        const folder = s.folders.find(f => f.id === note.folderId);
+        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
+        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
+        
+        const trashItem: TrashItem = {
+          id: genId(),
+          originalId: note.id,
+          type: 'note',
+          item: note,
+          workspaceId: workspace?.id || '',
+          workspaceName: workspace?.name || 'Unknown',
+          categoryId: category?.id || '',
+          categoryName: category?.name || 'Unknown',
+          folderId: folder?.id || '',
+          folderName: folder?.name || 'Unknown',
+          deletedAt: new Date().toISOString(),
+        };
+        
+        return {
+          notes: s.notes.filter(n => n.id !== id),
+          trash: [...s.trash, trashItem],
+          activeItemId: s.activeItemId === id ? null : s.activeItemId,
+        };
+      }),
 
       // ============================================
       // COMMAND CONTAINER ACTIONS
@@ -318,10 +353,34 @@ export const useStore = create<AppState & StoreActions>()(
         commands: s.commands.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c)
       })),
       
-      deleteCommandContainer: (id) => set((s) => ({
-        commands: s.commands.filter(c => c.id !== id),
-        activeItemId: s.activeItemId === id ? null : s.activeItemId,
-      })),
+      deleteCommandContainer: (id) => set((s) => {
+        const command = s.commands.find(c => c.id === id);
+        if (!command) return s;
+        
+        const folder = s.folders.find(f => f.id === command.folderId);
+        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
+        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
+        
+        const trashItem: TrashItem = {
+          id: genId(),
+          originalId: command.id,
+          type: 'command',
+          item: command,
+          workspaceId: workspace?.id || '',
+          workspaceName: workspace?.name || 'Unknown',
+          categoryId: category?.id || '',
+          categoryName: category?.name || 'Unknown',
+          folderId: folder?.id || '',
+          folderName: folder?.name || 'Unknown',
+          deletedAt: new Date().toISOString(),
+        };
+        
+        return {
+          commands: s.commands.filter(c => c.id !== id),
+          trash: [...s.trash, trashItem],
+          activeItemId: s.activeItemId === id ? null : s.activeItemId,
+        };
+      }),
       
       addCommandItem: (containerId, item) => {
         const newItem: CommandItem = { ...item, id: genId() };
@@ -365,10 +424,34 @@ export const useStore = create<AppState & StoreActions>()(
         links: s.links.map(l => l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l)
       })),
       
-      deleteLinkContainer: (id) => set((s) => ({
-        links: s.links.filter(l => l.id !== id),
-        activeItemId: s.activeItemId === id ? null : s.activeItemId,
-      })),
+      deleteLinkContainer: (id) => set((s) => {
+        const link = s.links.find(l => l.id === id);
+        if (!link) return s;
+        
+        const folder = s.folders.find(f => f.id === link.folderId);
+        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
+        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
+        
+        const trashItem: TrashItem = {
+          id: genId(),
+          originalId: link.id,
+          type: 'link',
+          item: link,
+          workspaceId: workspace?.id || '',
+          workspaceName: workspace?.name || 'Unknown',
+          categoryId: category?.id || '',
+          categoryName: category?.name || 'Unknown',
+          folderId: folder?.id || '',
+          folderName: folder?.name || 'Unknown',
+          deletedAt: new Date().toISOString(),
+        };
+        
+        return {
+          links: s.links.filter(l => l.id !== id),
+          trash: [...s.trash, trashItem],
+          activeItemId: s.activeItemId === id ? null : s.activeItemId,
+        };
+      }),
       
       addLinkItem: (containerId, item) => {
         const newItem: LinkItem = { ...item, id: genId() };
@@ -411,10 +494,34 @@ export const useStore = create<AppState & StoreActions>()(
         prompts: s.prompts.map(p => p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p)
       })),
       
-      deletePromptContainer: (id) => set((s) => ({
-        prompts: s.prompts.filter(p => p.id !== id),
-        activeItemId: s.activeItemId === id ? null : s.activeItemId,
-      })),
+      deletePromptContainer: (id) => set((s) => {
+        const prompt = s.prompts.find(p => p.id === id);
+        if (!prompt) return s;
+        
+        const folder = s.folders.find(f => f.id === prompt.folderId);
+        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
+        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
+        
+        const trashItem: TrashItem = {
+          id: genId(),
+          originalId: prompt.id,
+          type: 'prompt',
+          item: prompt,
+          workspaceId: workspace?.id || '',
+          workspaceName: workspace?.name || 'Unknown',
+          categoryId: category?.id || '',
+          categoryName: category?.name || 'Unknown',
+          folderId: folder?.id || '',
+          folderName: folder?.name || 'Unknown',
+          deletedAt: new Date().toISOString(),
+        };
+        
+        return {
+          prompts: s.prompts.filter(p => p.id !== id),
+          trash: [...s.trash, trashItem],
+          activeItemId: s.activeItemId === id ? null : s.activeItemId,
+        };
+      }),
       
       addPromptItem: (containerId, item) => {
         const newItem: PromptItem = { ...item, id: genId() };
@@ -439,6 +546,82 @@ export const useStore = create<AppState & StoreActions>()(
           ...p, subItems: p.subItems.filter(i => i.id !== itemId)
         } : p)
       })),
+
+      // ============================================
+      // TRASH ACTIONS
+      // ============================================
+      setShowTrash: (show) => set({ showTrash: show }),
+      
+      restoreFromTrash: (trashId) => set((s) => {
+        const trashItem = s.trash.find(t => t.id === trashId);
+        if (!trashItem) return s;
+        
+        // Check if the original folder still exists
+        const folderExists = s.folders.some(f => f.id === trashItem.folderId);
+        if (!folderExists) {
+          // Create the folder back if it doesn't exist
+          // First check if category exists
+          const categoryExists = s.categories.some(c => c.id === trashItem.categoryId);
+          if (!categoryExists) {
+            // Create category
+            const newCategory: Category = {
+              id: trashItem.categoryId,
+              workspaceId: trashItem.workspaceId,
+              name: trashItem.categoryName,
+              icon: '📁',
+              color: '#6366f1',
+              baseType: trashItem.type === 'note' ? 'notes' : 
+                        trashItem.type === 'command' ? 'commands' : 
+                        trashItem.type === 'link' ? 'links' : 'prompts',
+              order: 999,
+              isDefault: false,
+            };
+            s.categories.push(newCategory);
+          }
+          
+          // Create folder
+          const newFolder: Folder = {
+            id: trashItem.folderId,
+            categoryId: trashItem.categoryId,
+            parentId: null,
+            name: trashItem.folderName,
+            order: 999,
+            isExpanded: true,
+            createdAt: new Date().toISOString(),
+          };
+          s.folders.push(newFolder);
+        }
+        
+        // Restore the item
+        const restoredItem = { ...trashItem.item } as any;
+        
+        const newState: any = {
+          trash: s.trash.filter(t => t.id !== trashId),
+        };
+        
+        switch (trashItem.type) {
+          case 'note':
+            newState.notes = [...s.notes, restoredItem as NoteItem];
+            break;
+          case 'command':
+            newState.commands = [...s.commands, restoredItem as CommandContainer];
+            break;
+          case 'link':
+            newState.links = [...s.links, restoredItem as LinkContainer];
+            break;
+          case 'prompt':
+            newState.prompts = [...s.prompts, restoredItem as PromptContainer];
+            break;
+        }
+        
+        return newState;
+      }),
+      
+      permanentlyDelete: (trashId) => set((s) => ({
+        trash: s.trash.filter(t => t.id !== trashId),
+      })),
+      
+      clearTrash: () => set({ trash: [] }),
 
       // ============================================
       // UI ACTIONS
@@ -503,6 +686,7 @@ export const useStore = create<AppState & StoreActions>()(
         commands: [],
         links: [],
         prompts: [],
+        trash: [],
         activeWorkspaceId: null,
         activeCategoryId: null,
         activeFolderId: null,

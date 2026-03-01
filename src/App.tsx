@@ -7,6 +7,7 @@ import { CommandsView } from './components/CommandsView';
 import { LinksView } from './components/LinksView';
 import { PromptsView } from './components/PromptsView';
 import { SettingsModal } from './components/SettingsModal';
+import { TrashModal } from './components/TrashModal';
 import type { NoteItem } from './types';
 import { FileText, Plus } from 'lucide-react';
 
@@ -123,6 +124,9 @@ export function App() {
 
       {/* Settings Modal */}
       {showSettings && <SettingsModal />}
+      
+      {/* Trash Modal */}
+      <TrashModal />
     </div>
   );
 }

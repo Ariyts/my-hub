@@ -135,6 +135,24 @@ export interface PromptContainer {
 export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContainer;
 
 // ============================================
+// TRASH - удаленные элементы
+// ============================================
+export interface TrashItem {
+  id: string;
+  originalId: string;
+  type: 'note' | 'command' | 'link' | 'prompt';
+  item: NoteItem | CommandContainer | LinkContainer | PromptContainer;
+  // Path info for restoration
+  workspaceId: string;
+  workspaceName: string;
+  categoryId: string;
+  categoryName: string;
+  folderId: string;
+  folderName: string;
+  deletedAt: string;
+}
+
+// ============================================
 // SETTINGS - глобальные настройки приложения
 // ============================================
 export interface GitHubSyncConfig {
@@ -177,6 +195,10 @@ export interface AppState {
   links: LinkContainer[];
   prompts: PromptContainer[];
   activeItemId: string | null;
+  
+  // Trash
+  trash: TrashItem[];
+  showTrash: boolean;
   
   // UI State
   settings: Settings;
