@@ -42,6 +42,90 @@ function genId(prefix, path) {
   return prefix + "_" + hashId(path);
 }
 
+// Parse commands from markdown body
+function parseCommandsFromBody(body) {
+  const items = [];
+  const sections = body.split(/^### /m).filter(s => s.trim());
+  
+  for (const section of sections) {
+    const lines = section.split('\n');
+    const itemId = lines[0].trim();
+    
+    // Find code block
+    const codeMatch = section.match(/```(\w+)\n([\s\S]*?)```/);
+    // Find description (italic after code block)
+    const descMatch = section.match(/```[\s\S]*?```\s*\n_(.+?)_/);
+    
+    if (codeMatch) {
+      items.push({
+        id: itemId,
+        command: codeMatch[2].trim(),
+        description: descMatch ? descMatch[1] : '',
+        language: codeMatch[1] || 'bash',
+        tags: [],
+        isFavorite: false
+      });
+    }
+  }
+  
+  return items;
+}
+
+// Parse links from markdown body
+function parseLinksFromBody(body) {
+  const items = [];
+  const lines = body.split('\n');
+  
+  for (const line of lines) {
+    // Match: - [title](url) - description
+    const match = line.match(/-\s*\[([^\]]+)\]\(([^)]+)\)(?:\s*-\s*(.+))?/);
+    if (match) {
+      items.push({
+        id: genId("li", match[1] + match[2]),
+        title: match[1],
+        url: match[2],
+        description: match[3] || '',
+        tags: [],
+        isFavorite: false
+      });
+    }
+  }
+  
+  return items;
+}
+
+// Parse prompts from markdown body
+function parsePromptsFromBody(body) {
+  const items = [];
+  const sections = body.split(/^### /m).filter(s => s.trim());
+  
+  for (const section of sections) {
+    const lines = section.split('\n');
+    const title = lines[0].trim();
+    
+    // Find description (italic)
+    const descMatch = section.match(/^_(.+?)_/m);
+    // Find code block (prompt)
+    const codeMatch = section.match(/```\n([\s\S]*?)```/);
+    // Find variables
+    const varsMatch = section.match(/\*\*Variables:\*\*\s*(.+)/);
+    
+    if (codeMatch) {
+      items.push({
+        id: genId("pi", title),
+        title,
+        prompt: codeMatch[1].trim(),
+        description: descMatch ? descMatch[1] : '',
+        variables: varsMatch ? varsMatch[1].split(',').map(v => v.trim()) : [],
+        tags: [],
+        isFavorite: false
+      });
+    }
+  }
+  
+  return items;
+}
+
 // Category type icons and colors
 const CATEGORY_CONFIG = {
   notes: { icon: "📝", color: "#4CAF50" },
@@ -170,12 +254,13 @@ if (fs.existsSync(dataDir)) {
               type: "notes"
             });
           } else if (baseType === "commands") {
+            const subItems = parseCommandsFromBody(body);
             result.commands.push({
-              id: frontmatter.id || genId("cmd"),
+              id: frontmatter.id || genId("cmd", notePathForId),
               folderId: folder.id,
               title,
               description: frontmatter.description || "",
-              subItems: frontmatter.subItems || [],
+              subItems: subItems.length > 0 ? subItems : (frontmatter.subItems || []),
               tags: frontmatter.tags || [],
               order: frontmatter.order ?? result.commands.filter(c => c.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
@@ -183,11 +268,12 @@ if (fs.existsSync(dataDir)) {
               type: "commands"
             });
           } else if (baseType === "links") {
+            const subItems = parseLinksFromBody(body);
             result.links.push({
-              id: frontmatter.id || genId("lnk"),
+              id: frontmatter.id || genId("lnk", notePathForId),
               folderId: folder.id,
               title,
-              subItems: frontmatter.subItems || [],
+              subItems: subItems.length > 0 ? subItems : (frontmatter.subItems || []),
               tags: frontmatter.tags || [],
               order: frontmatter.order ?? result.links.filter(l => l.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
@@ -195,12 +281,13 @@ if (fs.existsSync(dataDir)) {
               type: "links"
             });
           } else if (baseType === "prompts") {
+            const subItems = parsePromptsFromBody(body);
             result.prompts.push({
-              id: frontmatter.id || genId("prm"),
+              id: frontmatter.id || genId("prm", notePathForId),
               folderId: folder.id,
               title,
               category: frontmatter.category || "",
-              subItems: frontmatter.subItems || [],
+              subItems: subItems.length > 0 ? subItems : (frontmatter.subItems || []),
               tags: frontmatter.tags || [],
               order: frontmatter.order ?? result.prompts.filter(p => p.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
