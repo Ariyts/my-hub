@@ -161,27 +161,62 @@ const categoryMap = new Map();   // workspaceId_name -> category
 const folderMap = new Map();     // categoryId_name -> folder
 
 const dataDir = "./data";
+const metadataPath = "./data/metadata.json";
+
+// Load metadata if exists (preserves order!)
+let metadata = null;
+if (fs.existsSync(metadataPath)) {
+  try {
+    metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+    console.log("✅ Loaded metadata.json - preserving categories order!");
+    
+    // Use metadata for workspaces, categories, folders (with correct order!)
+    if (metadata.workspaces) {
+      result.workspaces = metadata.workspaces;
+      metadata.workspaces.forEach(ws => workspaceMap.set(ws.name, ws));
+    }
+    if (metadata.categories) {
+      result.categories = metadata.categories;
+      metadata.categories.forEach(cat => {
+        const ws = result.workspaces.find(w => w.id === cat.workspaceId);
+        if (ws) categoryMap.set(`${ws.name}_${cat.name}`, cat);
+      });
+    }
+    if (metadata.folders) {
+      result.folders = metadata.folders;
+      metadata.folders.forEach(fld => {
+        const cat = result.categories.find(c => c.id === fld.categoryId);
+        if (cat) folderMap.set(`${cat.id}_${fld.name}`, fld);
+      });
+    }
+  } catch (e) {
+    console.log("⚠️ Failed to parse metadata.json, will scan folders");
+  }
+}
 
 if (fs.existsSync(dataDir)) {
   // Get all workspaces (top level directories)
   const workspaceEntries = fs.readdirSync(dataDir, { withFileTypes: true })
-    .filter(e => e.isDirectory());
+    .filter(e => e.isDirectory() && e.name !== 'metadata.json');
   
   for (const wsEntry of workspaceEntries) {
     const wsName = wsEntry.name;
     const wsPath = path.join(dataDir, wsName);
     
-    // Create workspace
-    const workspace = {
-      id: genId("ws", wsName),
-      name: wsName,
-      icon: "📁",
-      color: "#6366f1",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    result.workspaces.push(workspace);
-    workspaceMap.set(wsName, workspace);
+    // Create workspace if not in metadata
+    if (!workspaceMap.has(wsName)) {
+      const workspace = {
+        id: genId("ws", wsName),
+        name: wsName,
+        icon: "📁",
+        color: "#6366f1",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      result.workspaces.push(workspace);
+      workspaceMap.set(wsName, workspace);
+    }
+    const workspace = workspaceMap.get(wsName);
     
     // Get categories for this workspace
     const categoryEntries = fs.readdirSync(wsPath, { withFileTypes: true })
@@ -193,19 +228,23 @@ if (fs.existsSync(dataDir)) {
       const baseType = getCategoryType(catName);
       const config = CATEGORY_CONFIG[baseType];
       
-      // Create category
-      const category = {
-        id: genId("cat", `${wsName}/${catName}`),
-        workspaceId: workspace.id,
-        name: catName,
-        icon: config.icon,
-        color: config.color,
-        baseType: baseType,
-        order: result.categories.filter(c => c.workspaceId === workspace.id).length,
-        isDefault: false
-      };
-      result.categories.push(category);
-      categoryMap.set(`${workspace.id}_${catName}`, category);
+      // Create category if not in metadata
+      const catKey = `${workspace.name}_${catName}`;
+      if (!categoryMap.has(catKey)) {
+        const category = {
+          id: genId("cat", `${wsName}/${catName}`),
+          workspaceId: workspace.id,
+          name: catName,
+          icon: config.icon,
+          color: config.color,
+          baseType: baseType,
+          order: result.categories.filter(c => c.workspaceId === workspace.id).length,
+          isDefault: false
+        };
+        result.categories.push(category);
+        categoryMap.set(catKey, category);
+      }
+      const category = categoryMap.get(catKey);
       
       // Get folders for this category
       const folderEntries = fs.readdirSync(catPath, { withFileTypes: true })
@@ -215,18 +254,22 @@ if (fs.existsSync(dataDir)) {
         const fldName = fldEntry.name;
         const fldPath = path.join(catPath, fldName);
         
-        // Create folder
-        const folder = {
-          id: genId("f", `${wsName}/${catName}/${fldName}`),
-          categoryId: category.id,
-          parentId: null,
-          name: fldName,
-          order: result.folders.filter(f => f.categoryId === category.id).length,
-          isExpanded: true,
-          createdAt: new Date().toISOString()
-        };
-        result.folders.push(folder);
-        folderMap.set(`${category.id}_${fldName}`, folder);
+        // Create folder if not in metadata
+        const fldKey = `${category.id}_${fldName}`;
+        if (!folderMap.has(fldKey)) {
+          const folder = {
+            id: genId("f", `${wsName}/${catName}/${fldName}`),
+            categoryId: category.id,
+            parentId: null,
+            name: fldName,
+            order: result.folders.filter(f => f.categoryId === category.id).length,
+            isExpanded: true,
+            createdAt: new Date().toISOString()
+          };
+          result.folders.push(folder);
+          folderMap.set(fldKey, folder);
+        }
+        const folder = folderMap.get(fldKey);
         
         // Get notes in this folder
         const noteEntries = fs.readdirSync(fldPath, { withFileTypes: true })
