@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 interface Props {
   note: NoteItem;
@@ -257,7 +258,7 @@ export function NoteEditor({ note }: Props) {
           >
             <div className="prose prose-sm max-w-none" style={{ color: textColor }}>
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   h1: ({ children }) => <h1 style={{ color: textColor, borderBottom: `2px solid ${border}`, paddingBottom: '8px' }} className="text-2xl font-bold mb-4">{children}</h1>,
                   h2: ({ children }) => <h2 style={{ color: textColor }} className="text-xl font-bold mb-3 mt-6">{children}</h2>,
