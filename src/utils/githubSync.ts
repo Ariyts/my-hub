@@ -2,6 +2,7 @@
  * GitHub Sync Service
  * Saves data as .md files to data/ folder in main branch
  * Creates ONE commit with all changes
+ * Also saves metadata.json for structure (categories order, folders, etc.)
  */
 
 import { dataToFiles, FileStructure } from './mdStorage';
@@ -30,6 +31,7 @@ export interface SyncPreview {
 const GITHUB_API = 'https://api.github.com';
 const REPO = 'Ariyts/my-hub';
 const MAIN_BRANCH = 'main';
+const METADATA_FILE = 'data/metadata.json';
 
 async function githubRequest(
   endpoint: string,
@@ -110,7 +112,7 @@ async function listDataFiles(token: string): Promise<Map<string, string>> {
     for (const item of data) {
       if (item.type === 'dir') {
         await listDir(item.path);
-      } else if (item.type === 'file' && item.path.endsWith('.md')) {
+      } else if (item.type === 'file' && (item.path.endsWith('.md') || item.path.endsWith('.json'))) {
         files.set(item.path, item.sha);
       }
     }
@@ -118,6 +120,20 @@ async function listDataFiles(token: string): Promise<Map<string, string>> {
   
   await listDir('data');
   return files;
+}
+
+/**
+ * Create metadata.json content with structure info
+ */
+function createMetadataContent(data: DataFile): string {
+  const metadata = {
+    workspaces: data.workspaces,
+    categories: data.categories,  // Includes order!
+    folders: data.folders,
+    exportedAt: new Date().toISOString(),
+    version: '3.0',
+  };
+  return JSON.stringify(metadata, null, 2);
 }
 
 async function createBlob(token: string, content: string): Promise<string> {
@@ -291,6 +307,14 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
   
   try {
     const newFiles = dataToFiles(data);
+    
+    // Add metadata.json with structure
+    const metadataContent = createMetadataContent(data);
+    newFiles.push({
+      path: METADATA_FILE,
+      content: metadataContent,
+    });
+    
     if (newFiles.length === 0) {
       return { success: false, message: 'No data to save' };
     }
