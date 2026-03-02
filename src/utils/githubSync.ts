@@ -24,7 +24,7 @@ export interface SyncPreview {
   filesToUpdate: string[];
   filesToDelete: string[];
   totalFiles: number;
-  allFiles: string[];  // New: all file paths
+  allFiles: string[];
 }
 
 const GITHUB_API = 'https://api.github.com';
@@ -82,29 +82,20 @@ export async function initializeGitHubSync(token: string): Promise<GitHubConfig 
   }
 }
 
-/**
- * Get current HEAD commit SHA
- */
 async function getHeadSha(token: string): Promise<string> {
   const response = await githubRequest(`/repos/${REPO}/git/refs/heads/${MAIN_BRANCH}`, token);
   const data = await response.json();
   return data.object.sha;
 }
 
-/**
- * Get tree SHA from a commit
- */
 async function getCommitTreeSha(token: string, commitSha: string): Promise<string> {
   const response = await githubRequest(`/repos/${REPO}/git/commits/${commitSha}`, token);
   const data = await response.json();
   return data.tree.sha;
 }
 
-/**
- * List all files in data/ directory recursively
- */
 async function listDataFiles(token: string): Promise<Map<string, string>> {
-  const files = new Map<string, string>(); // path -> sha
+  const files = new Map<string, string>();
   
   async function listDir(path: string): Promise<void> {
     const response = await githubRequest(
@@ -129,9 +120,6 @@ async function listDataFiles(token: string): Promise<Map<string, string>> {
   return files;
 }
 
-/**
- * Create a blob for a file
- */
 async function createBlob(token: string, content: string): Promise<string> {
   const response = await githubRequest(`/repos/${REPO}/git/blobs`, token, {
     method: 'POST',
@@ -144,9 +132,6 @@ async function createBlob(token: string, content: string): Promise<string> {
   return data.sha;
 }
 
-/**
- * Create a tree with all files
- */
 async function createTree(
   token: string,
   baseTreeSha: string,
@@ -155,7 +140,6 @@ async function createTree(
 ): Promise<string> {
   const tree: any[] = [];
   
-  // Add files to create/update
   for (const file of files) {
     tree.push({
       path: file.path,
@@ -165,7 +149,6 @@ async function createTree(
     });
   }
   
-  // Add files to delete (null sha)
   for (const path of pathsToDelete) {
     tree.push({
       path,
@@ -187,9 +170,6 @@ async function createTree(
   return data.sha;
 }
 
-/**
- * Create a commit
- */
 async function createCommit(
   token: string,
   message: string,
@@ -208,9 +188,6 @@ async function createCommit(
   return data.sha;
 }
 
-/**
- * Update HEAD reference
- */
 async function updateHead(token: string, commitSha: string): Promise<boolean> {
   const response = await githubRequest(`/repos/${REPO}/git/refs/heads/${MAIN_BRANCH}`, token, {
     method: 'PATCH',
@@ -220,83 +197,76 @@ async function updateHead(token: string, commitSha: string): Promise<boolean> {
 }
 
 /**
- * Calculate simple hash of content
+ * Save sync time to localStorage
  */
-function simpleHash(content: string): string {
-  let hash = 0;
-  for (let i = 0; i < content.length; i++) {
-    const char = content.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(36);
-}
-
-/**
- * Get stored sync state from localStorage
- */
-function getStoredSyncState(): Map<string, string> {
-  try {
-    const stored = localStorage.getItem('sync-state-hashes');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return new Map(Object.entries(parsed));
-    }
-  } catch {}
-  return new Map();
-}
-
-/**
- * Save sync state to localStorage
- */
-export function saveSyncState(files: FileStructure[]): void {
-  const hashes: Record<string, string> = {};
-  for (const file of files) {
-    hashes[file.path] = simpleHash(file.content);
-  }
-  localStorage.setItem('sync-state-hashes', JSON.stringify(hashes));
+export function saveSyncTime(): void {
   localStorage.setItem('sync-state-time', new Date().toISOString());
 }
 
 /**
- * Get local preview with change detection (no token required)
+ * Get local preview - compare by updatedAt timestamp
+ * If element's updatedAt > lastSyncTime → it's changed
  */
 export function getLocalPreview(data: DataFile): SyncPreview {
   const newFiles = dataToFiles(data);
   const allPaths = newFiles.map(f => f.path);
-  const storedHashes = getStoredSyncState();
+  
+  // Get last sync time from embedded data or localStorage
+  const lastSyncTime = data.exportedAt || localStorage.getItem('sync-state-time') || '1970-01-01';
   
   const filesToCreate: string[] = [];
   const filesToUpdate: string[] = [];
   const filesToDelete: string[] = [];
   
-  // Check each file against stored state
-  const newPaths = new Set(newFiles.map(f => f.path));
+  // Build lookup maps
+  const folderMap = new Map(data.folders.map(f => [f.id, f]));
+  const categoryMap = new Map(data.categories.map(c => [c.id, c]));
+  const workspaceMap = new Map(data.workspaces.map(w => [w.id, w]));
   
-  for (const file of newFiles) {
-    const storedHash = storedHashes.get(file.path);
-    const currentHash = simpleHash(file.content);
+  // Helper to build file path
+  const getItemPath = (folderId: string, title: string): string | null => {
+    const folder = folderMap.get(folderId);
+    if (!folder) return null;
+    const category = categoryMap.get(folder.categoryId);
+    if (!category) return null;
+    const workspace = workspaceMap.get(category.workspaceId);
+    if (!workspace) return null;
     
-    if (!storedHash) {
-      // File doesn't exist in stored state = NEW
-      filesToCreate.push(file.path);
-    } else if (storedHash !== currentHash) {
-      // File exists but hash changed = UPDATED
-      filesToUpdate.push(file.path);
-    }
-    // If hash matches = no change, don't include
-  }
+    const sanitize = (s: string) => s.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_').substring(0, 50);
+    const fileName = sanitize(title) || 'Untitled';
+    
+    return `data/${workspace.name}/${category.name}/${folder.name}/${fileName}.md`;
+  };
   
-  // Check for deleted files (exist in stored but not in current)
-  for (const [path] of storedHashes) {
-    if (!newPaths.has(path)) {
-      filesToDelete.push(path);
+  // Process all item types
+  const processItems = (items: Array<{folderId: string; title: string; createdAt: string; updatedAt: string}>) => {
+    for (const item of items) {
+      const path = getItemPath(item.folderId, item.title);
+      if (!path) continue;
+      
+      if (item.createdAt > lastSyncTime) {
+        filesToCreate.push(path);
+      } else if (item.updatedAt > lastSyncTime) {
+        filesToUpdate.push(path);
+      }
     }
+  };
+  
+  processItems(data.notes);
+  processItems(data.commands);
+  processItems(data.links);
+  processItems(data.prompts);
+  
+  // Remove duplicates (new takes priority over update)
+  const createSet = new Set(filesToCreate);
+  const updateSet = new Set(filesToUpdate);
+  for (const path of createSet) {
+    updateSet.delete(path);
   }
   
   return {
-    filesToCreate,
-    filesToUpdate,
+    filesToCreate: [...createSet],
+    filesToUpdate: [...updateSet],
     filesToDelete,
     totalFiles: newFiles.length,
     allFiles: allPaths,
@@ -304,10 +274,9 @@ export function getLocalPreview(data: DataFile): SyncPreview {
 }
 
 /**
- * Preview what will be synced (uses local state for comparison)
+ * Preview what will be synced
  */
 export async function previewSync(config: GitHubConfig, data: DataFile): Promise<SyncPreview> {
-  // Use local preview - it already has change detection
   return getLocalPreview(data);
 }
 
@@ -320,7 +289,6 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
   }
   
   try {
-    // Generate files
     const newFiles = dataToFiles(data);
     if (newFiles.length === 0) {
       return { success: false, message: 'No data to save' };
@@ -328,12 +296,10 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
     
     console.log(`Preparing ${newFiles.length} files...`);
     
-    // Get current state
     const headSha = await getHeadSha(config.token);
     const baseTreeSha = await getCommitTreeSha(config.token, headSha);
     const existingFiles = await listDataFiles(config.token);
     
-    // Determine what to delete
     const newPaths = new Set(newFiles.map(f => f.path));
     const pathsToDelete: string[] = [];
     for (const [path] of existingFiles) {
@@ -342,7 +308,6 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       }
     }
     
-    // Create blobs for all files
     console.log('Creating blobs...');
     const blobs: { path: string; sha: string }[] = [];
     for (const file of newFiles) {
@@ -350,11 +315,9 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       blobs.push({ path: file.path, sha: blobSha });
     }
     
-    // Create tree
     console.log('Creating tree...');
     const treeSha = await createTree(config.token, baseTreeSha, blobs, pathsToDelete);
     
-    // Create commit
     console.log('Creating commit...');
     const timestamp = new Date().toLocaleString();
     const commitSha = await createCommit(
@@ -364,7 +327,6 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       headSha
     );
     
-    // Update HEAD
     console.log('Updating HEAD...');
     const success = await updateHead(config.token, commitSha);
     
@@ -372,8 +334,8 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       return { success: false, message: 'Failed to update branch' };
     }
     
-    // Save sync state locally for future change detection
-    saveSyncState(newFiles);
+    // Save sync time for future change detection
+    saveSyncTime();
     
     const stats = {
       created: newFiles.filter(f => !existingFiles.has(f.path)).length,
