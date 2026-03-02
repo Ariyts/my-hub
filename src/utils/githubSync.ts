@@ -205,14 +205,15 @@ export function saveSyncTime(): void {
 
 /**
  * Get local preview - compare by updatedAt timestamp
- * If element's updatedAt > lastSyncTime → it's changed
+ * Priority: localStorage sync time > exportedAt (build time)
  */
 export function getLocalPreview(data: DataFile): SyncPreview {
   const newFiles = dataToFiles(data);
   const allPaths = newFiles.map(f => f.path);
   
-  // Get last sync time from embedded data or localStorage
-  const lastSyncTime = data.exportedAt || localStorage.getItem('sync-state-time') || '1970-01-01';
+  // IMPORTANT: Check localStorage FIRST (user's last sync time)
+  // Then fall back to exportedAt (build time) for initial load
+  const lastSyncTime = localStorage.getItem('sync-state-time') || data.exportedAt || '1970-01-01';
   
   const filesToCreate: string[] = [];
   const filesToUpdate: string[] = [];
