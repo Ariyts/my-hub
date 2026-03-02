@@ -3,7 +3,7 @@ id: "n1"
 title: "Welcome to Knowledge Hub"
 tags: ["welcome", "guide"]
 isFavorite: true
-order: 0
+order: "0"
 createdAt: "2026-02-24T00:00:00.000Z"
 updatedAt: "2026-02-24T00:00:00.000Z"
 ---
