@@ -1,0 +1,149 @@
+{
+  "workspaces": [
+    {
+      "id": "ws_1llp",
+      "name": "Job",
+      "icon": "📁",
+      "color": "#6366f1",
+      "createdAt": "2026-03-02T19:10:42.442Z",
+      "updatedAt": "2026-03-02T19:10:42.442Z"
+    },
+    {
+      "id": "ws_1xo",
+      "name": "My",
+      "icon": "📁",
+      "color": "#6366f1",
+      "createdAt": "2026-03-02T19:10:42.445Z",
+      "updatedAt": "2026-03-02T19:10:42.445Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat_qeli1h",
+      "workspaceId": "ws_1llp",
+      "name": "4pda",
+      "icon": "📝",
+      "color": "#4CAF50",
+      "baseType": "notes",
+      "order": 4,
+      "isDefault": false
+    },
+    {
+      "id": "cat_s25xwa",
+      "workspaceId": "ws_1llp",
+      "name": "Commands",
+      "icon": "⌘",
+      "color": "#2196F3",
+      "baseType": "commands",
+      "order": 3,
+      "isDefault": false
+    },
+    {
+      "id": "cat_y5wxif",
+      "workspaceId": "ws_1llp",
+      "name": "Links",
+      "icon": "🔗",
+      "color": "#FF9800",
+      "baseType": "links",
+      "order": 1,
+      "isDefault": false
+    },
+    {
+      "id": "cat_y74gxb",
+      "workspaceId": "ws_1llp",
+      "name": "Notes",
+      "icon": "📝",
+      "color": "#4CAF50",
+      "baseType": "notes",
+      "order": 0,
+      "isDefault": false
+    },
+    {
+      "id": "cat_7khzp9",
+      "workspaceId": "ws_1llp",
+      "name": "Prompts",
+      "icon": "💬",
+      "color": "#9C27B0",
+      "baseType": "prompts",
+      "order": 2,
+      "isDefault": false
+    },
+    {
+      "id": "cat_twar1e",
+      "workspaceId": "ws_1xo",
+      "name": "Notes",
+      "icon": "📝",
+      "color": "#4CAF50",
+      "baseType": "notes",
+      "order": 0,
+      "isDefault": false
+    }
+  ],
+  "folders": [
+    {
+      "id": "f_w3z6v9",
+      "categoryId": "cat_qeli1h",
+      "parentId": null,
+      "name": "dns",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.442Z"
+    },
+    {
+      "id": "f_py6yte",
+      "categoryId": "cat_s25xwa",
+      "parentId": null,
+      "name": "3",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.443Z"
+    },
+    {
+      "id": "f_hxxnip",
+      "categoryId": "cat_y5wxif",
+      "parentId": null,
+      "name": "links",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.444Z"
+    },
+    {
+      "id": "f_n4tkby",
+      "categoryId": "cat_y74gxb",
+      "parentId": null,
+      "name": "2",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.445Z"
+    },
+    {
+      "id": "f_u6y9ox",
+      "categoryId": "cat_y74gxb",
+      "parentId": null,
+      "name": "Work",
+      "order": 1,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.445Z"
+    },
+    {
+      "id": "f_qyjju9",
+      "categoryId": "cat_7khzp9",
+      "parentId": null,
+      "name": "promts",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.445Z"
+    },
+    {
+      "id": "f_u4n7ep",
+      "categoryId": "cat_twar1e",
+      "parentId": null,
+      "name": "123",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-03-02T19:10:42.445Z"
+    }
+  ],
+  "exportedAt": "2026-03-02T19:17:45.672Z",
+  "version": "3.0"
+}
