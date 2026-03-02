@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { Category, BaseDataType } from '../types';
-import { Settings, Plus, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
+import { Settings, Plus, MoreHorizontal, Edit2, Trash2, GripVertical } from 'lucide-react';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 const BASE_TYPE_OPTIONS: { value: BaseDataType; label: string }[] = [
@@ -25,6 +25,7 @@ export function Sidebar() {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
     notes,
     commands,
     links,
@@ -38,6 +39,7 @@ export function Sidebar() {
   const [editingCategory, setEditingCategory] = useState<Partial<Category>>({});
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [draggedCategoryId, setDraggedCategoryId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   
   // Filter categories for current workspace
   const workspaceCategories = categories
@@ -127,9 +129,10 @@ export function Sidebar() {
           </span>
         </div>
         
-        {workspaceCategories.map((category) => {
+        {workspaceCategories.map((category, index) => {
           const isActive = activeCategoryId === category.id;
           const isDragging = draggedCategoryId === category.id;
+          const isDropTarget = dropTargetId === category.id;
           const itemCount = getItemCount(category.id);
           
           return (
@@ -143,17 +146,46 @@ export function Sidebar() {
               }}
               onDragOver={(e) => {
                 e.preventDefault();
+                if (draggedCategoryId && draggedCategoryId !== category.id) {
+                  setDropTargetId(category.id);
+                }
+              }}
+              onDragLeave={() => {
+                setDropTargetId(null);
               }}
               onDrop={(e) => {
                 e.preventDefault();
-                // Reorder logic could be added here
+                if (draggedCategoryId && draggedCategoryId !== category.id && activeWorkspaceId) {
+                  // Reorder categories
+                  const newOrder = [...workspaceCategories.map(c => c.id)];
+                  const draggedIndex = newOrder.indexOf(draggedCategoryId);
+                  const targetIndex = newOrder.indexOf(category.id);
+                  
+                  // Remove dragged item and insert at new position
+                  newOrder.splice(draggedIndex, 1);
+                  newOrder.splice(targetIndex, 0, draggedCategoryId);
+                  
+                  reorderCategories(activeWorkspaceId, newOrder);
+                }
                 setDraggedCategoryId(null);
+                setDropTargetId(null);
               }}
               onDragEnd={() => {
                 setDraggedCategoryId(null);
+                setDropTargetId(null);
               }}
-              style={{ opacity: isDragging ? 0.5 : 1 }}
+              style={{ 
+                opacity: isDragging ? 0.5 : 1,
+              }}
             >
+              {/* Drop indicator line */}
+              {isDropTarget && !isDragging && (
+                <div 
+                  className="absolute left-0 right-0 h-0.5 bg-indigo-500 rounded z-10"
+                  style={{ top: index === 0 ? '0' : '50%' }}
+                />
+              )}
+              
               <button
                 onClick={() => setActiveCategoryId(category.id)}
                 onContextMenu={(e) => {
@@ -162,10 +194,17 @@ export function Sidebar() {
                 }}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-all duration-200"
                 style={{
-                  background: isActive ? `${category.color}22` : 'transparent',
-                  border: isActive ? `1px solid ${category.color}40` : '1px solid transparent',
+                  background: isActive ? `${category.color}22` : isDropTarget ? '#6366f120' : 'transparent',
+                  border: isActive ? `1px solid ${category.color}40` : isDropTarget ? '1px solid #6366f1' : '1px solid transparent',
                 }}
               >
+                {/* Drag handle */}
+                <div 
+                  className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <GripVertical size={12} style={{ color: isDarkTheme ? '#64748b' : '#94a3b8' }} />
+                </div>
                 <span className="text-base">{category.icon}</span>
                 <span 
                   className="flex-1 text-sm font-medium text-left truncate"

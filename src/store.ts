@@ -42,6 +42,7 @@ interface StoreActions {
   addCategory: (category: Omit<Category, 'id' | 'order'>) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  reorderCategories: (workspaceId: string, categoryIds: string[]) => void;
 
   // Folder actions
   setActiveFolderId: (id: string | null) => void;
@@ -239,6 +240,18 @@ export const useStore = create<AppState & StoreActions>()(
           prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
           activeCategoryId: s.activeCategoryId === id ? null : s.activeCategoryId,
         };
+      }),
+      
+      reorderCategories: (workspaceId, categoryIds) => set((s) => {
+        // Update order for each category
+        const updatedCategories = s.categories.map(c => {
+          if (c.workspaceId === workspaceId) {
+            const newOrder = categoryIds.indexOf(c.id);
+            return newOrder >= 0 ? { ...c, order: newOrder } : c;
+          }
+          return c;
+        });
+        return { categories: updatedCategories };
       }),
 
       // ============================================
