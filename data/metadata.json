@@ -77,6 +77,16 @@
       "baseType": "notes",
       "order": 0,
       "isDefault": false
+    },
+    {
+      "workspaceId": "ws_1llp",
+      "name": "Kali",
+      "icon": "🔧",
+      "color": "#9C27B0",
+      "baseType": "notes",
+      "isDefault": false,
+      "id": "izvyumyq3mmao5oa1",
+      "order": 5
     }
   ],
   "folders": [
@@ -142,8 +152,17 @@
       "order": 0,
       "isExpanded": true,
       "createdAt": "2026-03-02T19:10:42.445Z"
+    },
+    {
+      "name": "install_tools",
+      "categoryId": "izvyumyq3mmao5oa1",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "bajprsujhmmao68df",
+      "order": 1,
+      "createdAt": "2026-03-03T13:54:44.835Z"
     }
   ],
-  "exportedAt": "2026-03-03T12:27:40.611Z",
+  "exportedAt": "2026-03-03T14:06:18.652Z",
   "version": "3.0"
 }
