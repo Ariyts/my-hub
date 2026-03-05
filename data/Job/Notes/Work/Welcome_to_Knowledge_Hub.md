@@ -5,7 +5,7 @@ tags: ["welcome", "guide"]
 isFavorite: true
 order: "0"
 createdAt: "2026-02-24T00:00:00.000Z"
-updatedAt: "2026-03-04T13:19:31.358Z"
+updatedAt: "2026-03-05T12:44:56.801Z"
 ---
 # Welcome! 👋
 

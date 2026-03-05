@@ -161,26 +161,8 @@
       "id": "bajprsujhmmao68df",
       "order": 1,
       "createdAt": "2026-03-03T13:54:44.835Z"
-    },
-    {
-      "name": "warp",
-      "categoryId": "cat_y5wxif",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "11id7sg1hmmc2hy0b",
-      "order": 1,
-      "createdAt": "2026-03-04T13:23:32.075Z"
-    },
-    {
-      "name": "hexstrike",
-      "categoryId": "izvyumyq3mmao5oa1",
-      "parentId": null,
-      "isExpanded": true,
-      "id": "rua7uo0ivmmc2nfev",
-      "order": 2,
-      "createdAt": "2026-03-04T13:27:47.911Z"
     }
   ],
-  "exportedAt": "2026-03-04T13:29:57.115Z",
+  "exportedAt": "2026-03-05T13:34:29.929Z",
   "version": "3.0"
 }
