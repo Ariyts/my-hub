@@ -87,6 +87,16 @@
       "isDefault": false,
       "id": "izvyumyq3mmao5oa1",
       "order": 5
+    },
+    {
+      "workspaceId": "ws_1xo",
+      "name": "New",
+      "icon": "📁",
+      "color": "#6366f1",
+      "baseType": "links",
+      "isDefault": false,
+      "id": "5kln5fk5pmmdr6k94",
+      "order": 1
     }
   ],
   "folders": [
@@ -161,8 +171,17 @@
       "id": "bajprsujhmmao68df",
       "order": 1,
       "createdAt": "2026-03-03T13:54:44.835Z"
+    },
+    {
+      "name": "4dpa",
+      "categoryId": "5kln5fk5pmmdr6k94",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "qg5595rq8mmdr71hl",
+      "order": 1,
+      "createdAt": "2026-03-05T17:42:39.945Z"
     }
   ],
-  "exportedAt": "2026-03-05T13:34:29.929Z",
+  "exportedAt": "2026-03-05T17:45:28.214Z",
   "version": "3.0"
 }
