@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/* Compact grid - vertical column flow (Google Drive style) */
+.compact-grid {
+  display: block;
+}
+
+.compact-grid > * {
+  break-inside: avoid;
+  margin-bottom: 6px;
+}
+
+/* Smooth transitions for compact items */
+.compact-grid > *:last-child {
+  margin-bottom: 0;
+}

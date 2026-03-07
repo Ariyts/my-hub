@@ -249,7 +249,7 @@ function LinkCard({
 }
 
 // ============================================
-// COMPACT LINK ITEM COMPONENT
+// COMPACT LINK ITEM COMPONENT (Google Drive Style)
 // ============================================
 interface CompactLinkItemProps {
   item: LinkItem;
@@ -262,69 +262,73 @@ interface CompactLinkItemProps {
 
 function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, isDragging }: CompactLinkItemProps) {
   const [faviconError, setFaviconError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
-  // Default colors for sections without color
-  const defaultColor = isDark ? '#334155' : '#f1f5f9';
-  const borderColor = sectionColor || defaultColor;
+  // Google Drive style colors
+  const borderColor = isDark ? '#374151' : '#e5e7eb';
+  const hoverBg = isDark ? '#1f2937' : '#f3f4f6';
+  const normalBg = isDark ? '#111827' : '#ffffff';
   
-  // Generate background color from section color (lighter version)
-  const getBgColor = () => {
-    if (!sectionColor) return isDark ? '#1e293b' : '#ffffff';
-    // If it's a hex color, make it lighter/more transparent
-    if (sectionColor.startsWith('#')) {
-      return `${sectionColor}15`; // Add 15% opacity
-    }
-    return `${sectionColor}15`;
+  // Section color as subtle tint
+  const getTintedBg = () => {
+    if (isHovered) return hoverBg;
+    if (!sectionColor) return normalBg;
+    // Very subtle tint from section color
+    return `${sectionColor}08`; // ~3% opacity
   };
 
   return (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
       draggable
       onDragStart={(e) => onDragStart(e, item.id, sectionId)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`
-        flex items-center gap-2 px-2 py-1.5 rounded-md cursor-grab active:cursor-grabbing
-        transition-all duration-150 border-l-2 group
-        ${isDragging ? 'opacity-40 scale-95' : 'hover:shadow-sm'}
+        relative flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing
+        transition-all duration-150 border group
+        ${isDragging ? 'opacity-50 scale-95 ring-2 ring-orange-400' : ''}
       `}
       style={{ 
-        background: getBgColor(),
-        borderLeftColor: borderColor,
+        background: getTintedBg(),
+        borderColor: isHovered ? (isDark ? '#4b5563' : '#d1d5db') : borderColor,
         minWidth: 0,
       }}
-      onClick={(e) => {
-        e.preventDefault();
-        window.open(item.url, '_blank', 'noopener,noreferrer');
-      }}
+      onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
     >
-      {/* Grip handle */}
+      {/* Color indicator bar (left) */}
+      {sectionColor && (
+        <div 
+          className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full"
+          style={{ background: sectionColor }}
+        />
+      )}
+      
+      {/* Drag handle */}
       <div 
         className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
         style={{ cursor: 'grab' }}
       >
-        <GripVertical size={10} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
+        <GripVertical size={12} style={{ color: isDark ? '#6b7280' : '#9ca3af' }} />
       </div>
       
       {/* Favicon */}
-      <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
         {item.favicon && !faviconError ? (
           <img 
             src={item.favicon} 
             alt="" 
-            className="w-4 h-4 object-contain"
+            className="w-5 h-5 object-contain"
             onError={() => setFaviconError(true)}
           />
         ) : (
-          <Globe size={12} className="text-slate-400" />
+          <Globe size={14} style={{ color: isDark ? '#6b7280' : '#9ca3af' }} />
         )}
       </div>
       
       {/* Title - truncated */}
       <span 
-        className="text-xs truncate flex-1"
-        style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
+        className="text-xs font-medium truncate flex-1"
+        style={{ color: isDark ? '#e5e7eb' : '#1f2937' }}
         title={item.title}
       >
         {item.title}
@@ -332,9 +336,9 @@ function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, i
       
       {/* Favorite indicator */}
       {item.isFavorite && (
-        <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />
+        <Star size={12} className="text-amber-400 fill-amber-400 flex-shrink-0" />
       )}
-    </a>
+    </div>
   );
 }
 
@@ -483,10 +487,18 @@ function Section({
       {/* Section Content */}
       {!isCollapsed && (
         <div 
-          className={`p-3 min-h-[80px] ${viewMode === 'compact' 
-            ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5' 
-            : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'}`}
-          style={{ background: bg }}
+          className={`p-3 min-h-[80px] ${
+            viewMode === 'compact' 
+              ? 'compact-grid' 
+              : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
+          }`}
+          style={{ 
+            background: bg,
+            ...(viewMode === 'compact' ? {
+              columnCount: Math.min(Math.max(Math.floor(links.length / 8) + 1, 2), 6),
+              columnGap: '6px',
+            } : {})
+          }}
           onDragOver={(e) => {
             e.preventDefault();
             // Set drop to end of this section when dragging over empty area
@@ -497,7 +509,7 @@ function Section({
           onDrop={onDrop}
         >
           {viewMode === 'compact' ? (
-            // Compact view
+            // Compact view - vertical column flow
             links.map((item) => (
               <CompactLinkItem
                 key={item.id}
@@ -532,7 +544,7 @@ function Section({
           
           {links.length === 0 && (
             <div 
-              className="col-span-full text-center py-6 text-xs border-2 border-dashed rounded-lg transition-colors"
+              className="text-center py-6 text-xs border-2 border-dashed rounded-lg transition-colors"
               style={{ 
                 color: '#94a3b8', 
                 borderColor: dragState.dropSectionId === sectionId ? '#FF9800' : 'transparent',
