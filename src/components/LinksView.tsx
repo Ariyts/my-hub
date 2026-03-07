@@ -258,9 +258,35 @@ interface CompactLinkItemProps {
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
   sectionId: string | null;
   isDragging: boolean;
+  onEdit: (item: LinkItem) => void;
+  onDelete: (itemId: string) => void;
+  onColorChange: (itemId: string, color: string | undefined) => void;
 }
 
-function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, isDragging }: CompactLinkItemProps) {
+// Color palette for link items
+const LINK_COLORS = [
+  undefined, // No color (default)
+  '#ef4444', // red
+  '#f97316', // orange  
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#14b8a6', // teal
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+];
+
+function CompactLinkItem({ 
+  item, 
+  sectionColor, 
+  isDark, 
+  onDragStart, 
+  sectionId, 
+  isDragging,
+  onEdit,
+  onDelete,
+  onColorChange
+}: CompactLinkItemProps) {
   const [faviconError, setFaviconError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -269,12 +295,25 @@ function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, i
   const hoverBg = isDark ? '#1f2937' : '#f3f4f6';
   const normalBg = isDark ? '#111827' : '#ffffff';
   
-  // Section color as subtle tint
+  // Priority: item color > section color > default
+  const activeColor = item.color || sectionColor;
+  
+  // Background with subtle tint
   const getTintedBg = () => {
     if (isHovered) return hoverBg;
-    if (!sectionColor) return normalBg;
-    // Very subtle tint from section color
-    return `${sectionColor}08`; // ~3% opacity
+    if (!activeColor) return normalBg;
+    // Very subtle tint from color
+    return `${activeColor}10`; // ~6% opacity
+  };
+  
+  // Handle color cycling
+  const handleCycleColor = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const currentIndex = LINK_COLORS.indexOf(item.color);
+    const nextIndex = (currentIndex + 1) % LINK_COLORS.length;
+    onColorChange(item.id, LINK_COLORS[nextIndex]);
   };
 
   return (
@@ -293,20 +332,21 @@ function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, i
         borderColor: isHovered ? (isDark ? '#4b5563' : '#d1d5db') : borderColor,
         minWidth: 0,
       }}
-      onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+      onClick={() => !isHovered && window.open(item.url, '_blank', 'noopener,noreferrer')}
     >
-      {/* Color indicator bar (left) */}
-      {sectionColor && (
+      {/* Color indicator bar (left) - item color or section color */}
+      {activeColor && (
         <div 
-          className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full"
-          style={{ background: sectionColor }}
+          className="absolute left-0 top-2 bottom-2 w-1 rounded-full"
+          style={{ background: activeColor }}
         />
       )}
       
-      {/* Drag handle */}
+      {/* Drag handle - only starts drag, no click action */}
       <div 
         className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
         style={{ cursor: 'grab' }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         <GripVertical size={12} style={{ color: isDark ? '#6b7280' : '#9ca3af' }} />
       </div>
@@ -338,6 +378,47 @@ function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, i
       {item.isFavorite && (
         <Star size={12} className="text-amber-400 fill-amber-400 flex-shrink-0" />
       )}
+      
+      {/* Action buttons - show on hover */}
+      {isHovered && (
+        <div 
+          className="flex items-center gap-0.5 flex-shrink-0"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {/* Color button */}
+          <button
+            onClick={handleCycleColor}
+            className="p-1 rounded hover:bg-slate-500/20 transition-colors"
+            title="Change color"
+          >
+            <div 
+              className="w-3 h-3 rounded-full border"
+              style={{ 
+                background: item.color || 'transparent',
+                borderColor: item.color || (isDark ? '#4b5563' : '#d1d5db')
+              }}
+            />
+          </button>
+          
+          {/* Edit button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onEdit(item); }}
+            className="p-1 rounded hover:bg-blue-500/20 transition-colors"
+            title="Edit"
+          >
+            <Edit3 size={12} style={{ color: isDark ? '#60a5fa' : '#3b82f6' }} />
+          </button>
+          
+          {/* Delete button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(item.id); }}
+            className="p-1 rounded hover:bg-red-500/20 transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={12} className="text-red-400" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -365,6 +446,10 @@ interface SectionProps {
   onDeleteSection: (sectionId: string) => void;
   onAddLink: (sectionId: string | null) => void;
   onColorSection: (sectionId: string) => void;
+  // Item actions for compact mode
+  onEditItem: (item: LinkItem) => void;
+  onDeleteItem: (itemId: string) => void;
+  onColorItem: (itemId: string, color: string | undefined) => void;
 }
 
 // Predefined color palette
@@ -382,7 +467,8 @@ const SECTION_COLORS = [
 
 function Section({ 
   section, links, containerId, isDark, viewMode, onDragStart, onDragOver, onDrop,
-  dragState, onToggleCollapse, onEditSection, onDeleteSection, onAddLink, onColorSection
+  dragState, onToggleCollapse, onEditSection, onDeleteSection, onAddLink, onColorSection,
+  onEditItem, onDeleteItem, onColorItem
 }: SectionProps) {
   const sectionId = section?.id || null;
   const isCollapsed = section?.collapsed ?? false;
@@ -519,6 +605,9 @@ function Section({
                 onDragStart={onDragStart}
                 sectionId={sectionId}
                 isDragging={dragState.draggingItemId === item.id}
+                onEdit={onEditItem}
+                onDelete={onDeleteItem}
+                onColorChange={onColorItem}
               />
             ))
           ) : (
@@ -786,6 +875,8 @@ export function LinksView({ containerId }: Props) {
     updateLinkSection,
     deleteLinkSection,
     addLinkSection,
+    updateLinkItem,
+    deleteLinkItem,
     isDarkTheme 
   } = useStore();
   
@@ -1004,6 +1095,37 @@ export function LinksView({ containerId }: Props) {
     addLinkSection(container.id, title);
   };
 
+  // Item action handlers (for compact mode)
+  const handleEditItem = (item: LinkItem) => {
+    if (!container) return;
+    // Simple prompt-based editing for now
+    const newTitle = prompt('Title:', item.title);
+    if (newTitle === null) return; // Cancelled
+    
+    const newUrl = prompt('URL:', item.url);
+    if (newUrl === null) return; // Cancelled
+    
+    const newDesc = prompt('Description:', item.description || '');
+    
+    updateLinkItem(container.id, item.id, {
+      title: newTitle?.trim() || item.title,
+      url: newUrl?.trim() || item.url,
+      description: newDesc?.trim() || undefined,
+    });
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    if (!container) return;
+    if (confirm('Delete this link?')) {
+      deleteLinkItem(container.id, itemId);
+    }
+  };
+
+  const handleColorItem = (itemId: string, color: string | undefined) => {
+    if (!container) return;
+    updateLinkItem(container.id, itemId, { color });
+  };
+
   // NOW we can do conditional return AFTER all hooks
   // If container not found, show placeholder
   if (!container) {
@@ -1128,6 +1250,9 @@ export function LinksView({ containerId }: Props) {
               onDeleteSection={handleDeleteSection}
               onAddLink={handleAddLink}
               onColorSection={handleColorSection}
+              onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
+              onColorItem={handleColorItem}
             />
           );
         })}

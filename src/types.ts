@@ -99,6 +99,7 @@ export interface LinkItem {
   isFavorite: boolean;
   order?: number;
   sectionId?: string; // ID секции, к которой принадлежит ссылка
+  color?: string; // Индивидуальный цвет ячейки (hex)
 }
 
 // Секция ссылок (категория внутри файла)

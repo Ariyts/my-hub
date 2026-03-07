@@ -482,14 +482,32 @@ export const useStore = create<AppState & StoreActions>()(
       }),
       
       addLinkItem: (containerId, item) => {
-        const newItem: LinkItem = { ...item, id: genId() };
-        set((s) => ({
-          links: s.links.map(l => l.id === containerId ? { 
-            ...l, 
-            subItems: [...l.subItems, newItem], 
-            updatedAt: new Date().toISOString() 
-          } : l)
-        }));
+        set((s) => {
+          const container = s.links.find(l => l.id === containerId);
+          if (!container) return s;
+          
+          // Calculate max order for the target section (or all items if no section)
+          const targetItems = item.sectionId 
+            ? container.subItems.filter(i => i.sectionId === item.sectionId)
+            : container.subItems;
+          const maxOrder = targetItems.length > 0 
+            ? Math.max(...targetItems.map(i => i.order ?? 0)) 
+            : -1;
+          
+          const newItem: LinkItem = { 
+            ...item, 
+            id: genId(),
+            order: maxOrder + 1, // Add to end
+          };
+          
+          return {
+            links: s.links.map(l => l.id === containerId ? { 
+              ...l, 
+              subItems: [...l.subItems, newItem], 
+              updatedAt: new Date().toISOString() 
+            } : l)
+          };
+        });
       },
       
       updateLinkItem: (containerId, itemId, updates) => set((s) => ({

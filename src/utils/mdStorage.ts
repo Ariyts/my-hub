@@ -85,6 +85,8 @@ export function createLinkFileWithSections(container: LinkContainer): string {
     if (item.favicon) linkMeta.favicon = item.favicon;
     if (item.tags.length > 0) linkMeta.tags = item.tags;
     if (item.isFavorite) linkMeta.isFavorite = true;
+    if (item.sectionId) linkMeta.sectionId = item.sectionId;
+    if (item.color) linkMeta.color = item.color;
     
     let linkLine = `- [${item.title}](${item.url})`;
     if (item.description) {
@@ -253,6 +255,8 @@ export function parseLinkFileWithSections(content: string): {
           tags: linkMeta.tags || [],
           isFavorite: linkMeta.isFavorite ?? false,
           order: linkMeta.order ?? linkOrder++,
+          sectionId: linkMeta.sectionId,
+          color: linkMeta.color,
         });
       }
     }
