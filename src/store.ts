@@ -76,7 +76,7 @@ interface StoreActions {
   deleteLinkItem: (containerId: string, itemId: string) => void;
   // Link section actions
   addLinkSection: (containerId: string, title: string) => void;
-  updateLinkSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; icon: string}>) => void;
+  updateLinkSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; icon: string; color: string}>) => void;
   deleteLinkSection: (containerId: string, sectionId: string) => void;
   reorderLinkSections: (containerId: string, sectionIds: string[]) => void;
   moveLinkToSection: (containerId: string, linkId: string, targetSectionId: string | null) => void;

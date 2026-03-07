@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store';
 import type { LinkItem, LinkSection } from '../types';
-import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
+import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, FolderPlus, LayoutGrid, LayoutList, Palette } from 'lucide-react';
 
 // Fetch link metadata
 async function fetchLinkMetadata(url: string): Promise<{ title?: string; description?: string; favicon?: string }> {
@@ -249,6 +249,96 @@ function LinkCard({
 }
 
 // ============================================
+// COMPACT LINK ITEM COMPONENT
+// ============================================
+interface CompactLinkItemProps {
+  item: LinkItem;
+  sectionColor?: string;
+  isDark: boolean;
+  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
+  sectionId: string | null;
+  isDragging: boolean;
+}
+
+function CompactLinkItem({ item, sectionColor, isDark, onDragStart, sectionId, isDragging }: CompactLinkItemProps) {
+  const [faviconError, setFaviconError] = useState(false);
+  
+  // Default colors for sections without color
+  const defaultColor = isDark ? '#334155' : '#f1f5f9';
+  const borderColor = sectionColor || defaultColor;
+  
+  // Generate background color from section color (lighter version)
+  const getBgColor = () => {
+    if (!sectionColor) return isDark ? '#1e293b' : '#ffffff';
+    // If it's a hex color, make it lighter/more transparent
+    if (sectionColor.startsWith('#')) {
+      return `${sectionColor}15`; // Add 15% opacity
+    }
+    return `${sectionColor}15`;
+  };
+
+  return (
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      draggable
+      onDragStart={(e) => onDragStart(e, item.id, sectionId)}
+      className={`
+        flex items-center gap-2 px-2 py-1.5 rounded-md cursor-grab active:cursor-grabbing
+        transition-all duration-150 border-l-2 group
+        ${isDragging ? 'opacity-40 scale-95' : 'hover:shadow-sm'}
+      `}
+      style={{ 
+        background: getBgColor(),
+        borderLeftColor: borderColor,
+        minWidth: 0,
+      }}
+      onClick={(e) => {
+        e.preventDefault();
+        window.open(item.url, '_blank', 'noopener,noreferrer');
+      }}
+    >
+      {/* Grip handle */}
+      <div 
+        className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+        style={{ cursor: 'grab' }}
+      >
+        <GripVertical size={10} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
+      </div>
+      
+      {/* Favicon */}
+      <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+        {item.favicon && !faviconError ? (
+          <img 
+            src={item.favicon} 
+            alt="" 
+            className="w-4 h-4 object-contain"
+            onError={() => setFaviconError(true)}
+          />
+        ) : (
+          <Globe size={12} className="text-slate-400" />
+        )}
+      </div>
+      
+      {/* Title - truncated */}
+      <span 
+        className="text-xs truncate flex-1"
+        style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
+        title={item.title}
+      >
+        {item.title}
+      </span>
+      
+      {/* Favorite indicator */}
+      {item.isFavorite && (
+        <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />
+      )}
+    </a>
+  );
+}
+
+// ============================================
 // SECTION COMPONENT
 // ============================================
 interface SectionProps {
@@ -256,6 +346,7 @@ interface SectionProps {
   links: LinkItem[];
   containerId: string;
   isDark: boolean;
+  viewMode: 'grid' | 'compact';
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
   onDragOver: (e: React.DragEvent, index: number, sectionId: string | null) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -269,11 +360,25 @@ interface SectionProps {
   onEditSection: (sectionId: string) => void;
   onDeleteSection: (sectionId: string) => void;
   onAddLink: (sectionId: string | null) => void;
+  onColorSection: (sectionId: string) => void;
 }
 
+// Predefined color palette
+const SECTION_COLORS = [
+  '#ef4444', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#14b8a6', // teal
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#64748b', // slate
+];
+
 function Section({ 
-  section, links, containerId, isDark, onDragStart, onDragOver, onDrop,
-  dragState, onToggleCollapse, onEditSection, onDeleteSection, onAddLink
+  section, links, containerId, isDark, viewMode, onDragStart, onDragOver, onDrop,
+  dragState, onToggleCollapse, onEditSection, onDeleteSection, onAddLink, onColorSection
 }: SectionProps) {
   const sectionId = section?.id || null;
   const isCollapsed = section?.collapsed ?? false;
@@ -301,12 +406,18 @@ function Section({
               onClick={(e) => { e.stopPropagation(); onToggleCollapse(section.id); }}
             >
               {isCollapsed ? (
-                <ChevronRight size={14} style={{ color: '#FF9800' }} />
+                <ChevronRight size={14} style={{ color: section.color || '#FF9800' }} />
               ) : (
-                <ChevronDown size={14} style={{ color: '#FF9800' }} />
+                <ChevronDown size={14} style={{ color: section.color || '#FF9800' }} />
               )}
             </button>
-            <Link2 size={14} style={{ color: '#FF9800' }} />
+            {section.color && (
+              <div 
+                className="w-3 h-3 rounded-full flex-shrink-0" 
+                style={{ background: section.color }}
+              />
+            )}
+            <Link2 size={14} style={{ color: section.color || '#FF9800' }} />
             <span 
               className="font-medium text-sm flex-1"
               style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
@@ -315,11 +426,18 @@ function Section({
             </span>
             <span 
               className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: '#FF980015', color: '#FF9800' }}
+              style={{ background: section.color ? `${section.color}20` : '#FF980015', color: section.color || '#FF9800' }}
             >
               {links.length}
             </span>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => { e.stopPropagation(); onColorSection(section.id); }}
+                className="p-1.5 rounded-lg hover:bg-slate-500/20 transition-colors"
+                title="Change color"
+              >
+                <Palette size={14} style={{ color: section.color || '#64748b' }} />
+              </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onEditSection(section.id); }}
                 className="p-1.5 rounded-lg hover:bg-orange-500/20 transition-colors"
@@ -365,7 +483,9 @@ function Section({
       {/* Section Content */}
       {!isCollapsed && (
         <div 
-          className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 min-h-[80px]"
+          className={`p-3 min-h-[80px] ${viewMode === 'compact' 
+            ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5' 
+            : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'}`}
           style={{ background: bg }}
           onDragOver={(e) => {
             e.preventDefault();
@@ -376,23 +496,39 @@ function Section({
           }}
           onDrop={onDrop}
         >
-          {links.map((item, index) => (
-            <LinkCard
-              key={item.id}
-              item={item}
-              containerId={containerId}
-              sectionId={sectionId}
-              isDark={isDark}
-              onDragStart={onDragStart}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
-              index={index}
-              isDragging={dragState.draggingItemId === item.id}
-              isDropTarget={dragState.dropIndex !== null}
-              dropIndex={dragState.dropIndex ?? -1}
-              dropSectionId={dragState.dropSectionId}
-            />
-          ))}
+          {viewMode === 'compact' ? (
+            // Compact view
+            links.map((item) => (
+              <CompactLinkItem
+                key={item.id}
+                item={item}
+                sectionColor={section?.color}
+                isDark={isDark}
+                onDragStart={onDragStart}
+                sectionId={sectionId}
+                isDragging={dragState.draggingItemId === item.id}
+              />
+            ))
+          ) : (
+            // Grid view (default)
+            links.map((item, index) => (
+              <LinkCard
+                key={item.id}
+                item={item}
+                containerId={containerId}
+                sectionId={sectionId}
+                isDark={isDark}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+                index={index}
+                isDragging={dragState.draggingItemId === item.id}
+                isDropTarget={dragState.dropIndex !== null}
+                dropIndex={dragState.dropIndex ?? -1}
+                dropSectionId={dragState.dropSectionId}
+              />
+            ))
+          )}
           
           {links.length === 0 && (
             <div 
@@ -644,6 +780,18 @@ export function LinksView({ containerId }: Props) {
   // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURN
   const [search, setSearch] = useState('');
   
+  // View mode - default to grid, persists in localStorage
+  const [viewMode, setViewMode] = useState<'grid' | 'compact'>(() => {
+    const saved = localStorage.getItem('links-viewMode');
+    return (saved === 'compact' || saved === 'grid') ? saved : 'grid';
+  });
+  
+  // Save viewMode to localStorage when it changes
+  const handleSetViewMode = (mode: 'grid' | 'compact') => {
+    setViewMode(mode);
+    localStorage.setItem('links-viewMode', mode);
+  };
+  
   // Drag & Drop state
   const [dragState, setDragState] = useState<{
     draggingItemId: string | null;
@@ -796,6 +944,19 @@ export function LinksView({ containerId }: Props) {
     }
   };
 
+  const handleColorSection = (sectionId: string) => {
+    if (!container) return;
+    const section = sections.find(s => s?.id === sectionId);
+    if (!section) return;
+    
+    // Simple color picker - cycle through colors or prompt for hex
+    const currentIndex = SECTION_COLORS.indexOf(section.color || '');
+    const nextIndex = (currentIndex + 1) % SECTION_COLORS.length;
+    const newColor = SECTION_COLORS[nextIndex];
+    
+    updateLinkSection(container.id, sectionId, { color: newColor });
+  };
+
   const handleDeleteSection = (sectionId: string) => {
     if (!container) return;
     
@@ -877,6 +1038,26 @@ export function LinksView({ containerId }: Props) {
             onChange={(e) => setSearch(e.target.value)} 
           />
         </div>
+        {/* View Mode Toggle */}
+        <div 
+          className="flex items-center border rounded-lg overflow-hidden"
+          style={{ borderColor: border }}
+        >
+          <button
+            onClick={() => handleSetViewMode('grid')}
+            className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-orange-500/20' : 'hover:bg-slate-500/10'}`}
+            title="Card view"
+          >
+            <LayoutGrid size={16} style={{ color: viewMode === 'grid' ? '#FF9800' : '#64748b' }} />
+          </button>
+          <button
+            onClick={() => handleSetViewMode('compact')}
+            className={`p-1.5 transition-colors ${viewMode === 'compact' ? 'bg-orange-500/20' : 'hover:bg-slate-500/10'}`}
+            title="Compact view"
+          >
+            <LayoutList size={16} style={{ color: viewMode === 'compact' ? '#FF9800' : '#64748b' }} />
+          </button>
+        </div>
         <button 
           onClick={() => setShowAddSectionModal(true)} 
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border"
@@ -925,6 +1106,7 @@ export function LinksView({ containerId }: Props) {
               links={sectionLinks}
               containerId={container.id}
               isDark={isDarkTheme}
+              viewMode={viewMode}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
@@ -933,6 +1115,7 @@ export function LinksView({ containerId }: Props) {
               onEditSection={handleEditSection}
               onDeleteSection={handleDeleteSection}
               onAddLink={handleAddLink}
+              onColorSection={handleColorSection}
             />
           );
         })}

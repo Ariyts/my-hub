@@ -108,6 +108,7 @@ export interface LinkSection {
   order: number;
   collapsed: boolean;
   icon?: string;
+  color?: string; // Цвет секции для визуальной группировки (hex или название)
 }
 
 // Контейнер ссылок (один .md файл)
