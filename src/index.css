@@ -14,3 +14,115 @@
 .compact-grid > *:last-child {
   margin-bottom: 0;
 }
+
+/* ============================================
+   INLINE FORM ANIMATIONS
+   ============================================ */
+
+/* Fade in animation for inline forms */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
+/* Scale animation for editing mode */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   COMPACT ITEM HOVER STATES
+   ============================================ */
+
+/* Smooth hover transition for compact items */
+.compact-item-hover {
+  transition: all 0.15s ease;
+}
+
+.compact-item-hover:hover {
+  transform: translateX(2px);
+}
+
+/* ============================================
+   DRAG & DROP INDICATORS
+   ============================================ */
+
+/* Drop target highlight */
+.drop-target-active {
+  box-shadow: inset 0 0 0 2px #FF9800;
+  background: rgba(255, 152, 0, 0.05) !important;
+}
+
+/* Dragging state */
+.dragging-item {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* ============================================
+   FOCUS STYLES
+   ============================================ */
+
+/* Focus ring for inputs */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* ============================================
+   SCROLLBAR STYLING (Dark mode)
+   ============================================ */
+
+.dark-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* ============================================
+   LINK ITEM COLOR INDICATOR
+   ============================================ */
+
+.color-indicator {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  transition: width 0.15s ease;
+}
+
+.color-indicator:hover {
+  width: 4px;
+}
