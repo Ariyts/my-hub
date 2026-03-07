@@ -8,7 +8,7 @@ import { LinksView } from './components/LinksView';
 import { PromptsView } from './components/PromptsView';
 import { SettingsModal } from './components/SettingsModal';
 import { TrashModal } from './components/TrashModal';
-import type { NoteItem, CommandContainer, LinkContainer, PromptContainer } from './types';
+import type { NoteItem, CommandContainer, PromptContainer } from './types';
 import { FileText, Plus } from 'lucide-react';
 
 function MainArea() {
@@ -96,8 +96,8 @@ function MainArea() {
 
   if (baseType === 'links') {
     if (activeFile?.data) {
-      // Передаём контейнер (файл) для отображения
-      return <LinksView container={activeFile.data as LinkContainer} />;
+      // Передаём ID контейнера для reactive updates
+      return <LinksView containerId={activeFile.data.id} />;
     }
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: bg }}>

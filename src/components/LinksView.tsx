@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store';
-import type { LinkContainer, LinkItem, LinkSection } from '../types';
+import type { LinkItem, LinkSection } from '../types';
 import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
 
 // Fetch link metadata
@@ -285,7 +285,7 @@ function Section({
 
   return (
     <div 
-      className="rounded-xl border overflow-hidden"
+      className="rounded-xl border overflow-hidden group"
       style={{ borderColor: isDragging ? '#FF9800' : border }}
     >
       {/* Section Header */}
@@ -319,18 +319,20 @@ function Section({
             >
               {links.length}
             </span>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => { e.stopPropagation(); onEditSection(section.id); }}
-                className="p-1 rounded hover:bg-slate-500/20"
+                className="p-1.5 rounded-lg hover:bg-orange-500/20 transition-colors"
+                title="Rename section"
               >
-                <Edit3 size={12} className="text-slate-400" />
+                <Edit3 size={14} style={{ color: '#FF9800' }} />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }}
-                className="p-1 rounded hover:bg-red-500/20"
+                className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors"
+                title="Delete section"
               >
-                <Trash2 size={12} className="text-red-400" />
+                <Trash2 size={14} className="text-red-400" />
               </button>
             </div>
           </>
@@ -608,10 +610,12 @@ function AddSectionModal({ isOpen, onClose, onAdd, isDark }: AddSectionModalProp
 // MAIN LINKS VIEW
 // ============================================
 interface Props { 
-  container: LinkContainer;
+  containerId: string;
 }
 
-export function LinksView({ container }: Props) {
+export function LinksView({ containerId }: Props) {
+  // Get container directly from store to ensure re-renders on updates
+  const container = useStore(state => state.links.find(l => l.id === containerId));
   const { 
     updateLinkContainer, 
     updateLinkSection,
@@ -619,6 +623,16 @@ export function LinksView({ container }: Props) {
     addLinkSection,
     isDarkTheme 
   } = useStore();
+  
+  // If container not found, show placeholder
+  if (!container) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: isDarkTheme ? '#0f172a' : '#ffffff' }}>
+        <Link2 size={48} className="opacity-20" style={{ color: '#FF9800' }} />
+        <p style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}>Container not found</p>
+      </div>
+    );
+  }
   
   const [search, setSearch] = useState('');
   
