@@ -861,7 +861,8 @@ export function LinksView({ containerId }: Props) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {totalLinks === 0 && (
+        {/* Show "No links" only if no links AND no sections */}
+        {totalLinks === 0 && sections.filter(s => s !== null).length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: '#94a3b8' }}>
             <Link2 size={48} className="opacity-20" />
             <p className="text-lg font-medium">No links yet</p>
@@ -876,9 +877,11 @@ export function LinksView({ containerId }: Props) {
           </div>
         )}
 
-        {totalLinks > 0 && sections.map(section => {
+        {/* Show sections (including empty ones) */}
+        {sections.map(section => {
           const sectionLinks = getLinksForSection(section?.id || null);
-          if (sectionLinks.length === 0 && section !== null) return null;
+          // Skip uncategorized if no links AND there are other sections
+          if (section === null && sectionLinks.length === 0 && sections.filter(s => s !== null).length > 0) return null;
           
           return (
             <Section
