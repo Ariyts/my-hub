@@ -55,12 +55,12 @@ interface StoreActions {
   setActiveItemId: (id: string | null) => void;
 
   // Note actions
-  addNote: (note: Omit<NoteItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addNote: (note: Omit<NoteItem, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
   updateNote: (id: string, updates: Partial<NoteItem>) => void;
   deleteNote: (id: string) => void;
 
   // Command container actions
-  addCommandContainer: (container: Omit<CommandContainer, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addCommandContainer: (container: Omit<CommandContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
   updateCommandContainer: (id: string, updates: Partial<CommandContainer>) => void;
   deleteCommandContainer: (id: string) => void;
   addCommandItem: (containerId: string, item: Omit<CommandItem, 'id'>) => void;
@@ -68,15 +68,21 @@ interface StoreActions {
   deleteCommandItem: (containerId: string, itemId: string) => void;
 
   // Link container actions
-  addLinkContainer: (container: Omit<LinkContainer, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addLinkContainer: (container: Omit<LinkContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
   updateLinkContainer: (id: string, updates: Partial<LinkContainer>) => void;
   deleteLinkContainer: (id: string) => void;
   addLinkItem: (containerId: string, item: Omit<LinkItem, 'id'>) => void;
   updateLinkItem: (containerId: string, itemId: string, updates: Partial<LinkItem>) => void;
   deleteLinkItem: (containerId: string, itemId: string) => void;
+  // Link section actions
+  addLinkSection: (containerId: string, title: string) => void;
+  updateLinkSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; icon: string}>) => void;
+  deleteLinkSection: (containerId: string, sectionId: string) => void;
+  reorderLinkSections: (containerId: string, sectionIds: string[]) => void;
+  moveLinkToSection: (containerId: string, linkId: string, targetSectionId: string | null) => void;
 
   // Prompt container actions
-  addPromptContainer: (container: Omit<PromptContainer, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addPromptContainer: (container: Omit<PromptContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
   updatePromptContainer: (id: string, updates: Partial<PromptContainer>) => void;
   deletePromptContainer: (id: string) => void;
   addPromptItem: (containerId: string, item: Omit<PromptItem, 'id'>) => void;
@@ -497,6 +503,85 @@ export const useStore = create<AppState & StoreActions>()(
         links: s.links.map(l => l.id === containerId ? {
           ...l, subItems: l.subItems.filter(i => i.id !== itemId)
         } : l)
+      })),
+      
+      // ============================================
+      // LINK SECTION ACTIONS
+      // ============================================
+      addLinkSection: (containerId, title) => {
+        const sectionId = genId();
+        set((s) => ({
+          links: s.links.map(l => {
+            if (l.id !== containerId) return l;
+            const sections = l.sections || [];
+            const newSection = {
+              id: sectionId,
+              title,
+              order: sections.length,
+              collapsed: false,
+            };
+            return {
+              ...l,
+              sections: [...sections, newSection],
+              updatedAt: new Date().toISOString(),
+            };
+          })
+        }));
+      },
+      
+      updateLinkSection: (containerId, sectionId, updates) => set((s) => ({
+        links: s.links.map(l => {
+          if (l.id !== containerId) return l;
+          return {
+            ...l,
+            sections: (l.sections || []).map(sec => 
+              sec.id === sectionId ? { ...sec, ...updates } : sec
+            ),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+      
+      deleteLinkSection: (containerId, sectionId) => set((s) => ({
+        links: s.links.map(l => {
+          if (l.id !== containerId) return l;
+          // Remove section and move its links to "no section" (null)
+          return {
+            ...l,
+            sections: (l.sections || []).filter(sec => sec.id !== sectionId),
+            subItems: l.subItems.map(item => 
+              item.sectionId === sectionId ? { ...item, sectionId: undefined } : item
+            ),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+      
+      reorderLinkSections: (containerId, sectionIds) => set((s) => ({
+        links: s.links.map(l => {
+          if (l.id !== containerId) return l;
+          return {
+            ...l,
+            sections: (l.sections || []).map(sec => ({
+              ...sec,
+              order: sectionIds.indexOf(sec.id),
+            })).sort((a, b) => a.order - b.order),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+      
+      moveLinkToSection: (containerId, linkId, targetSectionId) => set((s) => ({
+        links: s.links.map(l => {
+          if (l.id !== containerId) return l;
+          return {
+            ...l,
+            subItems: l.subItems.map(item =>
+              item.id === linkId ? { ...item, sectionId: targetSectionId || undefined } : item
+            ),
+            updatedAt: new Date().toISOString(),
+          };
+        })
       })),
 
       // ============================================

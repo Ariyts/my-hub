@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap, FileText, Edit, Trash, Plus, ChevronDown, ChevronRight, File } from 'lucide-react';
+import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap, Edit, Trash, Plus, ChevronDown, ChevronRight, File } from 'lucide-react';
 import { previewSync, getLocalPreview, type SyncPreview } from '../utils/githubSync';
 
 interface TabProps {

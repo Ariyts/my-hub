@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { PromptContainer, PromptItem } from '../types';
-import { Plus, Search, Copy, Edit3, Trash2, ChevronDown, ChevronRight, MessageSquare, Star, Check, Variable, GripVertical, X } from 'lucide-react';
+import { Plus, Search, Copy, Edit3, Trash2, ChevronDown, ChevronRight, MessageSquare, Star, Check, Variable, X } from 'lucide-react';
 
 interface PromptRowProps {
   item: PromptItem;
@@ -345,25 +345,18 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
   );
 }
 
-interface Props { folderId: string | null; }
+interface Props { 
+  container: PromptContainer;  // ИЗМЕНЕНО: принимаем конкретный контейнер (файл)
+}
 
-export function PromptsView({ folderId }: Props) {
-  const { prompts, addPromptContainer, searchQuery, isDarkTheme } = useStore();
+export function PromptsView({ container }: Props) {
+  const { isDarkTheme } = useStore();
   const [search, setSearch] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newCat, setNewCat] = useState('General');
 
-  const filtered = prompts
-    .filter(p => !folderId || p.folderId === folderId)
-    .filter(p => p.title.toLowerCase().includes((search || searchQuery).toLowerCase()));
-
-  const handleAdd = () => {
-    if (newTitle.trim() && folderId) {
-      addPromptContainer({ folderId, title: newTitle.trim(), subItems: [], tags: [], category: newCat, type: 'prompts', isExpanded: true });
-      setNewTitle(''); setAdding(false);
-    }
-  };
+  const filtered = container.subItems.filter(i =>
+    i.title.toLowerCase().includes(search.toLowerCase()) ||
+    i.prompt.toLowerCase().includes(search.toLowerCase())
+  );
 
   const bg = isDarkTheme ? '#0f172a' : '#f1f5f9';
   const border = isDarkTheme ? '#1e293b' : '#e2e8f0';
@@ -373,38 +366,30 @@ export function PromptsView({ folderId }: Props) {
       <div className="px-6 py-4 border-b flex items-center gap-3" style={{ background: isDarkTheme ? '#111827' : '#fff', borderColor: border }}>
         <MessageSquare size={20} style={{ color: '#9C27B0' }} />
         <div className="flex-1">
-          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>Prompts</h1>
-          <p className="text-xs" style={{ color: '#94a3b8' }}>{filtered.length} collections</p>
+          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>{container.title}</h1>
+          <p className="text-xs" style={{ color: '#94a3b8' }}>{filtered.length} prompts</p>
         </div>
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className="pl-8 pr-3 py-1.5 text-sm rounded-lg border outline-none w-48" style={{ background: isDarkTheme ? '#1e293b' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input 
+            className="pl-8 pr-3 py-1.5 text-sm rounded-lg border outline-none w-48" 
+            style={{ background: isDarkTheme ? '#1e293b' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} 
+            placeholder="Search prompts..." 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+          />
         </div>
-        <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ background: '#9C27B020', color: '#9C27B0' }}>
-          <Plus size={15} /> New Collection
-        </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-6 space-y-3">
-        {adding && (
-          <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: '#9C27B050', background: isDarkTheme ? '#1e293b' : '#fff' }}>
-            <input autoFocus className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} placeholder="Collection name..." value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAdding(false); }} />
-            <select className="w-full text-sm px-3 py-2 rounded-lg border outline-none" style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} value={newCat} onChange={(e) => setNewCat(e.target.value)}>
-              {['General', 'Coding', 'Writing', 'Analysis', 'Design', 'Research'].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <div className="flex gap-2">
-              <button onClick={handleAdd} className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>Create</button>
-              <button onClick={() => setAdding(false)} className="px-3 py-1.5 rounded text-xs" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
-            </div>
-          </div>
-        )}
-        {filtered.length === 0 && !adding && (
+      <div className="flex-1 overflow-y-auto p-6">
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: '#94a3b8' }}>
             <MessageSquare size={48} className="opacity-20" />
-            <p className="text-lg font-medium">No prompt collections</p>
-            <p className="text-sm">Select a folder and create your first collection</p>
+            <p className="text-lg font-medium">No prompts yet</p>
+            <p className="text-sm">Add your first prompt using the panel below</p>
           </div>
+        ) : (
+          <ContainerCard container={{ ...container, subItems: filtered }} isDark={isDarkTheme} />
         )}
-        {filtered.map(container => <ContainerCard key={container.id} container={container} isDark={isDarkTheme} />)}
       </div>
     </div>
   );

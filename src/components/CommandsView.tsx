@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import type { CommandContainer, CommandItem } from '../types';
 import {
   ChevronDown, ChevronRight, Plus, Copy, Edit3, Trash2, Check,
-  Search, Star, Terminal, GripVertical
+  Search, Star, Terminal
 } from 'lucide-react';
 
 const LANG_COLORS: Record<string, string> = {
@@ -16,7 +16,7 @@ const LANG_ICONS: Record<string, string> = {
 };
 
 // Syntax highlighting - simple approach
-function highlightSyntax(code: string, lang: string): JSX.Element {
+function highlightSyntax(code: string): React.ReactElement {
   const keywords = ['git', 'npm', 'docker', 'kubectl', 'cd', 'ls', 'cat', 'echo', 'export', 'import', 'function', 'const', 'let', 'var', 'if', 'else', 'for', 'while', 'return', 'sudo', 'apt', 'brew', 'pip', 'node', 'python'];
   
   const parts = code.split(/(\s+|['"][^'"]*['"]|#[^\n]*)/g);
@@ -146,7 +146,7 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
           onClick={handleCopy}
           title={item.description || 'Click to copy'}
         >
-          {highlightSyntax(item.command, item.language)}
+          {highlightSyntax(item.command)}
         </div>
       </td>
       
@@ -325,31 +325,17 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
 }
 
 interface Props {
-  folderId: string | null;
+  container: CommandContainer;  // ИЗМЕНЕНО: принимаем конкретный контейнер (файл)
 }
 
-export function CommandsView({ folderId }: Props) {
-  const { commands, addCommandContainer, searchQuery, isDarkTheme } = useStore();
+export function CommandsView({ container }: Props) {
+  const { isDarkTheme } = useStore();
   const [search, setSearch] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newDesc, setNewDesc] = useState('');
 
-  const filtered = commands
-    .filter(c => !folderId || c.folderId === folderId)
-    .filter(c =>
-      c.title.toLowerCase().includes((search || searchQuery).toLowerCase()) ||
-      c.subItems.some(i => i.command.toLowerCase().includes((search || searchQuery).toLowerCase()))
-    );
-
-  const handleAdd = () => {
-    if (newTitle.trim() && folderId) {
-      addCommandContainer({ folderId, title: newTitle.trim(), description: newDesc, subItems: [], tags: [], type: 'commands', isExpanded: true });
-      setNewTitle('');
-      setNewDesc('');
-      setAdding(false);
-    }
-  };
+  const filtered = container.subItems.filter(i =>
+    i.command.toLowerCase().includes(search.toLowerCase()) ||
+    i.description.toLowerCase().includes(search.toLowerCase())
+  );
 
   const bg = isDarkTheme ? '#0f172a' : '#f1f5f9';
   const border = isDarkTheme ? '#1e293b' : '#e2e8f0';
@@ -360,69 +346,32 @@ export function CommandsView({ folderId }: Props) {
       <div className="px-6 py-4 border-b flex items-center gap-3" style={{ background: isDarkTheme ? '#111827' : '#fff', borderColor: border }}>
         <Terminal size={20} style={{ color: '#2196F3' }} />
         <div className="flex-1">
-          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>Commands</h1>
-          <p className="text-xs" style={{ color: '#94a3b8' }}>{filtered.length} collections</p>
+          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>{container.title}</h1>
+          <p className="text-xs" style={{ color: '#94a3b8' }}>{filtered.length} commands</p>
         </div>
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             className="pl-8 pr-3 py-1.5 text-sm rounded-lg border outline-none w-48"
             style={{ background: isDarkTheme ? '#1e293b' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
-            placeholder="Search..."
+            placeholder="Search commands..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button
-          onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium"
-          style={{ background: '#2196F320', color: '#2196F3' }}
-        >
-          <Plus size={15} /> New Collection
-        </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-3">
-        {adding && (
-          <div className="rounded-xl border p-3 space-y-2" style={{ borderColor: '#2196F350', background: isDarkTheme ? '#1e293b' : '#fff' }}>
-            <input
-              autoFocus
-              className="w-full text-sm px-3 py-2 rounded-lg border outline-none"
-              style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
-              placeholder="Collection name..."
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAdding(false); }}
-            />
-            <input
-              className="w-full text-sm px-3 py-2 rounded-lg border outline-none"
-              style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
-              placeholder="Description (optional)..."
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-            />
-            <div className="flex gap-2">
-              <button onClick={handleAdd} className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: '#2196F315', color: '#2196F3' }}>Create</button>
-              <button onClick={() => setAdding(false)} className="px-3 py-1.5 rounded text-xs" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
-            </div>
-          </div>
-        )}
-        {filtered.length === 0 && !adding && (
+      <div className="flex-1 overflow-y-auto p-6">
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: '#94a3b8' }}>
             <Terminal size={48} className="opacity-20" />
-            <p className="text-lg font-medium">No command collections</p>
-            <p className="text-sm">Select a folder and create your first collection</p>
-            {folderId && (
-              <button onClick={() => setAdding(true)} className="px-4 py-2 rounded-lg text-sm font-medium" style={{ background: '#2196F320', color: '#2196F3' }}>
-                Create Collection
-              </button>
-            )}
+            <p className="text-lg font-medium">No commands yet</p>
+            <p className="text-sm">Add your first command using the panel below</p>
           </div>
+        ) : (
+          <ContainerCard container={{ ...container, subItems: filtered }} isDark={isDarkTheme} />
         )}
-        {filtered.map(container => (
-          <ContainerCard key={container.id} container={container} isDark={isDarkTheme} />
-        ))}
       </div>
     </div>
   );

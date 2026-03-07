@@ -23,7 +23,7 @@ export function NoteEditor({ note }: Props) {
   const [showTagInput, setShowTagInput] = useState(false);
   const [saved, setSaved] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const autoSaveRef = useRef<ReturnType<typeof setTimeout>>();
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setTitle(note.title);

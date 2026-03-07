@@ -18,19 +18,17 @@ interface FolderItemProps {
   folder: Folder;
   depth: number;
   activeItemId: string | null;
-  onSelectFolder: (id: string) => void;
-  onSelectItem: (id: string) => void;
-  onAddItemToFolder: (folderId: string) => void;
+  onSelectFile: (id: string) => void;
+  onAddFileToFolder: (folderId: string) => void;
   onAddSubfolder: (parentId: string) => void;
 }
 
-function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem, onAddItemToFolder, onAddSubfolder }: FolderItemProps) {
+function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFolder, onAddSubfolder }: FolderItemProps) {
   const { 
     activeCategoryId, 
     categories,
     folders,
     notes, commands, links, prompts, 
-    activeFolderId, 
     toggleFolderExpanded, 
     updateFolder, 
     deleteFolder, 
@@ -45,8 +43,8 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
     deletePromptContainer
   } = useStore();
   
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: 'folder' | 'item'; itemId?: string } | null>(null);
-  const [renaming, setRenaming] = useState<{ type: 'folder' | 'item'; itemId?: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: 'folder' | 'file'; itemId?: string } | null>(null);
+  const [renaming, setRenaming] = useState<{ type: 'folder' | 'file'; itemId?: string } | null>(null);
   const [newName, setNewName] = useState(folder.name);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
@@ -58,8 +56,8 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
   // Get child folders
   const childFolders = folders.filter(f => f.parentId === folder.id).sort((a, b) => a.order - b.order);
 
-  // Get items in this folder (sorted by order)
-  const getItems = () => {
+  // Get files in this folder (sorted by order)
+  const getFiles = () => {
     const sortByOrder = (items: any[]) => 
       [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
@@ -71,10 +69,9 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
     }
   };
 
-  const items = getItems();
-  const isActive = activeFolderId === folder.id;
+  const files = getFiles();
 
-  const handleContextMenu = (e: React.MouseEvent, type: 'folder' | 'item', itemId?: string) => {
+  const handleContextMenu = (e: React.MouseEvent, type: 'folder' | 'file', itemId?: string) => {
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({ x: e.clientX, y: e.clientY, type, itemId });
@@ -86,7 +83,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
     setContextMenu(null);
   };
 
-  const handleRenameItem = (itemId: string) => {
+  const handleRenameFile = (itemId: string) => {
     if (newName.trim()) {
       switch (baseType) {
         case 'notes': updateNote(itemId, { title: newName.trim() }); break;
@@ -99,7 +96,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
     setContextMenu(null);
   };
 
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteFile = (itemId: string) => {
     switch (baseType) {
       case 'notes': deleteNote(itemId); break;
       case 'commands': deleteCommandContainer(itemId); break;
@@ -110,12 +107,12 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
   };
 
   // Drag & Drop handlers
-  const handleDragStart = (e: React.DragEvent, item: any) => {
+  const handleDragStart = (e: React.DragEvent, file: any) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('application/json', JSON.stringify({
-      id: item.id,
-      folderId: item.folderId,
-      title: item.title
+      id: file.id,
+      folderId: file.folderId,
+      title: file.title
     }));
   };
 
@@ -147,9 +144,9 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
     setDropTarget(null);
   };
 
-  const startRenameItem = (itemId: string, currentTitle: string) => {
+  const startRenameFile = (itemId: string, currentTitle: string) => {
     setNewName(currentTitle);
-    setRenaming({ type: 'item', itemId });
+    setRenaming({ type: 'file', itemId });
     setContextMenu(null);
   };
 
@@ -203,8 +200,8 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
                   style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
                   onClick={() => {
-                    const item = items.find(i => i.id === contextMenu.itemId);
-                    if (item) startRenameItem(item.id, item.title);
+                    const file = files.find(f => f.id === contextMenu.itemId);
+                    if (file) startRenameFile(file.id, file.title);
                   }}
                 >
                   <Edit2 size={12} /> Rename
@@ -212,7 +209,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
                 <button
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
                   style={{ color: '#ef4444' }}
-                  onClick={() => contextMenu.itemId && handleDeleteItem(contextMenu.itemId)}
+                  onClick={() => contextMenu.itemId && handleDeleteFile(contextMenu.itemId)}
                 >
                   <Trash2 size={12} /> Delete
                 </button>
@@ -222,15 +219,15 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
         </>
       )}
 
-      {/* Folder row */}
+      {/* Folder row - КЛИК ТОЛЬКО РАСКРЫВАЕТ/СВОРАЧИВАЕТ */}
       <div
         className="group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-lg mx-1 transition-all duration-150"
         style={{
           paddingLeft: `${10 + depth * 14}px`,
-          background: isActive ? `${typeColor}15` : 'transparent',
-          border: isActive ? `1px solid ${typeColor}40` : '1px solid transparent',
+          background: 'transparent',
+          border: '1px solid transparent',
         }}
-        onClick={() => onSelectFolder(folder.id)}
+        onClick={() => toggleFolderExpanded(folder.id)} // ИЗМЕНЕНО: только toggle
         onContextMenu={(e) => handleContextMenu(e, 'folder')}
       >
         <button
@@ -252,20 +249,20 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="flex-1 text-sm font-medium truncate" style={{ color: isActive ? typeColor : isDarkTheme ? '#cbd5e1' : '#374151' }}>
+          <span className="flex-1 text-sm font-medium truncate" style={{ color: isDarkTheme ? '#cbd5e1' : '#374151' }}>
             {folder.name}
           </span>
         )}
         
         <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>
-          {items.length}
+          {files.length}
         </span>
         
-        {/* Add item button */}
+        {/* Add file button */}
         <button
           className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded"
-          onClick={(e) => { e.stopPropagation(); onAddItemToFolder(folder.id); }}
-          title="Add item"
+          onClick={(e) => { e.stopPropagation(); onAddFileToFolder(folder.id); }}
+          title="Add file"
         >
           <Plus size={12} style={{ color: typeColor }} />
         </button>
@@ -286,37 +283,36 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
           folder={childFolder}
           depth={depth + 1}
           activeItemId={activeItemId}
-          onSelectFolder={onSelectFolder}
-          onSelectItem={onSelectItem}
-          onAddItemToFolder={onAddItemToFolder}
+          onSelectFile={onSelectFile}
+          onAddFileToFolder={onAddFileToFolder}
           onAddSubfolder={onAddSubfolder}
         />
       ))}
 
-      {/* Items inside folder */}
-      {folder.isExpanded && items.map((item) => {
-        const isItemActive = activeItemId === item.id;
-        const isRenamingThis = renaming?.type === 'item' && renaming.itemId === item.id;
+      {/* Files inside folder - КЛИК ОТКРЫВАЕТ ФАЙЛ */}
+      {folder.isExpanded && files.map((file) => {
+        const isFileActive = activeItemId === file.id;
+        const isRenamingThis = renaming?.type === 'file' && renaming.itemId === file.id;
         
         return (
           <div
-            key={item.id}
+            key={file.id}
             draggable
-            onDragStart={(e) => handleDragStart(e, item)}
-            className="group/item flex items-center gap-1.5 cursor-pointer rounded-lg mx-1 transition-all duration-150"
+            onDragStart={(e) => handleDragStart(e, file)}
+            className="group/file flex items-center gap-1.5 cursor-pointer rounded-lg mx-1 transition-all duration-150"
             style={{
               paddingLeft: `${26 + depth * 14}px`,
               paddingRight: '6px',
               paddingTop: '4px',
               paddingBottom: '4px',
-              background: isItemActive ? `${typeColor}22` : 'transparent',
-              border: isItemActive ? `1px solid ${typeColor}50` : '1px solid transparent',
+              background: isFileActive ? `${typeColor}22` : 'transparent',
+              border: isFileActive ? `1px solid ${typeColor}50` : '1px solid transparent',
             }}
-            onClick={() => onSelectItem(item.id)}
-            onContextMenu={(e) => handleContextMenu(e, 'item', item.id)}
+            onClick={() => onSelectFile(file.id)} // ИЗМЕНЕНО: открывает файл
+            onContextMenu={(e) => handleContextMenu(e, 'file', file.id)}
           >
             {/* Drag handle */}
-            <div className="opacity-0 group-hover/item:opacity-30 cursor-grab">
+            <div className="opacity-0 group-hover/file:opacity-30 cursor-grab">
               <GripVertical size={10} className="text-slate-400" />
             </div>
             
@@ -327,30 +323,30 @@ function FolderItem({ folder, depth, activeItemId, onSelectFolder, onSelectItem,
                 className="flex-1 text-xs bg-transparent border-b outline-none"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                onBlur={() => handleRenameItem(item.id)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleRenameItem(item.id); if (e.key === 'Escape') setRenaming(null); }}
+                onBlur={() => handleRenameFile(file.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFile(file.id); if (e.key === 'Escape') setRenaming(null); }}
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span className="flex-1 text-xs truncate" style={{ color: isItemActive ? typeColor : isDarkTheme ? '#94a3b8' : '#6b7280' }}>
-                {item.title}
+              <span className="flex-1 text-xs truncate" style={{ color: isFileActive ? typeColor : isDarkTheme ? '#94a3b8' : '#6b7280' }}>
+                {file.title}
               </span>
             )}
             
-            {'isFavorite' in item && item.isFavorite && <Star size={9} className="text-amber-400 fill-amber-400" />}
+            {'isFavorite' in file && file.isFavorite && <Star size={9} className="text-amber-400 fill-amber-400" />}
             
             {/* Edit/Delete buttons */}
             <button
-              className="opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded"
-              onClick={(e) => { e.stopPropagation(); startRenameItem(item.id, item.title); }}
+              className="opacity-0 group-hover/file:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded"
+              onClick={(e) => { e.stopPropagation(); startRenameFile(file.id, file.title); }}
               title="Rename"
             >
               <Edit2 size={10} className="text-slate-400 hover:text-slate-200" />
             </button>
             <button
-              className="opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 hover:bg-red-900/30 rounded"
-              onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+              className="opacity-0 group-hover/file:opacity-100 transition-opacity p-0.5 hover:bg-red-900/30 rounded"
+              onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id); }}
               title="Delete"
             >
               <Trash2 size={10} className="text-slate-400 hover:text-red-400" />
@@ -376,7 +372,6 @@ export function FolderPanel() {
     addCommandContainer, 
     addLinkContainer,
     addPromptContainer, 
-    setActiveFolderId, 
     isDarkTheme,
   } = useStore();
 
@@ -406,7 +401,7 @@ export function FolderPanel() {
     }
   };
 
-  const handleAddItem = (folderId: string) => {
+  const handleAddFile = (folderId: string) => {
     switch (baseType) {
       case 'notes':
         addNote({ folderId, title: 'New Note', content: '# New Note\n\nStart writing...', tags: [], isFavorite: false, type: 'notes' });
@@ -423,12 +418,9 @@ export function FolderPanel() {
     }
   };
 
-  const handleSelectFolder = (folderId: string) => {
-    setActiveFolderId(folderId);
-    setActiveItemId(null);
-  };
-
-  const handleSelectItem = (itemId: string) => {
+  // ИЗМЕНЕНО: handleSelectFolder удалён, так как папка только раскрывается
+  // handleSelectFile теперь открывает файл на просмотр
+  const handleSelectFile = (itemId: string) => {
     setActiveItemId(itemId);
   };
 
@@ -473,10 +465,10 @@ export function FolderPanel() {
           <button
             onClick={() => {
               if (categoryFolders.length > 0) {
-                handleAddItem(categoryFolders[0].id);
+                handleAddFile(categoryFolders[0].id);
               }
             }}
-            title="New Item"
+            title="New File"
             className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             style={{ background: `${typeColor}15` }}
           >
@@ -514,9 +506,8 @@ export function FolderPanel() {
             folder={folder}
             depth={0}
             activeItemId={activeItemId}
-            onSelectFolder={handleSelectFolder}
-            onSelectItem={handleSelectItem}
-            onAddItemToFolder={handleAddItem}
+            onSelectFile={handleSelectFile}
+            onAddFileToFolder={handleAddFile}
             onAddSubfolder={(parentId) => {
               setNewFolderName('');
               addFolder({ 
@@ -563,14 +554,14 @@ export function FolderPanel() {
         <button
           onClick={() => {
             if (categoryFolders.length > 0) {
-              handleAddItem(categoryFolders[0].id);
+              handleAddFile(categoryFolders[0].id);
             }
           }}
           className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
           style={{ background: `${typeColor}20`, color: typeColor }}
         >
           <Plus size={13} />
-          New Item
+          New File
         </button>
       </div>
     </div>

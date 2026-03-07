@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store';
-import type { LinkContainer, LinkItem } from '../types';
-import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X } from 'lucide-react';
+import type { LinkContainer, LinkItem, LinkSection } from '../types';
+import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
 
 // Fetch link metadata
 async function fetchLinkMetadata(url: string): Promise<{ title?: string; description?: string; favicon?: string }> {
@@ -49,19 +49,21 @@ function getDomain(url: string) {
 interface LinkCardProps {
   item: LinkItem;
   containerId: string;
+  sectionId: string | null;
   isDark: boolean;
-  onDragStart: (e: React.DragEvent, itemId: string, containerId: string) => void;
-  onDragOver: (e: React.DragEvent, containerId: string, index: number) => void;
+  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
+  onDragOver: (e: React.DragEvent, index: number, sectionId: string | null) => void;
   onDrop: (e: React.DragEvent) => void;
   index: number;
   isDragging: boolean;
   isDropTarget: boolean;
   dropIndex: number;
+  dropSectionId: string | null;
 }
 
 function LinkCard({ 
-  item, containerId, isDark, onDragStart, onDragOver, onDrop, 
-  index, isDragging, isDropTarget, dropIndex 
+  item, containerId, sectionId, isDark, onDragStart, onDragOver, onDrop, 
+  index, isDragging, isDropTarget, dropIndex, dropSectionId
 }: LinkCardProps) {
   const { updateLinkItem, deleteLinkItem } = useStore();
   const [editing, setEditing] = useState(false);
@@ -84,12 +86,12 @@ function LinkCard({
 
   const border = isDark ? '#1e293b' : '#e2e8f0';
   const bg = isDark ? '#1e293b' : '#ffffff';
-  const hoverBg = isDark ? '#334155' : '#f8fafc';
+  const isCurrentDropTarget = isDropTarget && dropIndex === index && dropSectionId === sectionId;
 
   if (editing) {
     return (
       <div 
-        className="rounded-xl p-3 border-2 transition-all"
+        className="rounded-xl p-3 border-2 transition-all col-span-1"
         style={{ background: bg, borderColor: '#FF9800' }}
       >
         <div className="space-y-2">
@@ -127,24 +129,22 @@ function LinkCard({
   return (
     <div
       draggable
-      onDragStart={(e) => onDragStart(e, item.id, containerId)}
-      onDragOver={(e) => onDragOver(e, containerId, index)}
+      onDragStart={(e) => onDragStart(e, item.id, sectionId)}
+      onDragOver={(e) => onDragOver(e, index, sectionId)}
       onDrop={onDrop}
       className={`rounded-xl border transition-all duration-200 cursor-grab active:cursor-grabbing group relative ${isDragging ? 'opacity-50 scale-95' : ''}`}
       style={{ 
         background: bg, 
-        borderColor: isDropTarget && dropIndex === index ? '#FF9800' : border,
-        boxShadow: isDropTarget && dropIndex === index ? '0 0 0 2px #FF980040' : 'none'
+        borderColor: isCurrentDropTarget ? '#FF9800' : border,
+        boxShadow: isCurrentDropTarget ? '0 0 0 2px #FF980040' : 'none'
       }}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Drop indicator line at top */}
-      {isDropTarget && dropIndex === index && (
+      {isCurrentDropTarget && (
         <div className="absolute -top-1 left-2 right-2 h-0.5 bg-orange-400 rounded z-10" />
       )}
       
-      {/* Drag handle */}
       <div 
         className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded bg-slate-500/20"
         style={{ cursor: 'grab' }}
@@ -159,7 +159,6 @@ function LinkCard({
         className="block p-3"
         onClick={(e) => e.preventDefault()}
       >
-        {/* Header: Favicon + Title */}
         <div className="flex items-start gap-2 mb-2">
           <div 
             className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
@@ -189,14 +188,12 @@ function LinkCard({
           </div>
         </div>
 
-        {/* Description */}
         {item.description && (
           <p className="text-xs mb-2 line-clamp-2" style={{ color: '#64748b' }}>
             {item.description}
           </p>
         )}
 
-        {/* Tags */}
         {item.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap mb-2">
             {item.tags.slice(0, 3).map(tag => (
@@ -211,7 +208,6 @@ function LinkCard({
           </div>
         )}
 
-        {/* Actions */}
         <div 
           className="flex items-center gap-1 transition-opacity"
           style={{ opacity: showActions ? 1 : 0 }}
@@ -253,52 +249,154 @@ function LinkCard({
 }
 
 // ============================================
-// SECTION HEADER (Category Divider)
+// SECTION COMPONENT
 // ============================================
-interface SectionHeaderProps {
-  container: LinkContainer;
+interface SectionProps {
+  section: LinkSection | null; // null = uncategorized
+  links: LinkItem[];
+  containerId: string;
   isDark: boolean;
-  onAddLink: () => void;
-  onDelete: () => void;
-  isExpanded: boolean;
-  onToggle: () => void;
+  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
+  onDragOver: (e: React.DragEvent, index: number, sectionId: string | null) => void;
+  onDrop: (e: React.DragEvent) => void;
+  dragState: {
+    draggingItemId: string | null;
+    draggingSectionId: string | null;
+    dropIndex: number | null;
+    dropSectionId: string | null;
+  };
+  onToggleCollapse: (sectionId: string) => void;
+  onEditSection: (sectionId: string) => void;
+  onDeleteSection: (sectionId: string) => void;
+  onAddLink: (sectionId: string | null) => void;
 }
 
-function SectionHeader({ container, isDark, onAddLink, onDelete, isExpanded, onToggle }: SectionHeaderProps) {
+function Section({ 
+  section, links, containerId, isDark, onDragStart, onDragOver, onDrop,
+  dragState, onToggleCollapse, onEditSection, onDeleteSection, onAddLink
+}: SectionProps) {
+  const sectionId = section?.id || null;
+  const isCollapsed = section?.collapsed ?? false;
+  const isDragging = dragState.draggingSectionId === sectionId;
+  
+  const border = isDark ? '#1e293b' : '#e2e8f0';
+  const bg = isDark ? '#111827' : '#ffffff';
+  const headerBg = isDark ? '#1e293b' : '#f8fafc';
+
   return (
-    <div className="flex items-center gap-3 py-2 px-1">
-      <div className="flex items-center gap-2 flex-1">
-        <div className="w-1 h-5 rounded-full bg-orange-400" />
-        <Link2 size={14} style={{ color: '#FF9800' }} />
-        <h2 
-          className="font-semibold text-sm cursor-pointer hover:text-orange-400 transition-colors"
-          style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
-          onClick={onToggle}
+    <div 
+      className="rounded-xl border overflow-hidden"
+      style={{ borderColor: isDragging ? '#FF9800' : border }}
+    >
+      {/* Section Header */}
+      <div 
+        className="flex items-center gap-2 px-4 py-2 cursor-pointer"
+        style={{ background: headerBg }}
+        onClick={() => section && onToggleCollapse(section.id)}
+      >
+        {section ? (
+          <>
+            <button 
+              className="p-0.5 rounded hover:bg-slate-500/20"
+              onClick={(e) => { e.stopPropagation(); onToggleCollapse(section.id); }}
+            >
+              {isCollapsed ? (
+                <ChevronRight size={14} style={{ color: '#FF9800' }} />
+              ) : (
+                <ChevronDown size={14} style={{ color: '#FF9800' }} />
+              )}
+            </button>
+            <Link2 size={14} style={{ color: '#FF9800' }} />
+            <span 
+              className="font-medium text-sm flex-1"
+              style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
+            >
+              {section.title}
+            </span>
+            <span 
+              className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: '#FF980015', color: '#FF9800' }}
+            >
+              {links.length}
+            </span>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+              <button
+                onClick={(e) => { e.stopPropagation(); onEditSection(section.id); }}
+                className="p-1 rounded hover:bg-slate-500/20"
+              >
+                <Edit3 size={12} className="text-slate-400" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }}
+                className="p-1 rounded hover:bg-red-500/20"
+              >
+                <Trash2 size={12} className="text-red-400" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <Link2 size={14} style={{ color: '#94a3b8' }} />
+            <span 
+              className="font-medium text-sm flex-1"
+              style={{ color: '#94a3b8' }}
+            >
+              Uncategorized
+            </span>
+            <span 
+              className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}
+            >
+              {links.length}
+            </span>
+          </>
+        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddLink(sectionId); }}
+          className="p-1 rounded hover:bg-orange-500/20"
+          title="Add link to this section"
         >
-          {container.title}
-        </h2>
-        <span 
-          className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-          style={{ background: '#FF980015', color: '#FF9800' }}
-        >
-          {container.subItems.length}
-        </span>
-      </div>
-      <div className="flex items-center gap-1">
-        <button 
-          onClick={onAddLink}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium hover:bg-orange-500/20 transition-colors"
-          style={{ color: '#FF9800' }}
-        >
-          <Plus size={12} /> Add
+          <Plus size={14} style={{ color: '#FF9800' }} />
         </button>
-        <button 
-          onClick={onDelete}
-          className="p-1 rounded hover:bg-red-500/20 transition-colors"
-        >
-          <Trash2 size={12} className="text-red-400" />
-        </button>
       </div>
+
+      {/* Section Content */}
+      {!isCollapsed && (
+        <div 
+          className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          style={{ background: bg }}
+        >
+          {links.map((item, index) => (
+            <LinkCard
+              key={item.id}
+              item={item}
+              containerId={containerId}
+              sectionId={sectionId}
+              isDark={isDark}
+              onDragStart={onDragStart}
+              onDragOver={onDragOver}
+              onDrop={onDrop}
+              index={index}
+              isDragging={dragState.draggingItemId === item.id}
+              isDropTarget={dragState.dropIndex !== null}
+              dropIndex={dragState.dropIndex ?? -1}
+              dropSectionId={dragState.dropSectionId}
+            />
+          ))}
+          
+          {links.length === 0 && (
+            <div className="col-span-full text-center py-6 text-xs" style={{ color: '#94a3b8' }}>
+              No links in this section
+              <button 
+                onClick={() => onAddLink(sectionId)}
+                className="text-orange-400 hover:underline ml-1"
+              >
+                Add one
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -310,10 +408,11 @@ interface AddLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
   containerId: string;
+  sectionId: string | null;
   isDark: boolean;
 }
 
-function AddLinkModal({ isOpen, onClose, containerId, isDark }: AddLinkModalProps) {
+function AddLinkModal({ isOpen, onClose, containerId, sectionId, isDark }: AddLinkModalProps) {
   const { addLinkItem } = useStore();
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
@@ -343,6 +442,7 @@ function AddLinkModal({ isOpen, onClose, containerId, isDark }: AddLinkModalProp
       favicon: favicon || `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=32`,
       tags: [],
       isFavorite: false,
+      sectionId: sectionId || undefined,
     });
     
     setUrl('');
@@ -370,7 +470,9 @@ function AddLinkModal({ isOpen, onClose, containerId, isDark }: AddLinkModalProp
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>Add Link</h3>
+          <h3 className="font-semibold" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>
+            Add Link {sectionId ? `to section` : ''}
+          </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-slate-500/20">
             <X size={16} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
           </button>
@@ -400,9 +502,6 @@ function AddLinkModal({ isOpen, onClose, containerId, isDark }: AddLinkModalProp
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          <p className="text-[10px]" style={{ color: '#94a3b8' }}>
-            Tip: Just paste URL - title & description will be fetched automatically
-          </p>
         </div>
         
         <div className="flex gap-2 mt-4">
@@ -429,85 +528,158 @@ function AddLinkModal({ isOpen, onClose, containerId, isDark }: AddLinkModalProp
 }
 
 // ============================================
+// ADD SECTION MODAL
+// ============================================
+interface AddSectionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAdd: (title: string) => void;
+  isDark: boolean;
+}
+
+function AddSectionModal({ isOpen, onClose, onAdd, isDark }: AddSectionModalProps) {
+  const [title, setTitle] = useState('');
+
+  const handleAdd = () => {
+    if (title.trim()) {
+      onAdd(title.trim());
+      setTitle('');
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const bg = isDark ? '#1e293b' : '#ffffff';
+  const border = isDark ? '#334155' : '#e2e8f0';
+  const inputBg = isDark ? '#0f172a' : '#f8fafc';
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div 
+        className="rounded-2xl w-full max-w-sm p-5 shadow-xl"
+        style={{ background: bg, border: `1px solid ${border}` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>New Section</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-slate-500/20">
+            <X size={16} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
+          </button>
+        </div>
+        
+        <input
+          autoFocus
+          className="w-full text-sm px-3 py-2 rounded-lg border outline-none mb-4"
+          style={{ background: inputBg, borderColor: border, color: isDark ? '#e2e8f0' : '#1e293b' }}
+          placeholder="Section title..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+        />
+        
+        <div className="flex gap-2">
+          <button 
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium"
+            style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleAdd}
+            disabled={!title.trim()}
+            className="flex-1 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+            style={{ background: '#FF9800', color: 'white' }}
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // MAIN LINKS VIEW
 // ============================================
-interface Props { folderId: string | null; }
+interface Props { 
+  container: LinkContainer;
+}
 
-export function LinksView({ folderId }: Props) {
-  const { links, addLinkContainer, deleteLinkContainer, updateLinkContainer, searchQuery, isDarkTheme } = useStore();
+export function LinksView({ container }: Props) {
+  const { 
+    updateLinkContainer, 
+    updateLinkSection,
+    deleteLinkSection,
+    addLinkSection,
+    isDarkTheme 
+  } = useStore();
+  
   const [search, setSearch] = useState('');
-  const [addingCollection, setAddingCollection] = useState(false);
-  const [newCollectionTitle, setNewCollectionTitle] = useState('');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   
   // Drag & Drop state
   const [dragState, setDragState] = useState<{
     draggingItemId: string | null;
-    draggingFromContainerId: string | null;
-    dropTargetContainerId: string | null;
+    draggingSectionId: string | null;
     dropIndex: number | null;
+    dropSectionId: string | null;
   }>({
     draggingItemId: null,
-    draggingFromContainerId: null,
-    dropTargetContainerId: null,
+    draggingSectionId: null,
     dropIndex: null,
+    dropSectionId: null,
   });
   
-  // Add link modal state
-  const [addLinkModal, setAddLinkModal] = useState<{ isOpen: boolean; containerId: string | null }>({ 
-    isOpen: false, 
-    containerId: null 
-  });
+  // Modals
+  const [showAddLinkModal, setShowAddLinkModal] = useState(false);
+  const [showAddSectionModal, setShowAddSectionModal] = useState(false);
+  const [addLinkToSection, setAddLinkToSection] = useState<string | null>(null);
 
-  const filtered = links
-    .filter(l => !folderId || l.folderId === folderId)
-    .filter(l => l.title.toLowerCase().includes((search || searchQuery).toLowerCase()));
-
-  const handleAddCollection = () => {
-    if (newCollectionTitle.trim() && folderId) {
-      addLinkContainer({ 
-        folderId, 
-        title: newCollectionTitle.trim(), 
-        subItems: [], 
-        tags: [], 
-        type: 'links', 
-        isExpanded: true 
-      });
-      setNewCollectionTitle('');
-      setAddingCollection(false);
+  // Get sections (or create a default one if no sections)
+  const sections: (LinkSection | null)[] = useMemo(() => {
+    const existingSections = container.sections || [];
+    if (existingSections.length === 0) {
+      // No sections - return null for uncategorized
+      return [null];
     }
-  };
+    // Return sections sorted by order, plus null for uncategorized at the end
+    return [...existingSections.sort((a, b) => a.order - b.order), null];
+  }, [container.sections]);
 
-  const toggleSection = (containerId: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev);
-      if (next.has(containerId)) {
-        next.delete(containerId);
-      } else {
-        next.add(containerId);
-      }
-      return next;
-    });
-  };
+  // Get links for a section
+  const getLinksForSection = useCallback((sectionId: string | null) => {
+    return container.subItems
+      .filter(link => (link.sectionId || null) === sectionId)
+      .filter(link =>
+        link.title.toLowerCase().includes(search.toLowerCase()) ||
+        link.url.toLowerCase().includes(search.toLowerCase())
+      )
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [container.subItems, search]);
 
-  // Drag & Drop handlers
-  const handleDragStart = (e: React.DragEvent, itemId: string, containerId: string) => {
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string | null) => {
     e.dataTransfer.effectAllowed = 'move';
     setDragState({
       draggingItemId: itemId,
-      draggingFromContainerId: containerId,
-      dropTargetContainerId: null,
+      draggingSectionId: sectionId,
       dropIndex: null,
+      dropSectionId: null,
     });
   };
 
-  const handleDragOver = (e: React.DragEvent, containerId: string, index: number) => {
+  const handleDragOver = (e: React.DragEvent, index: number, sectionId: string | null) => {
     e.preventDefault();
     if (dragState.draggingItemId) {
       setDragState(prev => ({
         ...prev,
-        dropTargetContainerId: containerId,
         dropIndex: index,
+        dropSectionId: sectionId,
       }));
     }
   };
@@ -515,54 +687,109 @@ export function LinksView({ folderId }: Props) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     
-    const { draggingItemId, draggingFromContainerId, dropTargetContainerId, dropIndex } = dragState;
+    const { draggingItemId, draggingSectionId, dropIndex, dropSectionId } = dragState;
     
-    if (!draggingItemId || !draggingFromContainerId || !dropTargetContainerId || dropIndex === null) {
-      setDragState({ draggingItemId: null, draggingFromContainerId: null, dropTargetContainerId: null, dropIndex: null });
+    if (!draggingItemId || dropIndex === null) {
+      setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
       return;
     }
     
-    // Find source container and item
-    const sourceContainer = links.find(l => l.id === draggingFromContainerId);
-    const targetContainer = links.find(l => l.id === dropTargetContainerId);
-    
-    if (!sourceContainer || !targetContainer) return;
-    
-    const itemToMove = sourceContainer.subItems.find(item => item.id === draggingItemId);
+    const itemToMove = container.subItems.find(item => item.id === draggingItemId);
     if (!itemToMove) return;
     
-    // Same container reordering
-    if (draggingFromContainerId === dropTargetContainerId) {
-      const newItems = [...sourceContainer.subItems];
-      const fromIndex = newItems.findIndex(item => item.id === draggingItemId);
-      
-      if (fromIndex !== -1) {
-        newItems.splice(fromIndex, 1);
-        newItems.splice(dropIndex > fromIndex ? dropIndex - 1 : dropIndex, 0, itemToMove);
-        updateLinkContainer(sourceContainer.id, { subItems: newItems });
-      }
-    } else {
-      // Move between containers
-      const newSourceItems = sourceContainer.subItems.filter(item => item.id !== draggingItemId);
-      const newTargetItems = [...targetContainer.subItems];
-      
-      // Find proper insertion index
-      const insertIndex = Math.min(dropIndex, newTargetItems.length);
-      newTargetItems.splice(insertIndex, 0, itemToMove);
-      
-      updateLinkContainer(sourceContainer.id, { subItems: newSourceItems });
-      updateLinkContainer(targetContainer.id, { subItems: newTargetItems });
-    }
+    // Get all items in target section
+    const targetSectionLinks = container.subItems
+      .filter(link => (link.sectionId || null) === dropSectionId)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
-    setDragState({ draggingItemId: null, draggingFromContainerId: null, dropTargetContainerId: null, dropIndex: null });
+    // Build new subItems array
+    const newSubItems = container.subItems.map(item => {
+      if (item.id === draggingItemId) {
+        // Update section and order
+        const fromIndex = targetSectionLinks.findIndex(i => i.id === draggingItemId);
+        const actualDropIndex = dropSectionId === draggingSectionId && fromIndex !== -1 && dropIndex > fromIndex
+          ? dropIndex - 1
+          : dropIndex;
+        
+        return { 
+          ...item, 
+          sectionId: dropSectionId || undefined,
+          order: actualDropIndex
+        };
+      }
+      return item;
+    });
+    
+    // Reorder all items in target section
+    const reorderedSubItems = newSubItems.map(item => {
+      if ((item.sectionId || null) !== dropSectionId) return item;
+      if (item.id === draggingItemId) return item;
+      
+      const currentOrder = item.order ?? 0;
+      const isAfterDrop = currentOrder >= dropIndex;
+      
+      return {
+        ...item,
+        order: isAfterDrop ? currentOrder + 1 : currentOrder
+      };
+    });
+    
+    // Normalize orders
+    const normalizedSubItems = reorderedSubItems.map(item => {
+      const sectionLinks = reorderedSubItems
+        .filter(l => (l.sectionId || null) === (item.sectionId || null))
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      
+      return {
+        ...item,
+        order: sectionLinks.findIndex(l => l.id === item.id)
+      };
+    });
+    
+    updateLinkContainer(container.id, { subItems: normalizedSubItems });
+    setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
   };
 
   const handleDragEnd = () => {
-    setDragState({ draggingItemId: null, draggingFromContainerId: null, dropTargetContainerId: null, dropIndex: null });
+    setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
+  };
+
+  // Section handlers
+  const handleToggleCollapse = (sectionId: string) => {
+    updateLinkSection(container.id, sectionId, { 
+      collapsed: !sections.find(s => s?.id === sectionId)?.collapsed 
+    });
+  };
+
+  const handleEditSection = (sectionId: string) => {
+    const section = sections.find(s => s?.id === sectionId);
+    if (!section) return;
+    
+    const newTitle = prompt('Section title:', section.title);
+    if (newTitle && newTitle.trim()) {
+      updateLinkSection(container.id, sectionId, { title: newTitle.trim() });
+    }
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    if (confirm('Delete this section? Links will be moved to "Uncategorized"')) {
+      deleteLinkSection(container.id, sectionId);
+    }
+  };
+
+  const handleAddLink = (sectionId: string | null) => {
+    setAddLinkToSection(sectionId);
+    setShowAddLinkModal(true);
+  };
+
+  const handleAddSection = (title: string) => {
+    addLinkSection(container.id, title);
   };
 
   const bg = isDarkTheme ? '#0f172a' : '#f1f5f9';
   const border = isDarkTheme ? '#1e293b' : '#e2e8f0';
+
+  const totalLinks = container.subItems.length;
 
   return (
     <div 
@@ -577,9 +804,11 @@ export function LinksView({ folderId }: Props) {
       >
         <Link2 size={20} style={{ color: '#FF9800' }} />
         <div className="flex-1">
-          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>Links</h1>
+          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>
+            {container.title}
+          </h1>
           <p className="text-xs" style={{ color: '#94a3b8' }}>
-            {filtered.reduce((sum, c) => sum + c.subItems.length, 0)} links in {filtered.length} collections
+            {totalLinks} links {container.sections?.length ? `in ${container.sections.length} sections` : ''}
           </p>
         </div>
         <div className="relative">
@@ -587,123 +816,82 @@ export function LinksView({ folderId }: Props) {
           <input 
             className="pl-8 pr-3 py-1.5 text-sm rounded-lg border outline-none w-48" 
             style={{ background: isDarkTheme ? '#1e293b' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} 
-            placeholder="Search..." 
+            placeholder="Search links..." 
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
           />
         </div>
         <button 
-          onClick={() => setAddingCollection(true)} 
+          onClick={() => setShowAddSectionModal(true)} 
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border"
+          style={{ background: 'transparent', color: '#FF9800', borderColor: '#FF980040' }}
+          title="Add new section"
+        >
+          <FolderPlus size={15} /> Section
+        </button>
+        <button 
+          onClick={() => { setAddLinkToSection(null); setShowAddLinkModal(true); }} 
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" 
           style={{ background: '#FF980020', color: '#FF9800' }}
         >
-          <Plus size={15} /> New Collection
+          <Plus size={15} /> Add Link
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {/* Add new collection */}
-        {addingCollection && (
-          <div 
-            className="rounded-xl border p-3 mb-4"
-            style={{ borderColor: '#FF980050', background: isDarkTheme ? '#1e293b' : '#fff' }}
-          >
-            <input 
-              autoFocus 
-              className="w-full text-sm px-3 py-2 rounded-lg border outline-none mb-2" 
-              style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }} 
-              placeholder="Collection name..." 
-              value={newCollectionTitle} 
-              onChange={(e) => setNewCollectionTitle(e.target.value)} 
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddCollection(); if (e.key === 'Escape') setAddingCollection(false); }} 
-            />
-            <div className="flex gap-2">
-              <button onClick={handleAddCollection} className="px-3 py-1.5 rounded text-xs font-medium" style={{ background: '#FF980015', color: '#FF9800' }}>Create</button>
-              <button onClick={() => setAddingCollection(false)} className="px-3 py-1.5 rounded text-xs" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
-            </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {filtered.length === 0 && !addingCollection && (
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {totalLinks === 0 && (
           <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: '#94a3b8' }}>
             <Link2 size={48} className="opacity-20" />
-            <p className="text-lg font-medium">No link collections</p>
-            <p className="text-sm">Select a folder and create your first collection</p>
+            <p className="text-lg font-medium">No links yet</p>
+            <p className="text-sm">Add your first link to get started</p>
+            <button 
+              onClick={() => { setAddLinkToSection(null); setShowAddLinkModal(true); }}
+              className="mt-2 px-4 py-2 rounded-lg text-sm font-medium"
+              style={{ background: '#FF980020', color: '#FF9800' }}
+            >
+              <Plus size={14} className="inline mr-1" /> Add Link
+            </button>
           </div>
         )}
 
-        {/* Sections */}
-        {filtered.map(container => {
-          const isExpanded = expandedSections.has(container.id) || container.subItems.length > 0;
+        {totalLinks > 0 && sections.map(section => {
+          const sectionLinks = getLinksForSection(section?.id || null);
+          if (sectionLinks.length === 0 && section !== null) return null;
           
           return (
-            <div key={container.id} className="mb-6">
-              {/* Section Header */}
-              <SectionHeader
-                container={container}
-                isDark={isDarkTheme}
-                onAddLink={() => setAddLinkModal({ isOpen: true, containerId: container.id })}
-                onDelete={() => {
-                  if (confirm(`Delete "${container.title}" and all its links?`)) {
-                    deleteLinkContainer(container.id);
-                  }
-                }}
-                isExpanded={isExpanded}
-                onToggle={() => toggleSection(container.id)}
-              />
-
-              {/* Grid of cards */}
-              {isExpanded && container.subItems.length > 0 && (
-                <div 
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-2"
-                >
-                  {container.subItems.map((item, index) => (
-                    <LinkCard
-                      key={item.id}
-                      item={item}
-                      containerId={container.id}
-                      isDark={isDarkTheme}
-                      onDragStart={handleDragStart}
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                      index={index}
-                      isDragging={dragState.draggingItemId === item.id}
-                      isDropTarget={dragState.dropTargetContainerId === container.id}
-                      dropIndex={dragState.dropIndex ?? -1}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Empty section message */}
-              {isExpanded && container.subItems.length === 0 && (
-                <div 
-                  className="text-center py-6 rounded-xl border-2 border-dashed mt-2"
-                  style={{ borderColor: isDarkTheme ? '#334155' : '#e2e8f0' }}
-                >
-                  <p className="text-xs" style={{ color: '#94a3b8' }}>
-                    No links yet. 
-                    <button 
-                      onClick={() => setAddLinkModal({ isOpen: true, containerId: container.id })}
-                      className="text-orange-400 hover:underline ml-1"
-                    >
-                      Add one
-                    </button>
-                  </p>
-                </div>
-              )}
-            </div>
+            <Section
+              key={section?.id || 'uncategorized'}
+              section={section}
+              links={sectionLinks}
+              containerId={container.id}
+              isDark={isDarkTheme}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              dragState={dragState}
+              onToggleCollapse={handleToggleCollapse}
+              onEditSection={handleEditSection}
+              onDeleteSection={handleDeleteSection}
+              onAddLink={handleAddLink}
+            />
           );
         })}
       </div>
 
-      {/* Add Link Modal */}
+      {/* Modals */}
       <AddLinkModal
-        isOpen={addLinkModal.isOpen}
-        onClose={() => setAddLinkModal({ isOpen: false, containerId: null })}
-        containerId={addLinkModal.containerId || ''}
+        isOpen={showAddLinkModal}
+        onClose={() => { setShowAddLinkModal(false); setAddLinkToSection(null); }}
+        containerId={container.id}
+        sectionId={addLinkToSection}
+        isDark={isDarkTheme}
+      />
+      
+      <AddSectionModal
+        isOpen={showAddSectionModal}
+        onClose={() => setShowAddSectionModal(false)}
+        onAdd={handleAddSection}
         isDark={isDarkTheme}
       />
     </div>

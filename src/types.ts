@@ -97,13 +97,29 @@ export interface LinkItem {
   favicon?: string;
   tags: string[];
   isFavorite: boolean;
+  order?: number;
+  sectionId?: string; // ID секции, к которой принадлежит ссылка
 }
 
+// Секция ссылок (категория внутри файла)
+export interface LinkSection {
+  id: string;
+  title: string;
+  order: number;
+  collapsed: boolean;
+  icon?: string;
+}
+
+// Контейнер ссылок (один .md файл)
+// Поддерживает два режима:
+// 1. Простой: subItems без секций (все ссылки в одном списке)
+// 2. С секциями: sections + subItems с sectionId
 export interface LinkContainer {
   id: string;
   folderId: string;
   title: string;
   subItems: LinkItem[];
+  sections?: LinkSection[]; // Секции для группировки ссылок
   tags: string[];
   order: number;
   createdAt: string;

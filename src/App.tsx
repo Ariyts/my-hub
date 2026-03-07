@@ -8,16 +8,18 @@ import { LinksView } from './components/LinksView';
 import { PromptsView } from './components/PromptsView';
 import { SettingsModal } from './components/SettingsModal';
 import { TrashModal } from './components/TrashModal';
-import type { NoteItem } from './types';
+import type { NoteItem, CommandContainer, LinkContainer, PromptContainer } from './types';
 import { FileText, Plus } from 'lucide-react';
 
 function MainArea() {
   const { 
     activeItemId, 
     notes, 
+    commands,
+    links,
+    prompts,
     activeCategoryId, 
     categories,
-    activeFolderId,
     isDarkTheme
   } = useStore();
 
@@ -26,36 +28,105 @@ function MainArea() {
   
   const activeCategory = categories.find(c => c.id === activeCategoryId);
   const baseType = activeCategory?.baseType || 'notes';
+  const typeColor = activeCategory?.color || '#4CAF50';
 
-  // Render based on base type
-  if (baseType === 'notes') {
-    const note = notes.find(n => n.id === activeItemId);
-    if (note) {
-      return <NoteEditor note={note as NoteItem} />;
+  // Получаем текущий активный файл/контейнер
+  const getActiveFile = (): { id: string; title: string; data: any } | null => {
+    if (!activeItemId) return null;
+    
+    switch (baseType) {
+      case 'notes': {
+        const note = notes.find(n => n.id === activeItemId);
+        return note ? { id: note.id, title: note.title, data: note } : null;
+      }
+      case 'commands': {
+        const cmd = commands.find(c => c.id === activeItemId);
+        return cmd ? { id: cmd.id, title: cmd.title, data: cmd } : null;
+      }
+      case 'links': {
+        const link = links.find(l => l.id === activeItemId);
+        return link ? { id: link.id, title: link.title, data: link } : null;
+      }
+      case 'prompts': {
+        const prompt = prompts.find(p => p.id === activeItemId);
+        return prompt ? { id: prompt.id, title: prompt.title, data: prompt } : null;
+      }
+      default:
+        return null;
     }
+  };
+
+  const activeFile = getActiveFile();
+
+  // Рендерим в зависимости от типа и выбранного файла
+  if (baseType === 'notes') {
+    if (activeFile?.data) {
+      return <NoteEditor note={activeFile.data as NoteItem} />;
+    }
+    // Показываем плейсхолдер когда нет выбранного файла
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: bg }}>
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: isDarkTheme ? '#1e293b' : '#f1f5f9' }}>
-          <FileText size={36} style={{ color: activeCategory?.color || '#4CAF50', opacity: 0.6 }} />
+          <FileText size={36} style={{ color: typeColor, opacity: 0.6 }} />
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No item selected</p>
-          <p className="text-sm" style={{ color: mutedColor }}>Select an item from the list or create a new one</p>
+          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No file selected</p>
+          <p className="text-sm" style={{ color: mutedColor }}>Select a file from the list or create a new one</p>
         </div>
       </div>
     );
   }
 
   if (baseType === 'commands') {
-    return <CommandsView folderId={activeFolderId} />;
+    if (activeFile?.data) {
+      return <CommandsView container={activeFile.data as CommandContainer} />;
+    }
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: bg }}>
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: isDarkTheme ? '#1e293b' : '#f1f5f9' }}>
+          <FileText size={36} style={{ color: typeColor, opacity: 0.6 }} />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No command file selected</p>
+          <p className="text-sm" style={{ color: mutedColor }}>Select a file from the list or create a new one</p>
+        </div>
+      </div>
+    );
   }
 
   if (baseType === 'links') {
-    return <LinksView folderId={activeFolderId} />;
+    if (activeFile?.data) {
+      // Передаём контейнер (файл) для отображения
+      return <LinksView container={activeFile.data as LinkContainer} />;
+    }
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: bg }}>
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: isDarkTheme ? '#1e293b' : '#f1f5f9' }}>
+          <FileText size={36} style={{ color: '#FF9800', opacity: 0.6 }} />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No link file selected</p>
+          <p className="text-sm" style={{ color: mutedColor }}>Select a file from the sidebar to view its links</p>
+        </div>
+      </div>
+    );
   }
 
   if (baseType === 'prompts') {
-    return <PromptsView folderId={activeFolderId} />;
+    if (activeFile?.data) {
+      return <PromptsView container={activeFile.data as PromptContainer} />;
+    }
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: bg }}>
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: isDarkTheme ? '#1e293b' : '#f1f5f9' }}>
+          <FileText size={36} style={{ color: '#9C27B0', opacity: 0.6 }} />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No prompt file selected</p>
+          <p className="text-sm" style={{ color: mutedColor }}>Select a file from the list or create a new one</p>
+        </div>
+      </div>
+    );
   }
 
   return null;

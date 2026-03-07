@@ -5,7 +5,7 @@
  * Also saves metadata.json for structure (categories order, folders, etc.)
  */
 
-import { dataToFiles, FileStructure } from './mdStorage';
+import { dataToFiles } from './mdStorage';
 import type { DataFile } from '../types';
 
 export interface GitHubConfig {
@@ -293,7 +293,7 @@ export function getLocalPreview(data: DataFile): SyncPreview {
 /**
  * Preview what will be synced
  */
-export async function previewSync(config: GitHubConfig, data: DataFile): Promise<SyncPreview> {
+export async function previewSync(_config: GitHubConfig, data: DataFile): Promise<SyncPreview> {
   return getLocalPreview(data);
 }
 
