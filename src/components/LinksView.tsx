@@ -624,16 +624,7 @@ export function LinksView({ containerId }: Props) {
     isDarkTheme 
   } = useStore();
   
-  // If container not found, show placeholder
-  if (!container) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: isDarkTheme ? '#0f172a' : '#ffffff' }}>
-        <Link2 size={48} className="opacity-20" style={{ color: '#FF9800' }} />
-        <p style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}>Container not found</p>
-      </div>
-    );
-  }
-  
+  // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURN
   const [search, setSearch] = useState('');
   
   // Drag & Drop state
@@ -656,17 +647,18 @@ export function LinksView({ containerId }: Props) {
 
   // Get sections (or create a default one if no sections)
   const sections: (LinkSection | null)[] = useMemo(() => {
-    const existingSections = container.sections || [];
+    const existingSections = container?.sections || [];
     if (existingSections.length === 0) {
       // No sections - return null for uncategorized
       return [null];
     }
     // Return sections sorted by order, plus null for uncategorized at the end
     return [...existingSections.sort((a, b) => a.order - b.order), null];
-  }, [container.sections]);
+  }, [container?.sections]);
 
   // Get links for a section
   const getLinksForSection = useCallback((sectionId: string | null) => {
+    if (!container) return [];
     return container.subItems
       .filter(link => (link.sectionId || null) === sectionId)
       .filter(link =>
@@ -674,7 +666,7 @@ export function LinksView({ containerId }: Props) {
         link.url.toLowerCase().includes(search.toLowerCase())
       )
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [container.subItems, search]);
+  }, [container, search]);
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string | null) => {
@@ -703,7 +695,7 @@ export function LinksView({ containerId }: Props) {
     
     const { draggingItemId, draggingSectionId, dropIndex, dropSectionId } = dragState;
     
-    if (!draggingItemId || dropIndex === null) {
+    if (!container || !draggingItemId || dropIndex === null) {
       setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
       return;
     }
@@ -770,12 +762,14 @@ export function LinksView({ containerId }: Props) {
 
   // Section handlers
   const handleToggleCollapse = (sectionId: string) => {
+    if (!container) return;
     updateLinkSection(container.id, sectionId, { 
       collapsed: !sections.find(s => s?.id === sectionId)?.collapsed 
     });
   };
 
   const handleEditSection = (sectionId: string) => {
+    if (!container) return;
     const section = sections.find(s => s?.id === sectionId);
     if (!section) return;
     
@@ -786,6 +780,7 @@ export function LinksView({ containerId }: Props) {
   };
 
   const handleDeleteSection = (sectionId: string) => {
+    if (!container) return;
     if (confirm('Delete this section? Links will be moved to "Uncategorized"')) {
       deleteLinkSection(container.id, sectionId);
     }
@@ -797,8 +792,20 @@ export function LinksView({ containerId }: Props) {
   };
 
   const handleAddSection = (title: string) => {
+    if (!container) return;
     addLinkSection(container.id, title);
   };
+
+  // NOW we can do conditional return AFTER all hooks
+  // If container not found, show placeholder
+  if (!container) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: isDarkTheme ? '#0f172a' : '#ffffff' }}>
+        <Link2 size={48} className="opacity-20" style={{ color: '#FF9800' }} />
+        <p style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}>Container not found</p>
+      </div>
+    );
+  }
 
   const bg = isDarkTheme ? '#0f172a' : '#f1f5f9';
   const border = isDarkTheme ? '#1e293b' : '#e2e8f0';
