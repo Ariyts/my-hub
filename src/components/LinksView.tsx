@@ -365,8 +365,16 @@ function Section({
       {/* Section Content */}
       {!isCollapsed && (
         <div 
-          className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 min-h-[80px]"
           style={{ background: bg }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            // Set drop to end of this section when dragging over empty area
+            if (dragState.draggingItemId && dragState.dropSectionId !== sectionId) {
+              onDragOver(e, links.length, sectionId);
+            }
+          }}
+          onDrop={onDrop}
         >
           {links.map((item, index) => (
             <LinkCard
@@ -387,14 +395,23 @@ function Section({
           ))}
           
           {links.length === 0 && (
-            <div className="col-span-full text-center py-6 text-xs" style={{ color: '#94a3b8' }}>
-              No links in this section
-              <button 
-                onClick={() => onAddLink(sectionId)}
-                className="text-orange-400 hover:underline ml-1"
-              >
-                Add one
-              </button>
+            <div 
+              className="col-span-full text-center py-6 text-xs border-2 border-dashed rounded-lg transition-colors"
+              style={{ 
+                color: '#94a3b8', 
+                borderColor: dragState.dropSectionId === sectionId ? '#FF9800' : 'transparent',
+                background: dragState.dropSectionId === sectionId ? '#FF980010' : 'transparent'
+              }}
+            >
+              {dragState.draggingItemId ? 'Drop here to move to this section' : 'No links in this section'}
+              {!dragState.draggingItemId && (
+                <button 
+                  onClick={() => onAddLink(sectionId)}
+                  className="text-orange-400 hover:underline ml-1"
+                >
+                  Add one
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -781,7 +798,25 @@ export function LinksView({ containerId }: Props) {
 
   const handleDeleteSection = (sectionId: string) => {
     if (!container) return;
-    if (confirm('Delete this section? Links will be moved to "Uncategorized"')) {
+    
+    // Count links in this section
+    const linksInSection = container.subItems.filter(link => link.sectionId === sectionId);
+    
+    if (linksInSection.length > 0) {
+      const result = window.confirm(`This section has ${linksInSection.length} link(s). Click OK to move them to "Uncategorized", or Cancel to delete them.`);
+      if (result) {
+        // Move links to uncategorized
+        deleteLinkSection(container.id, sectionId);
+      } else {
+        // Delete links along with section
+        const newSubItems = container.subItems
+          .filter(link => link.sectionId !== sectionId)
+          .map(link => link); // Keep only links not in this section
+        updateLinkContainer(container.id, { subItems: newSubItems });
+        deleteLinkSection(container.id, sectionId);
+      }
+    } else {
+      // No links, just delete
       deleteLinkSection(container.id, sectionId);
     }
   };
@@ -793,7 +828,6 @@ export function LinksView({ containerId }: Props) {
 
   const handleAddSection = (title: string) => {
     if (!container) return;
-    console.log('handleAddSection called:', { containerId: container.id, title });
     addLinkSection(container.id, title);
   };
 

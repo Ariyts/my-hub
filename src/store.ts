@@ -510,10 +510,8 @@ export const useStore = create<AppState & StoreActions>()(
       // ============================================
       addLinkSection: (containerId, title) => {
         const sectionId = genId();
-        console.log('addLinkSection called:', { containerId, title, sectionId });
         set((s) => {
           const linkIndex = s.links.findIndex(l => l.id === containerId);
-          console.log('Link found at index:', linkIndex);
           if (linkIndex === -1) return s;
           
           const link = s.links[linkIndex];
@@ -524,8 +522,6 @@ export const useStore = create<AppState & StoreActions>()(
             order: sections.length,
             collapsed: false,
           };
-          console.log('New section:', newSection);
-          console.log('Existing sections:', sections.length);
           
           const newLinks = [...s.links];
           newLinks[linkIndex] = {
