@@ -793,6 +793,7 @@ export function LinksView({ containerId }: Props) {
 
   const handleAddSection = (title: string) => {
     if (!container) return;
+    console.log('handleAddSection called:', { containerId: container.id, title });
     addLinkSection(container.id, title);
   };
 

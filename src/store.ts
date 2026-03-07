@@ -510,23 +510,32 @@ export const useStore = create<AppState & StoreActions>()(
       // ============================================
       addLinkSection: (containerId, title) => {
         const sectionId = genId();
-        set((s) => ({
-          links: s.links.map(l => {
-            if (l.id !== containerId) return l;
-            const sections = l.sections || [];
-            const newSection = {
-              id: sectionId,
-              title,
-              order: sections.length,
-              collapsed: false,
-            };
-            return {
-              ...l,
-              sections: [...sections, newSection],
-              updatedAt: new Date().toISOString(),
-            };
-          })
-        }));
+        console.log('addLinkSection called:', { containerId, title, sectionId });
+        set((s) => {
+          const linkIndex = s.links.findIndex(l => l.id === containerId);
+          console.log('Link found at index:', linkIndex);
+          if (linkIndex === -1) return s;
+          
+          const link = s.links[linkIndex];
+          const sections = link.sections || [];
+          const newSection = {
+            id: sectionId,
+            title,
+            order: sections.length,
+            collapsed: false,
+          };
+          console.log('New section:', newSection);
+          console.log('Existing sections:', sections.length);
+          
+          const newLinks = [...s.links];
+          newLinks[linkIndex] = {
+            ...link,
+            sections: [...sections, newSection],
+            updatedAt: new Date().toISOString(),
+          };
+          
+          return { links: newLinks };
+        });
       },
       
       updateLinkSection: (containerId, sectionId, updates) => set((s) => ({
