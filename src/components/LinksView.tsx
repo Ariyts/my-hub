@@ -52,7 +52,7 @@ interface LinkCardProps {
   sectionId: string | null;
   isDark: boolean;
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
-  onDragOver: (e: React.DragEvent, index: number, sectionId: string | null) => void;
+  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string | null) => void;
   onDrop: (e: React.DragEvent) => void;
   index: number;
   isDragging: boolean;
@@ -258,9 +258,12 @@ interface CompactLinkItemProps {
   isDark: boolean;
   sectionId: string | null;
   isDragging: boolean;
+  isDropTarget: boolean;
   onUpdateItem: (itemId: string, updates: Partial<LinkItem>) => void;
   onDeleteItem: (itemId: string) => void;
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
+  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string | null) => void;
+  onDrop: (e: React.DragEvent) => void;
 }
 
 // Color palette for link items
@@ -282,9 +285,12 @@ function CompactLinkItem({
   isDark, 
   sectionId, 
   isDragging,
+  isDropTarget,
   onUpdateItem,
   onDeleteItem,
   onDragStart,
+  onDragOver,
+  onDrop,
 }: CompactLinkItemProps) {
   const [faviconError, setFaviconError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -485,15 +491,26 @@ function CompactLinkItem({
         relative flex items-center gap-1 px-2 py-1.5 rounded-lg
         transition-all duration-150 border group
         ${isDragging ? 'opacity-50 scale-95 ring-2 ring-orange-400' : ''}
+        ${isDropTarget ? 'ring-2 ring-blue-400 bg-blue-500/10' : ''}
       `}
       style={{ 
-        background: getTintedBg(),
-        borderColor: isHovered ? (isDark ? '#4b5563' : '#d1d5db') : borderColor,
+        background: isDropTarget ? undefined : getTintedBg(),
+        borderColor: isDropTarget ? '#3b82f6' : (isHovered ? (isDark ? '#4b5563' : '#d1d5db') : borderColor),
         minWidth: 0,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onDragOver={(e) => {
+        e.preventDefault();
+        onDragOver(e, item.id, sectionId);
+      }}
+      onDrop={onDrop}
     >
+      {/* Drop indicator line */}
+      {isDropTarget && (
+        <div className="absolute -top-0.5 left-0 right-0 h-0.5 bg-blue-400 rounded z-10" />
+      )}
+      
       {/* Color indicator bar (left) */}
       {activeColor && (
         <div 
@@ -805,7 +822,7 @@ interface SectionProps {
   isDark: boolean;
   viewMode: 'grid' | 'compact';
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
-  onDragOver: (e: React.DragEvent, index: number, sectionId: string | null) => void;
+  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string | null) => void;
   onDrop: (e: React.DragEvent) => void;
   dragState: {
     draggingItemId: string | null;
@@ -971,7 +988,7 @@ function Section({
           {viewMode === 'compact' ? (
             // Compact view
             <>
-              {links.map((item) => (
+              {links.map((item, index) => (
                 <CompactLinkItem
                   key={item.id}
                   item={item}
@@ -979,13 +996,16 @@ function Section({
                   isDark={isDark}
                   sectionId={sectionId}
                   isDragging={dragState.draggingItemId === item.id}
+                  isDropTarget={dragState.dropIndex === index && dragState.dropSectionId === sectionId}
                   onUpdateItem={onUpdateItem}
                   onDeleteItem={onDeleteItem}
                   onDragStart={onDragStart}
+                  onDragOver={onDragOver}
+                  onDrop={onDrop}
                 />
               ))}
               
-              {/* Inline Add Link */}
+              {/* Inline Add Link - только при клике на + */}
               {addingLinkToSection === sectionId && (
                 <InlineAddLink
                   isDark={isDark}
@@ -1123,15 +1143,39 @@ export function LinksView({ containerId }: Props) {
     });
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number, sectionId: string | null) => {
+  // Handle drag over - accepts targetItemId (for compact) or calculates from index (for grid)
+  const handleDragOver = (e: React.DragEvent, target: number | string, sectionId: string | null) => {
     e.preventDefault();
-    if (dragState.draggingItemId) {
-      setDragState(prev => ({
-        ...prev,
-        dropIndex: index,
-        dropSectionId: sectionId,
-      }));
+    if (!dragState.draggingItemId || !container) return;
+    
+    // Calculate drop index
+    let dropIndex: number;
+    
+    if (typeof target === 'number') {
+      // Grid mode: target is already an index
+      dropIndex = target;
+    } else if (typeof target === 'string') {
+      // Compact mode: target is itemId, find its index in section
+      const sectionLinks = container.subItems
+        .filter(link => (link.sectionId || null) === sectionId)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      
+      if (target === '') {
+        // Empty string means drop at end of section
+        dropIndex = sectionLinks.length;
+      } else {
+        const targetIndex = sectionLinks.findIndex(l => l.id === target);
+        dropIndex = targetIndex >= 0 ? targetIndex : sectionLinks.length;
+      }
+    } else {
+      return;
     }
+    
+    setDragState(prev => ({
+      ...prev,
+      dropIndex,
+      dropSectionId: sectionId,
+    }));
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -1145,45 +1189,94 @@ export function LinksView({ containerId }: Props) {
     }
     
     const itemToMove = container.subItems.find(item => item.id === draggingItemId);
-    if (!itemToMove) return;
+    if (!itemToMove) {
+      setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
+      return;
+    }
+
+    // ============================================
+    // SAME SECTION REORDER (Intra-list DnD)
+    // ============================================
+    if (draggingSectionId === dropSectionId) {
+      const sectionLinks = container.subItems
+        .filter(link => (link.sectionId || null) === dropSectionId)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      
+      const fromIndex = sectionLinks.findIndex(l => l.id === draggingItemId);
+      if (fromIndex === -1) {
+        setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
+        return;
+      }
+      
+      // Calculate actual drop position
+      let toIndex = dropIndex;
+      if (toIndex > fromIndex) {
+        toIndex = Math.min(toIndex, sectionLinks.length);
+      }
+      
+      // Skip if dropping at same position
+      if (fromIndex === toIndex || fromIndex === toIndex - 1 && toIndex > fromIndex) {
+        setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
+        return;
+      }
+      
+      // Remove from old position and insert at new position
+      const reorderedLinks = [...sectionLinks];
+      const [removed] = reorderedLinks.splice(fromIndex, 1);
+      reorderedLinks.splice(toIndex > fromIndex ? toIndex - 1 : toIndex, 0, removed);
+      
+      // Update orders
+      const updatedSubItems = container.subItems.map(item => {
+        if ((item.sectionId || null) !== dropSectionId) return item;
+        const newOrder = reorderedLinks.findIndex(l => l.id === item.id);
+        return { ...item, order: newOrder };
+      });
+      
+      updateLinkContainer(container.id, { subItems: updatedSubItems });
+      setDragState({ draggingItemId: null, draggingSectionId: null, dropIndex: null, dropSectionId: null });
+      return;
+    }
     
-    // Reorder logic
+    // ============================================
+    // CROSS-SECTION MOVE (Inter-list DnD)
+    // ============================================
+    // Get links in target section
     const targetSectionLinks = container.subItems
       .filter(link => (link.sectionId || null) === dropSectionId)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
+    // Insert at drop position
+    const insertIndex = Math.min(dropIndex, targetSectionLinks.length);
+    
+    // Update the moved item
     const newSubItems = container.subItems.map(item => {
       if (item.id === draggingItemId) {
-        const fromIndex = targetSectionLinks.findIndex(i => i.id === draggingItemId);
-        const actualDropIndex = dropSectionId === draggingSectionId && fromIndex !== -1 && dropIndex > fromIndex
-          ? dropIndex - 1
-          : dropIndex;
-        
         return { 
           ...item, 
           sectionId: dropSectionId || undefined,
-          order: actualDropIndex
+          order: insertIndex
         };
       }
       return item;
     });
     
-    const reorderedSubItems = newSubItems.map(item => {
-      if ((item.sectionId || null) !== dropSectionId) return item;
+    // Shift orders for items at or after insert position in target section
+    const shiftedSubItems = newSubItems.map(item => {
       if (item.id === draggingItemId) return item;
+      if ((item.sectionId || null) !== dropSectionId) return item;
       
       const currentOrder = item.order ?? 0;
-      const isAfterDrop = currentOrder >= dropIndex;
-      
-      return {
-        ...item,
-        order: isAfterDrop ? currentOrder + 1 : currentOrder
-      };
+      if (currentOrder >= insertIndex) {
+        return { ...item, order: currentOrder + 1 };
+      }
+      return item;
     });
     
-    const normalizedSubItems = reorderedSubItems.map(item => {
-      const sectionLinks = reorderedSubItems
-        .filter(l => (l.sectionId || null) === (item.sectionId || null))
+    // Normalize orders per section
+    const normalizedSubItems = shiftedSubItems.map(item => {
+      const sectionId = item.sectionId || null;
+      const sectionLinks = shiftedSubItems
+        .filter(l => (l.sectionId || null) === sectionId)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       
       return {
