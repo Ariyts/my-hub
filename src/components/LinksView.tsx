@@ -1108,7 +1108,7 @@ export function LinksView({ containerId }: Props) {
   });
   
   // Inline add states
-  const [addingLinkToSection, setAddingLinkToSection] = useState<string | null>(null);
+  const [addingLinkToSection, setAddingLinkToSection] = useState<string | null>(null); // Hidden by default, shows on + click
   const [addingSection, setAddingSection] = useState(false);
 
   // Get sections
