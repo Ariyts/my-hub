@@ -3,11 +3,10 @@ id: "j0cg9ymrjmmemyvhc"
 title: "linux"
 tags: []
 isFavorite: false
-order: 1
+order: "1"
 createdAt: "2026-03-06T08:32:06.624Z"
 updatedAt: "2026-03-06T10:03:18.085Z"
 ---
-
 Поиск SUID файлов:
 ```Bash
 find / -perm -4000 -type f 2>/dev/null
@@ -78,4 +77,4 @@ Privesc через capability:
   6. АВТОМАТИЗАЦИЯ                                              
      linpeas.sh                                                  
      linenum.sh                                                  
-     linux-exploit-suggester.sh        
+     linux-exploit-suggester.sh

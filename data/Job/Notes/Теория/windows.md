@@ -3,11 +3,11 @@ id: "33emghs2bmmes1ewy"
 title: "windows"
 tags: []
 isFavorite: false
-order: 2
+order: "2"
 createdAt: "2026-03-06T10:54:03.202Z"
 updatedAt: "2026-03-06T10:54:18.556Z"
 ---
-  WINDOWS PRIVILEGE ESCALATION CHECKLIST               
+WINDOWS PRIVILEGE ESCALATION CHECKLIST               
                                                                  
   1. КТО Я?                                                      
      whoami /all                      ← Полная информация        
@@ -59,4 +59,4 @@ updatedAt: "2026-03-06T10:54:18.556Z"
   10. АВТОМАТИЗАЦИЯ                                             
       winPEAS.exe                                                
       Seatbelt.exe -group=all                                   
-      PowerUp.ps1                        
+      PowerUp.ps1

