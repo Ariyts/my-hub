@@ -71,27 +71,123 @@ function parseCommandsFromBody(body) {
   return items;
 }
 
-// Parse links from markdown body
-function parseLinksFromBody(body) {
-  const items = [];
+// ============================================
+// NEW: Parse links with sections and metadata
+// ============================================
+function parseLinksWithSectionsFromBody(body) {
+  const sections = [];
+  const subItems = [];
   const lines = body.split('\n');
   
-  for (const line of lines) {
-    // Match: - [title](url) - description
-    const match = line.match(/-\s*\[([^\]]+)\]\(([^)]+)\)(?:\s*-\s*(.+))?/);
-    if (match) {
-      items.push({
-        id: genId("li", match[1] + match[2]),
-        title: match[1],
-        url: match[2],
-        description: match[3] || '',
-        tags: [],
-        isFavorite: false
-      });
+  let currentSection = null;
+  let linkOrder = 0;
+  const genIdLocal = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+    
+    if (!trimmedLine) continue;
+    
+    // Section header: ## Title
+    if (trimmedLine.startsWith('## ')) {
+      // Save previous section
+      if (currentSection) {
+        sections.push(currentSection);
+      }
+      
+      let sectionTitle = trimmedLine.slice(3).trim();
+      let sectionIcon = undefined;
+      
+      // Extract emoji from title
+      const emojiMatch = sectionTitle.match(/^([\u{1F300}-\u{1F9FF}]\s*)/u);
+      if (emojiMatch) {
+        sectionIcon = emojiMatch[0].trim();
+        sectionTitle = sectionTitle.slice(emojiMatch[0].length).trim();
+      }
+      
+      currentSection = {
+        id: genIdLocal(),
+        title: sectionTitle,
+        order: sections.length,
+        collapsed: false,
+        icon: sectionIcon,
+      };
+      
+      // Check for section metadata on next line: <!-- section: {...} -->
+      const nextLine = lines[i + 1]?.trim();
+      if (nextLine?.startsWith('<!-- section:')) {
+        const metaMatch = nextLine.match(/<!--\s*section:\s*(\{.*?\})\s*-->/);
+        if (metaMatch) {
+          try {
+            const meta = JSON.parse(metaMatch[1]);
+            currentSection.id = meta.id || currentSection.id;
+            currentSection.order = typeof meta.order === 'number' ? meta.order : currentSection.order;
+            currentSection.collapsed = meta.collapsed ?? false;
+            currentSection.color = meta.color;
+            currentSection.icon = meta.icon || currentSection.icon;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        i++; // Skip metadata line
+      }
+      
+      linkOrder = 0;
+      continue;
+    }
+    
+    // Link: - [Title](URL) description <!-- link: {...} -->
+    if (trimmedLine.startsWith('- [') || trimmedLine.startsWith('-[')) {
+      // Extract link metadata
+      let linkMeta = {};
+      const metaMatch = trimmedLine.match(/<!--\s*link:\s*(\{.*?\})\s*-->/);
+      if (metaMatch) {
+        try {
+          linkMeta = JSON.parse(metaMatch[1]);
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      // Remove comment for main parsing
+      const cleanLine = trimmedLine.replace(/<!--\s*link:.*?-->/, '').trim();
+      
+      // Parse Markdown link
+      const linkMatch = cleanLine.match(/^-\s*\[([^\]]*)\]\(([^)]+)\)(.*)$/);
+      if (linkMatch) {
+        const [, title, url, rest] = linkMatch;
+        const description = rest.trim() || linkMeta.description || undefined;
+        
+        const linkItem = {
+          id: linkMeta.id || genIdLocal(),
+          url,
+          title: title || url,
+          description,
+          favicon: linkMeta.favicon,
+          tags: linkMeta.tags || [],
+          isFavorite: linkMeta.isFavorite ?? false,
+          order: linkMeta.order ?? linkOrder++,
+          sectionId: linkMeta.sectionId || (currentSection ? currentSection.id : undefined),
+          color: linkMeta.color,
+        };
+        
+        // If we have a section, assign link to it
+        if (currentSection) {
+          linkItem.sectionId = currentSection.id;
+        }
+        
+        subItems.push(linkItem);
+      }
     }
   }
   
-  return items;
+  // Save last section
+  if (currentSection) {
+    sections.push(currentSection);
+  }
+  
+  return { sections, subItems };
 }
 
 // Parse prompts from markdown body
@@ -311,12 +407,14 @@ if (fs.existsSync(dataDir)) {
               type: "commands"
             });
           } else if (baseType === "links") {
-            const subItems = parseLinksFromBody(body);
+            // NEW: Parse links with sections and metadata
+            const parsed = parseLinksWithSectionsFromBody(body);
             result.links.push({
               id: frontmatter.id || genId("lnk", notePathForId),
               folderId: folder.id,
               title,
-              subItems: subItems.length > 0 ? subItems : (frontmatter.subItems || []),
+              subItems: parsed.subItems.length > 0 ? parsed.subItems : (frontmatter.subItems || []),
+              sections: parsed.sections.length > 0 ? parsed.sections : (frontmatter.sections || []),
               tags: frontmatter.tags || [],
               order: frontmatter.order ?? result.links.filter(l => l.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
@@ -352,6 +450,10 @@ console.log("- Notes:", result.notes.length);
 console.log("- Commands:", result.commands.length);
 console.log("- Links:", result.links.length);
 console.log("- Prompts:", result.prompts.length);
+
+// Log sections count for debugging
+const linksWithSections = result.links.filter(l => l.sections && l.sections.length > 0);
+console.log("- Links with sections:", linksWithSections.length);
 
 fs.writeFileSync("./src/data.json", JSON.stringify(result, null, 2));
 console.log("Written to src/data.json");

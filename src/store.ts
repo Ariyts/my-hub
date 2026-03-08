@@ -552,18 +552,30 @@ export const useStore = create<AppState & StoreActions>()(
         });
       },
       
-      updateLinkSection: (containerId, sectionId, updates) => set((s) => ({
-        links: s.links.map(l => {
-          if (l.id !== containerId) return l;
+      updateLinkSection: (containerId, sectionId, updates) => {
+        console.log('[updateLinkSection] Called with:', { containerId, sectionId, updates });
+        set((s) => {
+          const container = s.links.find(l => l.id === containerId);
+          console.log('[updateLinkSection] Container before update:', {
+            containerFound: !!container,
+            sectionsBefore: container?.sections
+          });
           return {
-            ...l,
-            sections: (l.sections || []).map(sec => 
-              sec.id === sectionId ? { ...sec, ...updates } : sec
-            ),
-            updatedAt: new Date().toISOString(),
+            links: s.links.map(l => {
+              if (l.id !== containerId) return l;
+              const updatedSections = (l.sections || []).map(sec => 
+                sec.id === sectionId ? { ...sec, ...updates } : sec
+              );
+              console.log('[updateLinkSection] Updated sections:', updatedSections);
+              return {
+                ...l,
+                sections: updatedSections,
+                updatedAt: new Date().toISOString(),
+              };
+            })
           };
-        })
-      })),
+        });
+      },
       
       deleteLinkSection: (containerId, sectionId) => set((s) => ({
         links: s.links.map(l => {
@@ -888,6 +900,17 @@ export const useStore = create<AppState & StoreActions>()(
         }
         
         set({ syncStatus: 'syncing', syncMessage: 'Saving...' });
+        
+        // DEBUG: Log links data before sync
+        console.log('[syncToCloud] Links data being synced:', 
+          state.links.map(l => ({
+            id: l.id,
+            title: l.title,
+            sections: l.sections,
+            subItemsCount: l.subItems.length,
+            updatedAt: l.updatedAt
+          }))
+        );
         
         const data = {
           workspaces: state.workspaces,

@@ -1129,6 +1129,10 @@ export function LinksView({ containerId }: Props) {
 
   // Get sections
   const sections: (LinkSection | null)[] = useMemo(() => {
+    console.log('[LinksView] Computing sections from container:', {
+      containerId: container?.id,
+      sections: container?.sections
+    });
     const existingSections = container?.sections || [];
     if (existingSections.length === 0) {
       return [null];
@@ -1332,6 +1336,14 @@ export function LinksView({ containerId }: Props) {
     const currentIndex = SECTION_COLORS.indexOf(section.color || '');
     const nextIndex = (currentIndex + 1) % SECTION_COLORS.length;
     const newColor = SECTION_COLORS[nextIndex];
+    
+    console.log('[handleColorSection] Updating section:', {
+      containerId: container.id,
+      sectionId,
+      newColor,
+      currentSection: section,
+      allSections: container.sections
+    });
     
     updateLinkSection(container.id, sectionId, { color: newColor });
   };
