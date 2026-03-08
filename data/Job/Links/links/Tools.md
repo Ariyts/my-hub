@@ -4,8 +4,12 @@ title: "Tools"
 tags: []
 order: "2"
 createdAt: "2026-03-06T18:47:50.203Z"
-updatedAt: "2026-03-08T17:10:24.018Z"
+updatedAt: "2026-03-08T17:10:38.843Z"
 ---
+
+## тулзы которые юзаю
+<!-- section: {"id":"ndw1cb12jmmi0df5n","order":0,"collapsed":false} -->
+
 
 - [https://github.com/enaqx/awesome-pentest](enaqx/awesome-pentest) <!-- link: {"id":"li_pw4cfe","order":0,"color":"#ef4444"} -->
 - [Hack-with-Github/Awesome-Hacking](https://github.com/Hack-with-Github/Awesome-Hacking) <!-- link: {"id":"li_3sqjnu","order":0,"color":"#f97316"} -->
