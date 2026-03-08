@@ -4,7 +4,7 @@ title: "Tools"
 tags: []
 order: "2"
 createdAt: "2026-03-06T18:47:50.203Z"
-updatedAt: "2026-03-08T17:11:09.440Z"
+updatedAt: "2026-03-08T17:13:13.668Z"
 ---
 
 ## тулзы которые юзаю
