@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'data/**'
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'vite.config.ts'
   workflow_dispatch:
 
 permissions:
