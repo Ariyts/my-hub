@@ -838,7 +838,7 @@ interface SectionProps {
   onUpdateItem: (itemId: string, updates: Partial<LinkItem>) => void;
   onDeleteItem: (itemId: string) => void;
   // Inline add link state
-  addingLinkToSection: string | null;
+  addingLinkToSection: string | null | undefined;
   onStartAddLink: (sectionId: string | null) => void;
   onCloseAddLink: () => void;
   onCreateLink: (sectionId: string | null, url: string, title?: string) => Promise<void>;
@@ -1006,7 +1006,7 @@ function Section({
               ))}
               
               {/* Inline Add Link - только при клике на + */}
-              {addingLinkToSection === sectionId && (
+              {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
                 <InlineAddLink
                   isDark={isDark}
                   onCreateLink={async (url, title) => {
@@ -1036,10 +1036,21 @@ function Section({
                   dropSectionId={dragState.dropSectionId}
                 />
               ))}
+              
+              {/* Inline Add Link for Grid view - только при клике на + */}
+              {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
+                <InlineAddLink
+                  isDark={isDark}
+                  onCreateLink={async (url, title) => {
+                    await onCreateLink(sectionId, url, title);
+                  }}
+                  onClose={onCloseAddLink}
+                />
+              )}
             </>
           )}
           
-          {links.length === 0 && addingLinkToSection !== sectionId && (
+          {links.length === 0 && (addingLinkToSection === undefined || addingLinkToSection !== sectionId) && (
             <div 
               className="text-center py-6 text-xs border-2 border-dashed rounded-lg transition-colors cursor-pointer hover:border-orange-400"
               style={{ 
@@ -1108,7 +1119,8 @@ export function LinksView({ containerId }: Props) {
   });
   
   // Inline add states
-  const [addingLinkToSection, setAddingLinkToSection] = useState<string | null>(null); // Hidden by default, shows on + click
+  // undefined = hidden, null = uncategorized section, string = specific section ID
+  const [addingLinkToSection, setAddingLinkToSection] = useState<string | null | undefined>(undefined);
   const [addingSection, setAddingSection] = useState(false);
 
   // Get sections
@@ -1346,7 +1358,7 @@ export function LinksView({ containerId }: Props) {
   };
 
   const handleCloseAddLink = () => {
-    setAddingLinkToSection(null);
+    setAddingLinkToSection(undefined);
   };
 
   // Handle inline link creation with URL and title
