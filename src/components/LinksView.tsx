@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import type { LinkItem, LinkSection } from '../types';
+import { useAutoSync } from '../hooks/useAutoSync';
 import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, Palette, LayoutGrid, LayoutList, FolderPlus } from 'lucide-react';
 
 // Fetch link metadata
@@ -1089,6 +1090,9 @@ export function LinksView({ containerId }: Props) {
     addLinkItem,
     isDarkTheme 
   } = useStore();
+  
+  // Auto-sync hook - triggers debounced sync after changes
+  useAutoSync(containerId, container?.updatedAt);
   
   // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURN
   const [search, setSearch] = useState('');
