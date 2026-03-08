@@ -73,6 +73,7 @@ function parseCommandsFromBody(body) {
 
 // ============================================
 // NEW: Parse links with sections and metadata
+// FIXED: Properly handle uncategorized links
 // ============================================
 function parseLinksWithSectionsFromBody(body) {
   const sections = [];
@@ -80,14 +81,26 @@ function parseLinksWithSectionsFromBody(body) {
   const lines = body.split('\n');
   
   let currentSection = null;
+  let currentSectionId = null; // Track current section ID separately
   let linkOrder = 0;
+  let uncategorizedOrder = 0;
   const genIdLocal = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  
+  // Track if we've seen an empty line after last section content
+  let seenEmptyLineAfterSection = false;
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmedLine = line.trim();
     
-    if (!trimmedLine) continue;
+    // Empty line handling
+    if (!trimmedLine) {
+      // Mark that we've seen an empty line - this could indicate end of section content
+      if (currentSectionId) {
+        seenEmptyLineAfterSection = true;
+      }
+      continue;
+    }
     
     // Section header: ## Title
     if (trimmedLine.startsWith('## ')) {
@@ -113,6 +126,8 @@ function parseLinksWithSectionsFromBody(body) {
         collapsed: false,
         icon: sectionIcon,
       };
+      currentSectionId = currentSection.id;
+      seenEmptyLineAfterSection = false;
       
       // Check for section metadata on next line: <!-- section: {...} -->
       const nextLine = lines[i + 1]?.trim();
@@ -122,6 +137,7 @@ function parseLinksWithSectionsFromBody(body) {
           try {
             const meta = JSON.parse(metaMatch[1]);
             currentSection.id = meta.id || currentSection.id;
+            currentSectionId = currentSection.id;
             currentSection.order = typeof meta.order === 'number' ? meta.order : currentSection.order;
             currentSection.collapsed = meta.collapsed ?? false;
             currentSection.color = meta.color;
@@ -159,6 +175,23 @@ function parseLinksWithSectionsFromBody(body) {
         const [, title, url, rest] = linkMatch;
         const description = rest.trim() || linkMeta.description || undefined;
         
+        // Determine sectionId:
+        // 1. If link has explicit sectionId in metadata, always use it
+        // 2. If we've seen empty line after section and link has NO sectionId -> uncategorized
+        // 3. Otherwise, use current section
+        let linkSectionId = linkMeta.sectionId || undefined;
+        
+        if (!linkMeta.sectionId) {
+          // No explicit sectionId in metadata
+          if (seenEmptyLineAfterSection) {
+            // Empty line before this link suggests it's uncategorized
+            linkSectionId = undefined;
+          } else if (currentSectionId) {
+            // We're inside a section without empty line
+            linkSectionId = currentSectionId;
+          }
+        }
+        
         const linkItem = {
           id: linkMeta.id || genIdLocal(),
           url,
@@ -167,15 +200,10 @@ function parseLinksWithSectionsFromBody(body) {
           favicon: linkMeta.favicon,
           tags: linkMeta.tags || [],
           isFavorite: linkMeta.isFavorite ?? false,
-          order: linkMeta.order ?? linkOrder++,
-          sectionId: linkMeta.sectionId || (currentSection ? currentSection.id : undefined),
+          order: linkSectionId ? (linkMeta.order ?? linkOrder++) : (linkMeta.order ?? uncategorizedOrder++),
+          sectionId: linkSectionId,
           color: linkMeta.color,
         };
-        
-        // If we have a section, assign link to it
-        if (currentSection) {
-          linkItem.sectionId = currentSection.id;
-        }
         
         subItems.push(linkItem);
       }
@@ -455,5 +483,22 @@ console.log("- Prompts:", result.prompts.length);
 const linksWithSections = result.links.filter(l => l.sections && l.sections.length > 0);
 console.log("- Links with sections:", linksWithSections.length);
 
+// Log detailed links info for debugging
+result.links.forEach(link => {
+  console.log(`\nLink container "${link.title}":`);
+  console.log(`  - Sections: ${link.sections?.length || 0}`);
+  console.log(`  - SubItems: ${link.subItems?.length || 0}`);
+  if (link.sections) {
+    link.sections.forEach(s => {
+      const count = link.subItems.filter(i => i.sectionId === s.id).length;
+      console.log(`    - Section "${s.title}": ${count} items`);
+    });
+  }
+  const uncategorized = link.subItems.filter(i => !i.sectionId).length;
+  if (uncategorized > 0) {
+    console.log(`    - Uncategorized: ${uncategorized} items`);
+  }
+});
+
 fs.writeFileSync("./src/data.json", JSON.stringify(result, null, 2));
-console.log("Written to src/data.json");
+console.log("\nWritten to src/data.json");

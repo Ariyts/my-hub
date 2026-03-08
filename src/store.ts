@@ -954,24 +954,40 @@ export const useStore = create<AppState & StoreActions>()(
     }),
     {
       name: 'knowledge-hub-storage',
+      // Persist ALL data to localStorage for immediate persistence between sessions
+      // Data is also synced to GitHub for long-term storage
       partialize: (state) => ({
-        // Only persist UI preferences (NOT data - data comes from embedded data.json)
+        // Data
+        workspaces: state.workspaces,
+        categories: state.categories,
+        folders: state.folders,
+        notes: state.notes,
+        commands: state.commands,
+        links: state.links,
+        prompts: state.prompts,
+        // UI preferences
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
-        // Don't persist activeWorkspaceId - it should be derived from embedded data
+        activeWorkspaceId: state.activeWorkspaceId,
       }),
-      // On rehydration, ensure we have valid data
+      // On rehydration, merge localStorage data with embedded data
+      // localStorage has priority (more recent user changes)
       onRehydrateStorage: () => (state) => {
-        if (state && (!state.workspaces || state.workspaces.length === 0)) {
-          // If no workspaces from embedded data, reset to initial
-          state.workspaces = initialData.workspaces || [];
-          state.categories = initialData.categories || [];
-          state.folders = initialData.folders || [];
-          state.notes = initialData.notes || [];
-          state.commands = initialData.commands || [];
-          state.links = initialData.links || [];
-          state.prompts = initialData.prompts || [];
-          state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
+        if (state) {
+          // If localStorage is empty or corrupted, fall back to embedded data
+          if (!state.workspaces || state.workspaces.length === 0) {
+            console.log('[Store] No localStorage data, using embedded data.json');
+            state.workspaces = initialData.workspaces || [];
+            state.categories = initialData.categories || [];
+            state.folders = initialData.folders || [];
+            state.notes = initialData.notes || [];
+            state.commands = initialData.commands || [];
+            state.links = initialData.links || [];
+            state.prompts = initialData.prompts || [];
+            state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
+          } else {
+            console.log('[Store] Loaded data from localStorage');
+          }
         }
       },
     }
