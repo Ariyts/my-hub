@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { Category, BaseDataType } from '../types';
-import { Settings, Plus, MoreHorizontal, Edit2, Trash2, GripVertical } from 'lucide-react';
+import { Settings, Plus, MoreHorizontal, Edit2, Trash2, GripVertical, RotateCcw } from 'lucide-react';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 const BASE_TYPE_OPTIONS: { value: BaseDataType; label: string }[] = [
@@ -419,11 +419,26 @@ export function Sidebar() {
         {/* Settings button */}
         <button
           onClick={() => setShowSettings(true)}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 mb-1"
           style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}
         >
           <Settings size={14} />
           <span>Settings</span>
+        </button>
+
+        {/* Reset button - clears localStorage and reloads */}
+        <button
+          onClick={() => {
+            if (confirm('Reset to default data? All your changes will be lost.')) {
+              localStorage.removeItem('knowledge-hub-storage');
+              window.location.reload();
+            }
+          }}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-orange-900/30"
+          style={{ color: '#f97316' }}
+        >
+          <RotateCcw size={14} />
+          <span>Reset</span>
         </button>
       </div>
     </aside>
