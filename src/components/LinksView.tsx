@@ -561,43 +561,44 @@ function CompactLinkItem({
         <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />
       )}
       
-      {/* Action buttons - show on hover */}
-      {isHovered && (
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          {/* Color button */}
-          <button
-            onClick={handleCycleColor}
-            className="p-1 rounded hover:bg-slate-500/20 transition-colors"
-            title="Change color"
-          >
-            <div 
-              className="w-3 h-3 rounded-full border"
-              style={{ 
-                background: item.color || 'transparent',
-                borderColor: item.color || (isDark ? '#4b5563' : '#d1d5db')
-              }}
-            />
-          </button>
-          
-          {/* Edit button */}
-          <button
-            onClick={handleStartEdit}
-            className="p-1 rounded hover:bg-blue-500/20 transition-colors"
-            title="Edit"
-          >
-            <Edit3 size={12} style={{ color: isDark ? '#60a5fa' : '#3b82f6' }} />
-          </button>
-          
-          {/* Delete button */}
-          <button
-            onClick={handleDelete}
-            className="p-1 rounded hover:bg-red-500/20 transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={12} className="text-red-400" />
-          </button>
-        </div>
-      )}
+      {/* Action buttons - show on hover (always in DOM to prevent layout shift) */}
+      <div 
+        className="flex items-center gap-0.5 flex-shrink-0 transition-opacity duration-150"
+        style={{ opacity: isHovered ? 1 : 0, pointerEvents: isHovered ? 'auto' : 'none' }}
+      >
+        {/* Color button */}
+        <button
+          onClick={handleCycleColor}
+          className="p-1 rounded hover:bg-slate-500/20 transition-colors"
+          title="Change color"
+        >
+          <div 
+            className="w-3 h-3 rounded-full border"
+            style={{ 
+              background: item.color || 'transparent',
+              borderColor: item.color || (isDark ? '#4b5563' : '#d1d5db')
+            }}
+          />
+        </button>
+        
+        {/* Edit button */}
+        <button
+          onClick={handleStartEdit}
+          className="p-1 rounded hover:bg-blue-500/20 transition-colors"
+          title="Edit"
+        >
+          <Edit3 size={12} style={{ color: isDark ? '#60a5fa' : '#3b82f6' }} />
+        </button>
+        
+        {/* Delete button */}
+        <button
+          onClick={handleDelete}
+          className="p-1 rounded hover:bg-red-500/20 transition-colors"
+          title="Delete"
+        >
+          <Trash2 size={12} className="text-red-400" />
+        </button>
+      </div>
     </div>
   );
 }
