@@ -490,7 +490,7 @@ function CompactLinkItem({
     <div
       className={`
         relative flex items-center gap-1 px-2 py-1.5 rounded-lg
-        transition-all duration-150 border group
+        transition-colors transition-opacity duration-150 border group
         ${isDragging ? 'opacity-50 scale-95 ring-2 ring-orange-400' : ''}
         ${isDropTarget ? 'ring-2 ring-blue-400 bg-blue-500/10' : ''}
       `}
