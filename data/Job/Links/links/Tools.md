@@ -4,13 +4,13 @@ title: "Tools"
 tags: []
 order: "2"
 createdAt: "2026-03-06T18:47:50.203Z"
-updatedAt: "2026-03-08T17:11:09.440Z"
+updatedAt: "2026-03-09T19:21:26.552Z"
 ---
 
 ## тулзы которые юзаю
 <!-- section: {"id":"ndw1cb12jmmi0df5n","order":0,"collapsed":false} -->
 
-- [чайфи для разгадывания шифров](чайфи) <!-- link: {"id":"3mda3qzp6mmi0dzhh","order":0,"favicon":"https://www.google.com/s2/favicons?domain=чайфи&sz=32","sectionId":"ndw1cb12jmmi0df5n","color":"#14b8a6"} -->
+- [Ciphey - для разгадывания шифров](https://github.com/bee-san/Ciphey) <!-- link: {"id":"3mda3qzp6mmi0dzhh","order":0,"favicon":"https://www.google.com/s2/favicons?domain=чайфи&sz=32","sectionId":"ndw1cb12jmmi0df5n","color":"#14b8a6"} -->
 
 - [https://github.com/enaqx/awesome-pentest](enaqx/awesome-pentest) <!-- link: {"id":"li_pw4cfe","order":0,"color":"#ef4444"} -->
 - [Hack-with-Github/Awesome-Hacking](https://github.com/Hack-with-Github/Awesome-Hacking) <!-- link: {"id":"li_3sqjnu","order":0,"color":"#f97316"} -->
