@@ -227,6 +227,7 @@ export interface AppState {
   searchQuery: string;
   showSettings: boolean;
   sidebarCollapsed: boolean;
+  sidebarCompact: boolean;
   isDarkTheme: boolean;
 }
 

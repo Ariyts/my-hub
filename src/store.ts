@@ -99,6 +99,7 @@ interface StoreActions {
   setSearchQuery: (query: string) => void;
   setShowSettings: (show: boolean) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleSidebarCompact: () => void;
   toggleTheme: () => void;
   setSettings: (settings: Partial<Settings>) => void;
 
@@ -152,6 +153,7 @@ export const useStore = create<AppState & StoreActions>()(
       searchQuery: '',
       showSettings: false,
       sidebarCollapsed: false,
+      sidebarCompact: false,
       isDarkTheme: false,
 
       // ============================================
@@ -774,6 +776,7 @@ export const useStore = create<AppState & StoreActions>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
       setShowSettings: (show) => set({ showSettings: show }),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      toggleSidebarCompact: () => set((s) => ({ sidebarCompact: !s.sidebarCompact })),
       toggleTheme: () => set((s) => ({ isDarkTheme: !s.isDarkTheme })),
       setSettings: (settings) => set((s) => ({ settings: { ...s.settings, ...settings } })),
 
@@ -969,6 +972,7 @@ export const useStore = create<AppState & StoreActions>()(
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
         activeWorkspaceId: state.activeWorkspaceId,
+        sidebarCompact: state.sidebarCompact,
       }),
       // On rehydration, merge localStorage data with embedded data
       // localStorage has priority (more recent user changes)

@@ -6,7 +6,11 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 const EMOJI_OPTIONS = ['🏠', '💼', '🎯', '🚀', '📚', '💡', '🎨', '🔧', '⚡', '🎮', '🏠', '📊'];
 const COLOR_OPTIONS = ['#6366f1', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#E91E63', '#00BCD4', '#FF5722'];
 
-export function WorkspaceSwitcher() {
+interface WorkspaceSwitcherProps {
+  compact?: boolean;
+}
+
+export function WorkspaceSwitcher({ compact = false }: WorkspaceSwitcherProps) {
   const { 
     workspaces, 
     activeWorkspaceId, 
@@ -56,46 +60,52 @@ export function WorkspaceSwitcher() {
           <div key={workspace.id} className="relative group">
             <button
               onClick={() => setActiveWorkspaceId(workspace.id)}
+              title={compact ? workspace.name : undefined}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all duration-200"
               style={{
                 background: isActive ? `${workspace.color}22` : 'transparent',
                 border: isActive ? `1px solid ${workspace.color}50` : '1px solid transparent',
+                justifyContent: compact ? 'center' : 'flex-start',
               }}
             >
               <span className="text-sm">{workspace.icon}</span>
-              <span 
-                className="text-xs font-medium max-w-[60px] truncate"
-                style={{ color: isActive ? workspace.color : (isDarkTheme ? '#94a3b8' : '#64748b') }}
-              >
-                {workspace.name}
-              </span>
+              {!compact && (
+                <span 
+                  className="text-xs font-medium max-w-[60px] truncate"
+                  style={{ color: isActive ? workspace.color : (isDarkTheme ? '#94a3b8' : '#64748b') }}
+                >
+                  {workspace.name}
+                </span>
+              )}
             </button>
             
-            {/* Edit/Delete buttons on hover */}
-            <div className="absolute right-0 top-0 bottom-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-l from-transparent via-transparent to-[#1e293b] pr-1">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingWorkspace(workspace);
-                }}
-                className="p-0.5 rounded hover:bg-slate-600"
-              >
-                <Edit2 size={10} className="text-slate-400" />
-              </button>
-              {workspaces.length > 1 && (
+            {/* Edit/Delete buttons on hover - hidden in compact mode */}
+            {!compact && (
+              <div className="absolute right-0 top-0 bottom-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-l from-transparent via-transparent to-[#1e293b] pr-1">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm(`Delete workspace "${workspace.name}"?`)) {
-                      deleteWorkspace(workspace.id);
-                    }
+                    setEditingWorkspace(workspace);
                   }}
-                  className="p-0.5 rounded hover:bg-red-900/30"
+                  className="p-0.5 rounded hover:bg-slate-600"
                 >
-                  <Trash2 size={10} className="text-red-400" />
+                  <Edit2 size={10} className="text-slate-400" />
                 </button>
-              )}
-            </div>
+                {workspaces.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Delete workspace "${workspace.name}"?`)) {
+                        deleteWorkspace(workspace.id);
+                      }
+                    }}
+                    className="p-0.5 rounded hover:bg-red-900/30"
+                  >
+                    <Trash2 size={10} className="text-red-400" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         );
       })}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { Category, BaseDataType } from '../types';
-import { Settings, Plus, MoreHorizontal, Edit2, Trash2, GripVertical, RotateCcw } from 'lucide-react';
+import { Settings, Plus, MoreHorizontal, Edit2, Trash2, GripVertical, RotateCcw, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 const BASE_TYPE_OPTIONS: { value: BaseDataType; label: string }[] = [
@@ -31,7 +31,9 @@ export function Sidebar() {
     links,
     prompts,
     trash,
-    setShowTrash
+    setShowTrash,
+    sidebarCompact,
+    toggleSidebarCompact
   } = useStore();
   
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -40,6 +42,11 @@ export function Sidebar() {
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [draggedCategoryId, setDraggedCategoryId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  
+  // Toggle sidebar compact mode
+  const toggleSidebarCompact = () => {
+    useStore.getState().toggleSidebarCompact();
+  };
   
   // Filter categories for current workspace
   const workspaceCategories = categories
@@ -108,26 +115,41 @@ export function Sidebar() {
 
   return (
     <aside
-      className="flex flex-col border-r transition-all duration-300 z-20 relative"
+      className="flex flex-col border-r transition-all duration-300 ease-in-out z-20 relative overflow-hidden"
       style={{
-        width: '200px',
-        minWidth: '200px',
+        width: sidebarCompact ? '56px' : '200px',
+        minWidth: sidebarCompact ? '56px' : '200px',
         background: isDarkTheme ? '#0f172a' : '#1e293b',
         borderColor: isDarkTheme ? '#1e293b' : '#0f172a',
       }}
     >
-      {/* Workspace Switcher */}
-      <div className="border-b" style={{ borderColor: isDarkTheme ? '#1e293b' : '#0f172a' }}>
-        <WorkspaceSwitcher />
+      {/* Workspace Switcher with compact toggle */}
+      <div className="border-b flex items-center" style={{ borderColor: isDarkTheme ? '#1e293b' : '#0f172a' }}>
+        <div className="flex-1 overflow-hidden">
+          <WorkspaceSwitcher compact={sidebarCompact} />
+        </div>
+        <button
+          onClick={toggleSidebarCompact}
+          className="p-2 hover:bg-slate-700/50 transition-colors flex-shrink-0"
+          title={sidebarCompact ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {sidebarCompact ? (
+            <PanelLeft size={16} style={{ color: isDarkTheme ? '#64748b' : '#94a3b8' }} />
+          ) : (
+            <PanelLeftClose size={16} style={{ color: isDarkTheme ? '#64748b' : '#94a3b8' }} />
+          )}
+        </button>
       </div>
 
       {/* Categories */}
       <nav className="flex-1 overflow-y-auto py-2">
-        <div className="px-3 mb-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-            Categories
-          </span>
-        </div>
+        {!sidebarCompact && (
+          <div className="px-3 mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              Categories
+            </span>
+          </div>
+        )}
         
         {workspaceCategories.map((category, index) => {
           const isActive = activeCategoryId === category.id;
@@ -192,44 +214,54 @@ export function Sidebar() {
                   e.preventDefault();
                   setContextMenu({ id: category.id, x: e.clientX, y: e.clientY });
                 }}
+                title={sidebarCompact ? category.name : undefined}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-all duration-200"
                 style={{
                   background: isActive ? `${category.color}22` : isDropTarget ? '#6366f120' : 'transparent',
                   border: isActive ? `1px solid ${category.color}40` : isDropTarget ? '1px solid #6366f1' : '1px solid transparent',
+                  justifyContent: sidebarCompact ? 'center' : 'flex-start',
                 }}
               >
-                {/* Drag handle */}
-                <div 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  <GripVertical size={12} style={{ color: isDarkTheme ? '#64748b' : '#94a3b8' }} />
-                </div>
+                {/* Drag handle - hidden in compact mode */}
+                {!sidebarCompact && (
+                  <div 
+                    className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <GripVertical size={12} style={{ color: isDarkTheme ? '#64748b' : '#94a3b8' }} />
+                  </div>
+                )}
                 <span className="text-base">{category.icon}</span>
-                <span 
-                  className="flex-1 text-sm font-medium text-left truncate"
-                  style={{ color: isActive ? category.color : (isDarkTheme ? '#cbd5e1' : '#94a3b8') }}
-                >
-                  {category.name}
-                </span>
-                <span 
-                  className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                  style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}
-                >
-                  {itemCount}
-                </span>
+                {!sidebarCompact && (
+                  <>
+                    <span 
+                      className="flex-1 text-sm font-medium text-left truncate"
+                      style={{ color: isActive ? category.color : (isDarkTheme ? '#cbd5e1' : '#94a3b8') }}
+                    >
+                      {category.name}
+                    </span>
+                    <span 
+                      className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                      style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}
+                    >
+                      {itemCount}
+                    </span>
+                  </>
+                )}
               </button>
               
-              {/* Context menu button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setContextMenu({ id: category.id, x: e.clientX, y: e.clientY });
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-slate-700"
-              >
-                <MoreHorizontal size={12} className="text-slate-400" />
-              </button>
+              {/* Context menu button - hidden in compact mode */}
+              {!sidebarCompact && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setContextMenu({ id: category.id, x: e.clientX, y: e.clientY });
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-slate-700"
+                >
+                  <MoreHorizontal size={12} className="text-slate-400" />
+                </button>
+              )}
             </div>
           );
         })}
@@ -238,11 +270,15 @@ export function Sidebar() {
         <div className="px-2 mt-2">
           <button
             onClick={() => setShowAddMenu(!showAddMenu)}
+            title={sidebarCompact ? "Add Category" : undefined}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 border border-dashed border-slate-600"
-            style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}
+            style={{ 
+              color: isDarkTheme ? '#94a3b8' : '#64748b',
+              justifyContent: sidebarCompact ? 'center' : 'flex-start',
+            }}
           >
             <Plus size={14} />
-            <span>Add Category</span>
+            {!sidebarCompact && <span>Add Category</span>}
           </button>
         </div>
       </nav>
@@ -400,14 +436,18 @@ export function Sidebar() {
         {/* Trash button */}
         <button
           onClick={() => setShowTrash(true)}
-          className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 mb-1"
-          style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}
+          title={sidebarCompact ? "Trash" : undefined}
+          className="flex items-center w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 mb-1"
+          style={{ 
+            color: isDarkTheme ? '#94a3b8' : '#64748b',
+            justifyContent: sidebarCompact ? 'center' : 'space-between',
+          }}
         >
           <div className="flex items-center gap-2">
             <Trash2 size={14} />
-            <span>Trash</span>
+            {!sidebarCompact && <span>Trash</span>}
           </div>
-          {trash.length > 0 && (
+          {!sidebarCompact && trash.length > 0 && (
             <span 
               className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400"
             >
@@ -419,11 +459,15 @@ export function Sidebar() {
         {/* Settings button */}
         <button
           onClick={() => setShowSettings(true)}
+          title={sidebarCompact ? "Settings" : undefined}
           className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 mb-1"
-          style={{ color: isDarkTheme ? '#94a3b8' : '#64748b' }}
+          style={{ 
+            color: isDarkTheme ? '#94a3b8' : '#64748b',
+            justifyContent: sidebarCompact ? 'center' : 'flex-start',
+          }}
         >
           <Settings size={14} />
-          <span>Settings</span>
+          {!sidebarCompact && <span>Settings</span>}
         </button>
 
         {/* Reset button - clears localStorage and reloads */}
@@ -434,11 +478,15 @@ export function Sidebar() {
               window.location.reload();
             }
           }}
+          title={sidebarCompact ? "Reset" : undefined}
           className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-orange-900/30"
-          style={{ color: '#f97316' }}
+          style={{ 
+            color: '#f97316',
+            justifyContent: sidebarCompact ? 'center' : 'flex-start',
+          }}
         >
           <RotateCcw size={14} />
-          <span>Reset</span>
+          {!sidebarCompact && <span>Reset</span>}
         </button>
       </div>
     </aside>

@@ -843,6 +843,13 @@ interface SectionProps {
   onStartAddLink: (sectionId: string | null) => void;
   onCloseAddLink: () => void;
   onCreateLink: (sectionId: string | null, url: string, title?: string) => Promise<void>;
+  // Section DnD
+  sectionIndex: number;
+  isDraggingSection: boolean;
+  isDropTargetSection: boolean;
+  onSectionDragStart: (e: React.DragEvent, sectionId: string) => void;
+  onSectionDragOver: (e: React.DragEvent, targetIndex: number) => void;
+  onSectionDrop: (e: React.DragEvent) => void;
 }
 
 // Predefined color palette
@@ -861,7 +868,8 @@ const SECTION_COLORS = [
 function Section({ 
   section, links, containerId, isDark, viewMode, onDragStart, onDragOver, onDrop,
   dragState, onToggleCollapse, onEditSection, onDeleteSection, onColorSection,
-  onUpdateItem, onDeleteItem, addingLinkToSection, onStartAddLink, onCloseAddLink, onCreateLink
+  onUpdateItem, onDeleteItem, addingLinkToSection, onStartAddLink, onCloseAddLink, onCreateLink,
+  sectionIndex, isDraggingSection, isDropTargetSection, onSectionDragStart, onSectionDragOver, onSectionDrop
 }: SectionProps) {
   const sectionId = section?.id || null;
   const isCollapsed = section?.collapsed ?? false;
@@ -870,12 +878,31 @@ function Section({
   const border = isDark ? '#1e293b' : '#e2e8f0';
   const bg = isDark ? '#111827' : '#ffffff';
   const headerBg = isDark ? '#1e293b' : '#f8fafc';
+  
+  // Can only drag non-null sections (not "Uncategorized")
+  const canDrag = section !== null;
 
   return (
     <div 
-      className="rounded-xl border overflow-hidden group"
-      style={{ borderColor: isDragging ? '#FF9800' : border }}
+      className="rounded-xl border overflow-hidden group transition-all duration-200"
+      style={{ 
+        borderColor: isDraggingSection ? '#FF9800' : (isDropTargetSection ? '#3b82f6' : border),
+        opacity: isDraggingSection ? 0.5 : 1,
+        boxShadow: isDropTargetSection ? '0 0 0 2px #3b82f640' : 'none'
+      }}
+      onDragOver={(e) => {
+        if (canDrag) {
+          e.preventDefault();
+          onSectionDragOver(e, sectionIndex);
+        }
+      }}
+      onDrop={onSectionDrop}
     >
+      {/* Drop indicator above section */}
+      {isDropTargetSection && (
+        <div className="h-1 bg-blue-400 rounded-t-xl" />
+      )}
+      
       {/* Section Header */}
       <div 
         className="flex items-center gap-2 px-4 py-2 cursor-pointer"
@@ -884,6 +911,20 @@ function Section({
       >
         {section ? (
           <>
+            {/* Drag Handle - only for named sections */}
+            <div 
+              draggable={canDrag}
+              onDragStart={(e) => {
+                if (canDrag) {
+                  e.stopPropagation();
+                  onSectionDragStart(e, section.id);
+                }
+              }}
+              className={`p-0.5 rounded hover:bg-slate-500/20 transition-opacity ${canDrag ? 'cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
+              title="Drag to reorder section"
+            >
+              <GripVertical size={14} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
+            </div>
             <button 
               className="p-0.5 rounded hover:bg-slate-500/20"
               onClick={(e) => { e.stopPropagation(); onToggleCollapse(section.id); }}
@@ -939,6 +980,8 @@ function Section({
           </>
         ) : (
           <>
+            {/* No drag handle for Uncategorized */}
+            <div className="w-5" />
             <Link2 size={14} style={{ color: '#94a3b8' }} />
             <span 
               className="font-medium text-sm flex-1"
@@ -1088,6 +1131,7 @@ export function LinksView({ containerId }: Props) {
     updateLinkItem,
     deleteLinkItem,
     addLinkItem,
+    reorderLinkSections,
     isDarkTheme 
   } = useStore();
   
@@ -1120,6 +1164,15 @@ export function LinksView({ containerId }: Props) {
     draggingSectionId: null,
     dropIndex: null,
     dropSectionId: null,
+  });
+  
+  // Section DnD state
+  const [sectionDragState, setSectionDragState] = useState<{
+    draggingSectionId: string | null;
+    dropSectionIndex: number | null;
+  }>({
+    draggingSectionId: null,
+    dropSectionIndex: null,
   });
   
   // Inline add states
@@ -1418,6 +1471,63 @@ export function LinksView({ containerId }: Props) {
     deleteLinkItem(container.id, itemId);
   };
 
+  // Section DnD handlers
+  const handleSectionDragStart = (e: React.DragEvent, sectionId: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'section'); // Mark as section drag
+    setSectionDragState({
+      draggingSectionId: sectionId,
+      dropSectionIndex: null,
+    });
+  };
+
+  const handleSectionDragOver = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (!sectionDragState.draggingSectionId) return;
+    
+    setSectionDragState(prev => ({
+      ...prev,
+      dropSectionIndex: targetIndex,
+    }));
+  };
+
+  const handleSectionDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    
+    const { draggingSectionId, dropSectionIndex } = sectionDragState;
+    
+    if (!container || !draggingSectionId || dropSectionIndex === null) {
+      setSectionDragState({ draggingSectionId: null, dropSectionIndex: null });
+      return;
+    }
+    
+    // Get only named sections (exclude null/uncategorized)
+    const namedSections = (container.sections || []).sort((a, b) => a.order - b.order);
+    const fromIndex = namedSections.findIndex(s => s.id === draggingSectionId);
+    
+    if (fromIndex === -1) {
+      setSectionDragState({ draggingSectionId: null, dropSectionIndex: null });
+      return;
+    }
+    
+    // Skip if dropping at same position
+    if (fromIndex === dropSectionIndex) {
+      setSectionDragState({ draggingSectionId: null, dropSectionIndex: null });
+      return;
+    }
+    
+    // Reorder sections
+    const reorderedSections = [...namedSections];
+    const [removed] = reorderedSections.splice(fromIndex, 1);
+    reorderedSections.splice(dropSectionIndex, 0, removed);
+    
+    // Create new order array of section IDs
+    const newSectionIds = reorderedSections.map(s => s.id);
+    
+    reorderLinkSections(container.id, newSectionIds);
+    setSectionDragState({ draggingSectionId: null, dropSectionIndex: null });
+  };
+
   // NOW we can do conditional return AFTER all hooks
   if (!container) {
     return (
@@ -1496,9 +1606,15 @@ export function LinksView({ containerId }: Props) {
         )}
         
         {/* Sections */}
-        {sections.map((section) => {
+        {sections.map((section, sectionIndex) => {
           const sectionLinks = getLinksForSection(section?.id || null);
           if (section !== null && sectionLinks.length === 0 && search) return null;
+          
+          // Get named sections (exclude null/uncategorized) for index calculation
+          const namedSections = (container?.sections || []).sort((a, b) => a.order - b.order);
+          const sectionIndexInSection = section === null 
+            ? sections.length - 1 // Uncategorized is always last
+            : namedSections.findIndex(s => s.id === section?.id);
           
           return (
             <Section
@@ -1522,6 +1638,13 @@ export function LinksView({ containerId }: Props) {
               onStartAddLink={handleStartAddLink}
               onCloseAddLink={handleCloseAddLink}
               onCreateLink={handleCreateLink}
+              // Section DnD props
+              sectionIndex={sectionIndexInSection}
+              isDraggingSection={sectionDragState.draggingSectionId === section?.id}
+              isDropTargetSection={sectionDragState.dropSectionIndex === sectionIndexInSection}
+              onSectionDragStart={handleSectionDragStart}
+              onSectionDragOver={handleSectionDragOver}
+              onSectionDrop={handleSectionDrop}
             />
           );
         })}
