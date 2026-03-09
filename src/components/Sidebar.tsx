@@ -43,11 +43,6 @@ export function Sidebar() {
   const [draggedCategoryId, setDraggedCategoryId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   
-  // Toggle sidebar compact mode
-  const toggleSidebarCompact = () => {
-    useStore.getState().toggleSidebarCompact();
-  };
-  
   // Filter categories for current workspace
   const workspaceCategories = categories
     .filter(c => c.workspaceId === activeWorkspaceId)
