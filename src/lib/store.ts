@@ -7,6 +7,7 @@ import type {
   CommandContainer, LinkContainer, PromptContainer, FileContainer,
   CommandItem, LinkItem, PromptItem, FileItem, Settings, AnyItem
 } from './types';
+import { loadFromGitHubPublic } from '../utils/githubSync';
 
 const defaultSettings: Settings = {
   theme: 'system',
@@ -102,6 +103,8 @@ interface StoreActions {
   clearAllData: () => void;
   getActiveItem: () => AnyItem | null;
   loadData: (data: Partial<AppState>) => void;
+  resetToCloudData: () => Promise<void>;
+  loadFromCloudPublic: () => Promise<void>;
 }
 
 const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
@@ -197,6 +200,10 @@ export const useStore = create<AppState & StoreActions>()(
       showSettings: false,
       sidebarCollapsed: false,
       isDarkTheme: true,
+      
+      // Sync state
+      syncStatus: 'idle',
+      syncMessage: '',
 
       // ============================================
       // LOAD DATA
@@ -645,6 +652,92 @@ export const useStore = create<AppState & StoreActions>()(
           case 'files': return state.files.find(f => f.id === activeItemId) || null;
           default: return null;
         }
+      },
+
+      loadData: (data) => set((state) => ({ ...state, ...data })),
+
+      resetToCloudData: async () => {
+        // Clear localStorage
+        localStorage.removeItem('knowledge-hub-storage');
+        localStorage.removeItem('sync-state-time');
+        localStorage.removeItem('last-public-sync');
+        
+        // Set syncing status
+        set({ syncStatus: 'syncing', syncMessage: 'Resetting to cloud data...' });
+        
+        // Load fresh data from GitHub
+        const result = await loadFromGitHubPublic();
+        
+        if (result.success && result.data) {
+          set({
+            workspaces: result.data.workspaces,
+            categories: result.data.categories,
+            folders: result.data.folders,
+            notes: result.data.notes,
+            commands: result.data.commands,
+            links: result.data.links,
+            prompts: result.data.prompts,
+            files: result.data.files || [],
+            syncStatus: 'success',
+            syncMessage: 'Reset complete! Showing cloud data.',
+            activeWorkspaceId: result.data.workspaces?.[0]?.id || null,
+            activeCategoryId: null,
+            activeFolderId: null,
+            activeItemId: null,
+          });
+        } else {
+          set({ 
+            syncStatus: 'error', 
+            syncMessage: result.message || 'Failed to load cloud data' 
+          });
+        }
+        
+        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 4000);
+      },
+
+      loadFromCloudPublic: async () => {
+        // Check if recently synced (within 1 minute)
+        const lastSync = localStorage.getItem('last-public-sync');
+        if (lastSync) {
+          const lastSyncTime = new Date(lastSync).getTime();
+          const now = Date.now();
+          if (now - lastSyncTime < 60000) {
+            console.log('[loadFromCloudPublic] Recently synced, skipping');
+            return;
+          }
+        }
+        
+        // Set syncing status
+        set({ syncStatus: 'syncing', syncMessage: 'Loading from GitHub...' });
+        
+        // Load data from GitHub
+        const result = await loadFromGitHubPublic();
+        
+        if (result.success && result.data) {
+          set({
+            workspaces: result.data.workspaces,
+            categories: result.data.categories,
+            folders: result.data.folders,
+            notes: result.data.notes,
+            commands: result.data.commands,
+            links: result.data.links,
+            prompts: result.data.prompts,
+            files: result.data.files || [],
+            syncStatus: 'success',
+            syncMessage: result.message,
+            activeWorkspaceId: result.data.workspaces?.[0]?.id || get().activeWorkspaceId,
+          });
+          
+          // Save sync time
+          localStorage.setItem('last-public-sync', new Date().toISOString());
+        } else {
+          set({ 
+            syncStatus: 'error', 
+            syncMessage: result.message || 'Failed to load from GitHub' 
+          });
+        }
+        
+        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
       },
     }),
     {

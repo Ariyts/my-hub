@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import type { Category, BaseDataType } from '@/lib/types';
-import { Settings, Plus, MoreHorizontal, Edit2, Trash2, Moon, Sun } from 'lucide-react';
+import { Settings, Plus, MoreHorizontal, Edit2, Trash2, Moon, Sun, RefreshCcw } from 'lucide-react';
 
 const BASE_TYPE_OPTIONS: { value: BaseDataType; label: string }[] = [
   { value: 'notes', label: 'Notes (text content)' },
@@ -33,7 +33,9 @@ export function Sidebar() {
     links,
     prompts,
     files,
-    folders
+    folders,
+    syncStatus,
+    resetToCloudData
   } = useStore();
   
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -348,8 +350,28 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Bottom - Settings */}
+      {/* Bottom - Reset & Settings */}
       <div className="p-2 border-t" style={{ borderColor: isDarkTheme ? '#1e293b' : '#0f172a' }}>
+        {/* Reset to Cloud Data */}
+        <button
+          onClick={() => {
+            if (confirm('Reset to cloud data? This will clear all local changes and load fresh data from GitHub.')) {
+              resetToCloudData();
+            }
+          }}
+          disabled={syncStatus === 'syncing'}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700 mb-1"
+          style={{ 
+            color: '#f59e0b',
+            opacity: syncStatus === 'syncing' ? 0.5 : 1
+          }}
+          title="Clear local changes and load fresh data from GitHub"
+        >
+          <RefreshCcw size={14} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
+          <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Reset to Cloud'}</span>
+        </button>
+        
+        {/* Settings */}
         <button
           onClick={() => setShowSettings(true)}
           className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-slate-700"

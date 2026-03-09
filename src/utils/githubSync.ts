@@ -354,3 +354,365 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
     return { success: false, message: error.message || 'Failed to save' };
   }
 }
+
+// ============================================
+// PUBLIC LOAD (no token required)
+// ============================================
+
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Ariyts/my-hub/main';
+
+/**
+ * Fetch file content from GitHub raw URL (public, no auth required)
+ */
+async function fetchRawFile(path: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${GITHUB_RAW_URL}/${path}`, {
+      cache: 'no-store', // Bypass cache
+    });
+    if (!response.ok) return null;
+    return await response.text();
+  } catch (error) {
+    console.error(`[fetchRawFile] Error fetching ${path}:`, error);
+    return null;
+  }
+}
+
+/**
+ * List files in a directory using GitHub API (public, rate limited)
+ */
+async function listPublicFiles(dirPath: string): Promise<string[]> {
+  const files: string[] = [];
+  
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${REPO}/contents/${dirPath}?ref=${MAIN_BRANCH}`,
+      { cache: 'no-store' }
+    );
+    
+    if (!response.ok) return files;
+    
+    const data = await response.json();
+    if (!Array.isArray(data)) return files;
+    
+    for (const item of data) {
+      if (item.type === 'file' && item.path.endsWith('.md')) {
+        files.push(item.path);
+      } else if (item.type === 'dir') {
+        const subFiles = await listPublicFiles(item.path);
+        files.push(...subFiles);
+      }
+    }
+  } catch (error) {
+    console.error(`[listPublicFiles] Error listing ${dirPath}:`, error);
+  }
+  
+  return files;
+}
+
+/**
+ * Load data from GitHub without authentication
+ * Uses public raw URLs for file access
+ */
+export async function loadFromGitHubPublic(): Promise<{ success: boolean; data?: DataFile; message: string }> {
+  try {
+    console.log('[loadFromGitHubPublic] Starting public data load...');
+    
+    // 1. Fetch metadata.json
+    const metadataContent = await fetchRawFile('data/metadata.json');
+    if (!metadataContent) {
+      return { success: false, message: 'metadata.json not found in repository' };
+    }
+    
+    const metadata = JSON.parse(metadataContent);
+    
+    // 2. Initialize result
+    const result: DataFile = {
+      workspaces: metadata.workspaces || [],
+      categories: metadata.categories || [],
+      folders: metadata.folders || [],
+      notes: [],
+      commands: [],
+      links: [],
+      prompts: [],
+      files: [],
+      exportedAt: metadata.exportedAt || new Date().toISOString(),
+      version: metadata.version || '3.0',
+    };
+    
+    // 3. List and fetch all .md files
+    const mdFiles = await listPublicFiles('data');
+    console.log(`[loadFromGitHubPublic] Found ${mdFiles.length} .md files`);
+    
+    for (const filePath of mdFiles) {
+      const content = await fetchRawFile(filePath);
+      if (!content) continue;
+      
+      // Parse path: data/Workspace/Category/Folder/file.md
+      const pathParts = filePath.split('/');
+      if (pathParts.length < 5) continue;
+      
+      const wsName = decodeURIComponent(pathParts[1]);
+      const catName = decodeURIComponent(pathParts[2]);
+      const folderName = decodeURIComponent(pathParts[3]);
+      
+      // Find matching workspace, category, folder
+      const workspace = result.workspaces.find(w => w.name === wsName);
+      if (!workspace) continue;
+      
+      const category = result.categories.find(c => 
+        c.workspaceId === workspace.id && c.name === catName
+      );
+      if (!category) continue;
+      
+      const folder = result.folders.find(f => 
+        f.categoryId === category.id && f.name === folderName
+      );
+      if (!folder) continue;
+      
+      // Parse frontmatter
+      const { frontmatter, body } = parseFrontmatter(content);
+      const fileName = pathParts[pathParts.length - 1].replace('.md', '');
+      const title = frontmatter.title || fileName;
+      
+      // Add item based on category type
+      if (category.baseType === 'notes') {
+        result.notes.push({
+          id: frontmatter.id || `note_${filePath}`,
+          folderId: folder.id,
+          title,
+          content: body.trim(),
+          tags: frontmatter.tags || [],
+          isFavorite: frontmatter.isFavorite || false,
+          order: frontmatter.order ?? result.notes.filter(n => n.folderId === folder.id).length,
+          createdAt: frontmatter.createdAt || new Date().toISOString(),
+          updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+          type: 'notes',
+        });
+      } else if (category.baseType === 'links') {
+        const parsed = parseLinksFromBody(body);
+        result.links.push({
+          id: frontmatter.id || `link_${filePath}`,
+          folderId: folder.id,
+          title,
+          subItems: parsed.subItems,
+          sections: parsed.sections,
+          tags: frontmatter.tags || [],
+          order: frontmatter.order ?? result.links.filter(l => l.folderId === folder.id).length,
+          createdAt: frontmatter.createdAt || new Date().toISOString(),
+          updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+          type: 'links',
+        });
+      } else if (category.baseType === 'commands') {
+        const subItems = parseCommandsFromBody(body);
+        result.commands.push({
+          id: frontmatter.id || `cmd_${filePath}`,
+          folderId: folder.id,
+          title,
+          description: frontmatter.description || '',
+          subItems,
+          tags: frontmatter.tags || [],
+          order: frontmatter.order ?? result.commands.filter(c => c.folderId === folder.id).length,
+          createdAt: frontmatter.createdAt || new Date().toISOString(),
+          updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+          type: 'commands',
+        });
+      } else if (category.baseType === 'prompts') {
+        const subItems = parsePromptsFromBody(body);
+        result.prompts.push({
+          id: frontmatter.id || `prm_${filePath}`,
+          folderId: folder.id,
+          title,
+          category: frontmatter.category || '',
+          subItems,
+          tags: frontmatter.tags || [],
+          order: frontmatter.order ?? result.prompts.filter(p => p.folderId === folder.id).length,
+          createdAt: frontmatter.createdAt || new Date().toISOString(),
+          updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+          type: 'prompts',
+        });
+      }
+    }
+    
+    // Save last sync time
+    localStorage.setItem('last-public-sync', new Date().toISOString());
+    
+    console.log(`[loadFromGitHubPublic] Loaded: ${result.notes.length} notes, ${result.links.length} links, ${result.commands.length} commands, ${result.prompts.length} prompts`);
+    
+    return { 
+      success: true, 
+      data: result, 
+      message: `Loaded ${result.notes.length + result.links.length + result.commands.length + result.prompts.length} items` 
+    };
+  } catch (error: any) {
+    console.error('[loadFromGitHubPublic] Error:', error);
+    return { success: false, message: error.message || 'Failed to load data' };
+  }
+}
+
+// Helper parsing functions
+function parseFrontmatter(content: string): { frontmatter: Record<string, any>; body: string } {
+  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { frontmatter: {}, body: content };
+  
+  const frontmatter: Record<string, any> = {};
+  match[1].split("\n").forEach(line => {
+    const idx = line.indexOf(":");
+    if (idx > 0) {
+      let key = line.substring(0, idx).trim();
+      let value: any = line.substring(idx + 1).trim();
+      
+      if (value.startsWith("[") && value.endsWith("]")) {
+        value = value.slice(1, -1).split(",").map((v: string) => v.trim().replace(/^["']|["']$/g, "")).filter((v: string) => v);
+      } else if (value === "true") value = true;
+      else if (value === "false") value = false;
+      else if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      frontmatter[key] = value;
+    }
+  });
+  return { frontmatter, body: match[2] };
+}
+
+function parseLinksFromBody(body: string): { sections: any[]; subItems: any[] } {
+  const sections: any[] = [];
+  const subItems: any[] = [];
+  const lines = body.split('\n');
+  
+  let currentSection: any = null;
+  let linkOrder = 0;
+  const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+    
+    if (!trimmedLine) continue;
+    
+    if (trimmedLine.startsWith('## ')) {
+      let sectionTitle = trimmedLine.slice(3).trim();
+      let sectionIcon: string | undefined;
+      
+      const emojiMatch = sectionTitle.match(/^([\u{1F300}-\u{1F9FF}]\s*)/u);
+      if (emojiMatch) {
+        sectionIcon = emojiMatch[0].trim();
+        sectionTitle = sectionTitle.slice(emojiMatch[0].length).trim();
+      }
+      
+      currentSection = {
+        id: genId(),
+        title: sectionTitle,
+        order: sections.length,
+        collapsed: false,
+        icon: sectionIcon,
+      };
+      
+      const nextLine = lines[i + 1]?.trim();
+      if (nextLine?.startsWith('<!-- section:')) {
+        const metaMatch = nextLine.match(/<!--\s*section:\s*(\{.*?\})\s*-->/);
+        if (metaMatch) {
+          try {
+            const meta = JSON.parse(metaMatch[1]);
+            currentSection.id = meta.id || currentSection.id;
+            currentSection.order = typeof meta.order === 'number' ? meta.order : currentSection.order;
+            currentSection.collapsed = meta.collapsed ?? false;
+            currentSection.color = meta.color;
+            currentSection.icon = meta.icon || currentSection.icon;
+          } catch {}
+        }
+        i++;
+      }
+      
+      sections.push(currentSection);
+      linkOrder = 0;
+      continue;
+    }
+    
+    if (trimmedLine.startsWith('- [') || trimmedLine.startsWith('-[')) {
+      let linkMeta: any = {};
+      const metaMatch = trimmedLine.match(/<!--\s*link:\s*(\{.*?\})\s*-->/);
+      if (metaMatch) {
+        try {
+          linkMeta = JSON.parse(metaMatch[1]);
+        } catch {}
+      }
+      
+      const cleanLine = trimmedLine.replace(/<!--\s*link:.*?-->/, '').trim();
+      const linkMatch = cleanLine.match(/^-\s*\[([^\]]*)\]\(([^)]+)\)(.*)$/);
+      
+      if (linkMatch) {
+        const [, title, url, rest] = linkMatch;
+        subItems.push({
+          id: linkMeta.id || genId(),
+          url,
+          title: title || url,
+          description: rest.trim() || linkMeta.description || undefined,
+          favicon: linkMeta.favicon,
+          tags: linkMeta.tags || [],
+          isFavorite: linkMeta.isFavorite ?? false,
+          order: linkMeta.order ?? linkOrder++,
+          sectionId: linkMeta.sectionId || (currentSection?.id),
+          color: linkMeta.color,
+        });
+      }
+    }
+  }
+  
+  return { sections, subItems };
+}
+
+function parseCommandsFromBody(body: string): any[] {
+  const items: any[] = [];
+  const sections = body.split(/^### /m).filter(s => s.trim());
+  const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  
+  for (const section of sections) {
+    const lines = section.split('\n');
+    const itemId = lines[0].trim();
+    
+    const codeMatch = section.match(/```(\w+)\n([\s\S]*?)```/);
+    const descMatch = section.match(/```[\s\S]*?```\s*\n_(.+?)_/);
+    
+    if (codeMatch) {
+      items.push({
+        id: itemId || genId(),
+        command: codeMatch[2].trim(),
+        description: descMatch ? descMatch[1] : '',
+        language: codeMatch[1] || 'bash',
+        tags: [],
+        isFavorite: false
+      });
+    }
+  }
+  
+  return items;
+}
+
+function parsePromptsFromBody(body: string): any[] {
+  const items: any[] = [];
+  const sections = body.split(/^### /m).filter(s => s.trim());
+  const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  
+  for (const section of sections) {
+    const lines = section.split('\n');
+    const title = lines[0].trim();
+    
+    const descMatch = section.match(/^_(.+?)_/m);
+    const codeMatch = section.match(/```\n([\s\S]*?)```/);
+    const varsMatch = section.match(/\*\*Variables:\*\*\s*(.+)/);
+    
+    if (codeMatch) {
+      items.push({
+        id: genId(),
+        title,
+        prompt: codeMatch[1].trim(),
+        description: descMatch ? descMatch[1] : '',
+        variables: varsMatch ? varsMatch[1].split(',').map(v => v.trim()) : [],
+        tags: [],
+        isFavorite: false
+      });
+    }
+  }
+  
+  return items;
+}

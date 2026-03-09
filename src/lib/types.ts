@@ -243,6 +243,10 @@ export interface AppState {
   showSettings: boolean;
   sidebarCollapsed: boolean;
   isDarkTheme: boolean;
+  
+  // Sync State
+  syncStatus: 'idle' | 'connecting' | 'syncing' | 'success' | 'error';
+  syncMessage: string;
 }
 
 // ============================================
