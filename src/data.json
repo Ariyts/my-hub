@@ -412,6 +412,14 @@
       "id": "i2l37j35nmm7sa5eq",
       "folderId": "f_hxxnip",
       "title": "links",
+      "sections": [
+        {
+          "id": "restored_data_section",
+          "title": "RestoredData",
+          "order": 0,
+          "collapsed": false
+        }
+      ],
       "subItems": [
         {
           "id": "li_u0ggm7",
@@ -419,7 +427,8 @@
           "url": "https://ariyts.github.io/my-hub/",
           "description": "",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         },
         {
           "id": "li_tyeua0",
@@ -427,7 +436,8 @@
           "url": "https://wadcoms.github.io/#",
           "description": "",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         },
         {
           "id": "li_6dix47",
@@ -435,7 +445,8 @@
           "url": "https://gtfobins.org/",
           "description": "",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         },
         {
           "id": "li_twmaw3",
@@ -443,7 +454,8 @@
           "url": "https://www.revshells.com/",
           "description": "",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         },
         {
           "id": "li_dxpv1v",
@@ -451,7 +463,8 @@
           "url": "https://github.com/ByteSnipers/awesome-pentest-cheat-sheets?tab=readme-ov-file",
           "description": "",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         },
         {
           "id": "li_2vqe8",
@@ -459,7 +472,8 @@
           "url": "https://book.hacktricks.wiki/en/windows-hardening/av-bypass.html#installer-style-uac-bait-before-tampering-with-defender",
           "description": "",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         },
         {
           "id": "li_252l1h",
@@ -467,7 +481,8 @@
           "url": "https://swisskyrepo.github.io/InternalAllTheThings/active-directory/hash-pass-the-hash/#references",
           "description": "шпора для АД",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "sectionId": "restored_data_section"
         }
       ],
       "tags": [],
