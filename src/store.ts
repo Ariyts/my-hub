@@ -975,7 +975,7 @@ export const useStore = create<AppState & StoreActions>()(
         sidebarCompact: state.sidebarCompact,
       }),
       // On rehydration, merge localStorage data with embedded data
-      // localStorage has priority (more recent user changes)
+      // localStorage has priority (more recent user changes), BUT we check for new data in embedded
       onRehydrateStorage: () => (state) => {
         if (state) {
           // If localStorage is empty or corrupted, fall back to embedded data
@@ -990,7 +990,61 @@ export const useStore = create<AppState & StoreActions>()(
             state.prompts = initialData.prompts || [];
             state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
           } else {
-            console.log('[Store] Loaded data from localStorage');
+            console.log('[Store] Loaded data from localStorage, checking for new embedded data...');
+            
+            // Check if embedded data has new sections that localStorage doesn't have
+            // This handles the case where we added RestoredData section to data.json
+            if (initialData.links && state.links) {
+              let needsUpdate = false;
+              
+              const updatedLinks = state.links.map(localLink => {
+                // Find matching container in embedded data
+                const embeddedLink = initialData.links?.find((el: any) => el.id === localLink.id);
+                
+                if (embeddedLink && embeddedLink.sections && embeddedLink.sections.length > 0) {
+                  // Check if embedded has sections that local doesn't have
+                  const localSectionIds = (localLink.sections || []).map((s: any) => s.id);
+                  const newSections = embeddedLink.sections.filter((s: any) => !localSectionIds.includes(s.id));
+                  
+                  if (newSections.length > 0) {
+                    console.log(`[Store] Found ${newSections.length} new sections in embedded data for container ${localLink.id}`);
+                    needsUpdate = true;
+                    
+                    const newSectionIds = newSections.map((s: any) => s.id);
+                    
+                    // Update existing links that should belong to new sections
+                    // (links exist in localStorage but without sectionId, while embedded has sectionId)
+                    const updatedSubItems = localLink.subItems?.map((localItem: any) => {
+                      const embeddedItem = embeddedLink.subItems?.find((ei: any) => ei.id === localItem.id);
+                      // If embedded has sectionId for this link and it's one of the new sections
+                      if (embeddedItem && embeddedItem.sectionId && newSectionIds.includes(embeddedItem.sectionId)) {
+                        return { ...localItem, sectionId: embeddedItem.sectionId };
+                      }
+                      return localItem;
+                    }) || [];
+                    
+                    // Also add any new links from embedded that don't exist in local
+                    const localLinkIds = localLink.subItems?.map((i: any) => i.id) || [];
+                    const additionalNewLinks = embeddedLink.subItems?.filter((ei: any) => 
+                      !localLinkIds.includes(ei.id) && 
+                      newSectionIds.includes(ei.sectionId)
+                    ) || [];
+                    
+                    return {
+                      ...localLink,
+                      sections: [...(localLink.sections || []), ...newSections],
+                      subItems: [...updatedSubItems, ...additionalNewLinks],
+                    };
+                  }
+                }
+                return localLink;
+              });
+              
+              if (needsUpdate) {
+                console.log('[Store] Merging new sections from embedded data into localStorage');
+                state.links = updatedLinks;
+              }
+            }
           }
         }
       },
