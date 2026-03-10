@@ -50,10 +50,10 @@ function getDomain(url: string) {
 interface LinkCardProps {
   item: LinkItem;
   containerId: string;
-  sectionId: string | null;
+  sectionId: string;
   isDark: boolean;
-  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
-  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string | null) => void;
+  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
+  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
   onDrop: (e: React.DragEvent) => void;
   index: number;
   isDragging: boolean;
@@ -257,13 +257,13 @@ interface CompactLinkItemProps {
   item: LinkItem;
   sectionColor?: string;
   isDark: boolean;
-  sectionId: string | null;
+  sectionId: string;
   isDragging: boolean;
   isDropTarget: boolean;
   onUpdateItem: (itemId: string, updates: Partial<LinkItem>) => void;
   onDeleteItem: (itemId: string) => void;
-  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
-  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string | null) => void;
+  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
+  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
   onDrop: (e: React.DragEvent) => void;
 }
 
@@ -818,13 +818,13 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
 // SECTION COMPONENT
 // ============================================
 interface SectionProps {
-  section: LinkSection | null; // null = uncategorized
+  section: LinkSection; // Always a real section now
   links: LinkItem[];
   containerId: string;
   isDark: boolean;
   viewMode: 'grid' | 'compact';
-  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string | null) => void;
-  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string | null) => void;
+  onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
+  onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
   onDrop: (e: React.DragEvent) => void;
   dragState: {
     draggingItemId: string | null;
@@ -840,10 +840,10 @@ interface SectionProps {
   onUpdateItem: (itemId: string, updates: Partial<LinkItem>) => void;
   onDeleteItem: (itemId: string) => void;
   // Inline add link state
-  addingLinkToSection: string | null | undefined;
-  onStartAddLink: (sectionId: string | null) => void;
+  addingLinkToSection: string | undefined;
+  onStartAddLink: (sectionId: string) => void;
   onCloseAddLink: () => void;
-  onCreateLink: (sectionId: string | null, url: string, title?: string) => Promise<void>;
+  onCreateLink: (sectionId: string, url: string, title?: string) => Promise<void>;
   // Section DnD
   sectionIndex: number;
   isDraggingSection: boolean;
@@ -872,16 +872,13 @@ function Section({
   onUpdateItem, onDeleteItem, addingLinkToSection, onStartAddLink, onCloseAddLink, onCreateLink,
   sectionIndex, isDraggingSection, isDropTargetSection, onSectionDragStart, onSectionDragOver, onSectionDrop
 }: SectionProps) {
-  const sectionId = section?.id || null;
-  const isCollapsed = section?.collapsed ?? false;
+  const sectionId = section.id;
+  const isCollapsed = section.collapsed ?? false;
   const isDragging = dragState.draggingSectionId === sectionId;
   
   const border = isDark ? '#1e293b' : '#e2e8f0';
   const bg = isDark ? '#111827' : '#ffffff';
   const headerBg = isDark ? '#1e293b' : '#f8fafc';
-  
-  // Can only drag non-null sections (not "Uncategorized")
-  const canDrag = section !== null;
 
   return (
     <div 
@@ -892,10 +889,8 @@ function Section({
         boxShadow: isDropTargetSection ? '0 0 0 2px #3b82f640' : 'none'
       }}
       onDragOver={(e) => {
-        if (canDrag) {
-          e.preventDefault();
-          onSectionDragOver(e, sectionIndex);
-        }
+        e.preventDefault();
+        onSectionDragOver(e, sectionIndex);
       }}
       onDrop={onSectionDrop}
     >
@@ -908,96 +903,72 @@ function Section({
       <div 
         className="flex items-center gap-2 px-4 py-2 cursor-pointer"
         style={{ background: headerBg }}
-        onClick={() => section && onToggleCollapse(section.id)}
+        onClick={() => onToggleCollapse(section.id)}
       >
-        {section ? (
-          <>
-            {/* Drag Handle - only for named sections */}
-            <div 
-              draggable={canDrag}
-              onDragStart={(e) => {
-                if (canDrag) {
-                  e.stopPropagation();
-                  onSectionDragStart(e, section.id);
-                }
-              }}
-              className={`p-0.5 rounded hover:bg-slate-500/20 transition-opacity ${canDrag ? 'cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
-              title="Drag to reorder section"
-            >
-              <GripVertical size={14} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
-            </div>
-            <button 
-              className="p-0.5 rounded hover:bg-slate-500/20"
-              onClick={(e) => { e.stopPropagation(); onToggleCollapse(section.id); }}
-            >
-              {isCollapsed ? (
-                <ChevronRight size={14} style={{ color: section.color || '#FF9800' }} />
-              ) : (
-                <ChevronDown size={14} style={{ color: section.color || '#FF9800' }} />
-              )}
-            </button>
-            {section.color && (
-              <div 
-                className="w-3 h-3 rounded-full flex-shrink-0" 
-                style={{ background: section.color }}
-              />
-            )}
-            <Link2 size={14} style={{ color: section.color || '#FF9800' }} />
-            <span 
-              className="font-medium text-sm flex-1"
-              style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
-            >
-              {section.title}
-            </span>
-            <span 
-              className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: section.color ? `${section.color}20` : '#FF980015', color: section.color || '#FF9800' }}
-            >
-              {links.length}
-            </span>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => { e.stopPropagation(); onColorSection(section.id); }}
-                className="p-1.5 rounded-lg hover:bg-slate-500/20 transition-colors"
-                title="Change color"
-              >
-                <Palette size={14} style={{ color: section.color || '#64748b' }} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onEditSection(section.id); }}
-                className="p-1.5 rounded-lg hover:bg-orange-500/20 transition-colors"
-                title="Rename section"
-              >
-                <Edit3 size={14} style={{ color: '#FF9800' }} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }}
-                className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors"
-                title="Delete section"
-              >
-                <Trash2 size={14} className="text-red-400" />
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* No drag handle for Uncategorized */}
-            <div className="w-5" />
-            <Link2 size={14} style={{ color: '#94a3b8' }} />
-            <span 
-              className="font-medium text-sm flex-1"
-              style={{ color: '#94a3b8' }}
-            >
-              Uncategorized
-            </span>
-            <span 
-              className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}
-            >
-              {links.length}
-            </span>
-          </>
+        {/* Drag Handle */}
+        <div 
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation();
+            onSectionDragStart(e, section.id);
+          }}
+          className="p-0.5 rounded hover:bg-slate-500/20 transition-opacity cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100"
+          title="Drag to reorder section"
+        >
+          <GripVertical size={14} style={{ color: isDark ? '#64748b' : '#94a3b8' }} />
+        </div>
+        <button 
+          className="p-0.5 rounded hover:bg-slate-500/20"
+          onClick={(e) => { e.stopPropagation(); onToggleCollapse(section.id); }}
+        >
+          {isCollapsed ? (
+            <ChevronRight size={14} style={{ color: section.color || '#FF9800' }} />
+          ) : (
+            <ChevronDown size={14} style={{ color: section.color || '#FF9800' }} />
+          )}
+        </button>
+        {section.color && (
+          <div 
+            className="w-3 h-3 rounded-full flex-shrink-0" 
+            style={{ background: section.color }}
+          />
         )}
+        <Link2 size={14} style={{ color: section.color || '#FF9800' }} />
+        <span 
+          className="font-medium text-sm flex-1"
+          style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
+        >
+          {section.title}
+        </span>
+        <span 
+          className="text-xs px-2 py-0.5 rounded-full font-medium"
+          style={{ background: section.color ? `${section.color}20` : '#FF980015', color: section.color || '#FF9800' }}
+        >
+          {links.length}
+        </span>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => { e.stopPropagation(); onColorSection(section.id); }}
+            className="p-1.5 rounded-lg hover:bg-slate-500/20 transition-colors"
+            title="Change color"
+          >
+            <Palette size={14} style={{ color: section.color || '#64748b' }} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEditSection(section.id); }}
+            className="p-1.5 rounded-lg hover:bg-orange-500/20 transition-colors"
+            title="Rename section"
+          >
+            <Edit3 size={14} style={{ color: '#FF9800' }} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }}
+            className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors"
+            title="Delete section"
+          >
+            <Trash2 size={14} className="text-red-400" />
+          </button>
+        </div>
         <button
           onClick={(e) => { e.stopPropagation(); onStartAddLink(sectionId); }}
           className="p-1 rounded hover:bg-orange-500/20"
@@ -1178,27 +1149,24 @@ export function LinksView({ containerId }: Props) {
   
   // Inline add states
   // undefined = hidden, null = uncategorized section, string = specific section ID
-  const [addingLinkToSection, setAddingLinkToSection] = useState<string | null | undefined>(undefined);
+  const [addingLinkToSection, setAddingLinkToSection] = useState<string | undefined>(undefined);
   const [addingSection, setAddingSection] = useState(false);
 
-  // Get sections
-  const sections: (LinkSection | null)[] = useMemo(() => {
+  // Get sections (only real sections, no null/uncategorized)
+  const sections: LinkSection[] = useMemo(() => {
     console.log('[LinksView] Computing sections from container:', {
       containerId: container?.id,
       sections: container?.sections
     });
     const existingSections = container?.sections || [];
-    if (existingSections.length === 0) {
-      return [null];
-    }
-    return [...existingSections.sort((a, b) => a.order - b.order), null];
+    return [...existingSections].sort((a, b) => a.order - b.order);
   }, [container?.sections]);
 
   // Get links for a section
-  const getLinksForSection = useCallback((sectionId: string | null) => {
+  const getLinksForSection = useCallback((sectionId: string) => {
     if (!container) return [];
     return container.subItems
-      .filter(link => (link.sectionId || null) === sectionId)
+      .filter(link => link.sectionId === sectionId)
       .filter(link =>
         link.title.toLowerCase().includes(search.toLowerCase()) ||
         link.url.toLowerCase().includes(search.toLowerCase())
@@ -1207,7 +1175,7 @@ export function LinksView({ containerId }: Props) {
   }, [container, search]);
 
   // Drag handlers
-  const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string | null) => {
+  const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string) => {
     e.dataTransfer.effectAllowed = 'move';
     setDragState({
       draggingItemId: itemId,
@@ -1218,7 +1186,7 @@ export function LinksView({ containerId }: Props) {
   };
 
   // Handle drag over - accepts targetItemId (for compact) or calculates from index (for grid)
-  const handleDragOver = (e: React.DragEvent, target: number | string, sectionId: string | null) => {
+  const handleDragOver = (e: React.DragEvent, target: number | string, sectionId: string) => {
     e.preventDefault();
     if (!dragState.draggingItemId || !container) return;
     
@@ -1408,12 +1376,10 @@ export function LinksView({ containerId }: Props) {
     const linksInSection = container.subItems.filter(link => link.sectionId === sectionId);
     
     if (linksInSection.length > 0) {
-      const result = window.confirm(`This section has ${linksInSection.length} link(s). Click OK to move them to "Uncategorized", or Cancel to delete them.`);
+      const result = window.confirm(`This section has ${linksInSection.length} link(s). Delete section and all its links?`);
       if (result) {
-        deleteLinkSection(container.id, sectionId);
-      } else {
-        const newSubItems = container.subItems
-          .filter(link => link.sectionId !== sectionId);
+        // Delete all links in this section and the section itself
+        const newSubItems = container.subItems.filter(link => link.sectionId !== sectionId);
         updateLinkContainer(container.id, { subItems: newSubItems });
         deleteLinkSection(container.id, sectionId);
       }
@@ -1423,7 +1389,7 @@ export function LinksView({ containerId }: Props) {
   };
 
   // Inline add link
-  const handleStartAddLink = (sectionId: string | null) => {
+  const handleStartAddLink = (sectionId: string) => {
     setAddingLinkToSection(sectionId);
   };
 
@@ -1432,7 +1398,7 @@ export function LinksView({ containerId }: Props) {
   };
 
   // Handle inline link creation with URL and title
-  const handleCreateLink = async (sectionId: string | null, url: string, title?: string) => {
+  const handleCreateLink = async (sectionId: string, url: string, title?: string) => {
     if (!container || !url.trim()) return;
     
     let finalTitle = title;
@@ -1450,7 +1416,7 @@ export function LinksView({ containerId }: Props) {
       favicon: favicon || `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=32`,
       tags: [],
       isFavorite: false,
-      sectionId: sectionId || undefined,
+      sectionId: sectionId,
     });
   };
 
@@ -1606,20 +1572,34 @@ export function LinksView({ containerId }: Props) {
           />
         )}
         
+        {/* No sections state - prompt to create one */}
+        {sections.length === 0 && !addingSection && (
+          <div className="text-center py-12">
+            <FolderPlus size={48} className="mx-auto mb-4" style={{ color: '#64748b' }} />
+            <h3 className="text-lg font-medium mb-2" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>
+              No sections yet
+            </h3>
+            <p className="text-sm mb-4" style={{ color: '#64748b' }}>
+              Create a section to start organizing your links
+            </p>
+            <button
+              onClick={() => setAddingSection(true)}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{ background: '#FF9800', color: 'white' }}
+            >
+              Create Section
+            </button>
+          </div>
+        )}
+        
         {/* Sections */}
         {sections.map((section, sectionIndex) => {
-          const sectionLinks = getLinksForSection(section?.id || null);
-          if (section !== null && sectionLinks.length === 0 && search) return null;
-          
-          // Get named sections (exclude null/uncategorized) for index calculation
-          const namedSections = (container?.sections || []).sort((a, b) => a.order - b.order);
-          const sectionIndexInSection = section === null 
-            ? sections.length - 1 // Uncategorized is always last
-            : namedSections.findIndex(s => s.id === section?.id);
+          const sectionLinks = getLinksForSection(section.id);
+          if (sectionLinks.length === 0 && search) return null;
           
           return (
             <Section
-              key={section?.id || 'uncategorized'}
+              key={section.id}
               section={section}
               links={sectionLinks}
               containerId={container.id}
@@ -1640,9 +1620,9 @@ export function LinksView({ containerId }: Props) {
               onCloseAddLink={handleCloseAddLink}
               onCreateLink={handleCreateLink}
               // Section DnD props
-              sectionIndex={sectionIndexInSection}
-              isDraggingSection={sectionDragState.draggingSectionId === section?.id}
-              isDropTargetSection={sectionDragState.dropSectionIndex === sectionIndexInSection}
+              sectionIndex={sectionIndex}
+              isDraggingSection={sectionDragState.draggingSectionId === section.id}
+              isDropTargetSection={sectionDragState.dropSectionIndex === sectionIndex}
               onSectionDragStart={handleSectionDragStart}
               onSectionDragOver={handleSectionDragOver}
               onSectionDrop={handleSectionDrop}
@@ -1650,23 +1630,16 @@ export function LinksView({ containerId }: Props) {
           );
         })}
         
-        {/* Empty state */}
-        {container.subItems.length === 0 && (
+        {/* Empty state - when sections exist but no links */}
+        {sections.length > 0 && container.subItems.length === 0 && (
           <div className="text-center py-12">
             <Link2 size={48} className="mx-auto mb-4" style={{ color: '#64748b' }} />
             <h3 className="text-lg font-medium mb-2" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>
               No links yet
             </h3>
             <p className="text-sm mb-4" style={{ color: '#64748b' }}>
-              Start by adding your first link
+              Add your first link to a section
             </p>
-            <button
-              onClick={() => handleStartAddLink(null)}
-              className="px-4 py-2 rounded-lg text-sm font-medium"
-              style={{ background: '#FF9800', color: 'white' }}
-            >
-              Add Link
-            </button>
           </div>
         )}
       </div>
