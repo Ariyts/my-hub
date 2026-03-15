@@ -4,7 +4,7 @@ title: "links"
 tags: []
 order: "0"
 createdAt: "2026-03-01T13:26:27.554Z"
-updatedAt: "2026-03-13T11:40:28.737Z"
+updatedAt: "2026-03-15T18:42:25.288Z"
 ---
 
 ## test2
@@ -33,6 +33,11 @@ updatedAt: "2026-03-13T11:40:28.737Z"
 - [awesome-pentest-cheat-sheets](https://github.com/ByteSnipers/awesome-pentest-cheat-sheets) <!-- link: {"id":"mrdx1h1f3mmotrfsv","order":3,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"6rmvkflezmmotos0f"} -->
 - [Hacktricks](.wiki/en/windows-hardening/av-bypass.html) <!-- link: {"id":"xjse21sngmmotrrme","order":4,"favicon":"https://www.google.com/s2/favicons?domain=.wiki/en/windows-hardening/av-bypass.html&sz=32","sectionId":"6rmvkflezmmotos0f"} -->
 - [Internal All The Things](https://swisskyrepo.github.io/InternalAllTheThings/active-directory/hash-pass-the-hash/#references) <!-- link: {"id":"22dfgqactmmots2wx","order":5,"favicon":"https://www.google.com/s2/favicons?domain=swisskyrepo.github.io&sz=32","sectionId":"6rmvkflezmmotos0f"} -->
+
+## Временная секция - потом разобрать
+<!-- section: {"id":"kqhk3b8bimms3q2sm","order":3,"collapsed":false} -->
+
+- [WinPwn](https://github.com/S3cur3Th1sSh1t/WinPwn) <!-- link: {"id":"cukzwbv2cmms3qemg","order":0,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"kqhk3b8bimms3q2sm"} -->
 
 - [Шпора по АД](https://wadcoms.github.io/#) <!-- link: {"id":"li_tyeua0","order":0,"color":"#ef4444"} -->
 - [https://github.com/TeneBrae93](https://github.com/TeneBrae93) <!-- link: {"id":"li_mc4pvk","order":1} -->
