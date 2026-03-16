@@ -4,11 +4,11 @@ title: "Tools"
 tags: []
 order: "2"
 createdAt: "2026-03-06T18:47:50.203Z"
-updatedAt: "2026-03-10T19:37:53.086Z"
+updatedAt: "2026-03-16T07:55:25.512Z"
 ---
 
 ## тулзы которые юзаю
-<!-- section: {"id":"ndw1cb12jmmi0df5n","order":0,"collapsed":true} -->
+<!-- section: {"id":"ndw1cb12jmmi0df5n","order":0,"collapsed":false} -->
 
 - [Ciphey - для разгадывания шифров](https://github.com/bee-san/Ciphey) <!-- link: {"id":"3mda3qzp6mmi0dzhh","order":0,"favicon":"https://www.google.com/s2/favicons?domain=чайфи&sz=32","sectionId":"ndw1cb12jmmi0df5n","color":"#14b8a6"} -->
 

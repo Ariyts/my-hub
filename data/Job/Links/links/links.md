@@ -4,7 +4,7 @@ title: "links"
 tags: []
 order: "0"
 createdAt: "2026-03-01T13:26:27.554Z"
-updatedAt: "2026-03-15T18:46:01.429Z"
+updatedAt: "2026-03-16T11:58:22.332Z"
 ---
 
 ## test2
@@ -39,6 +39,7 @@ updatedAt: "2026-03-15T18:46:01.429Z"
 
 - [WinPwn](https://github.com/S3cur3Th1sSh1t/WinPwn) <!-- link: {"id":"cukzwbv2cmms3qemg","order":0,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"kqhk3b8bimms3q2sm"} -->
 - [S3cur3Th1sSh1t/Creds](https://github.com/S3cur3Th1sSh1t/Creds) <!-- link: {"id":"pq4qyqo6pmms3v1ed","order":1,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"kqhk3b8bimms3q2sm"} -->
+- [Карта атаки AD](https://orange-cyberdefense.github.io/ocd-mindmaps/img/mindmap_ad_dark_classic_2025.03.excalidraw.svg) <!-- link: {"id":"54kf8ela2mmt4qfhg","order":2,"favicon":"https://www.google.com/s2/favicons?domain=orange-cyberdefense.github.io&sz=32","sectionId":"kqhk3b8bimms3q2sm","color":"#ef4444"} -->
 
 - [Шпора по АД](https://wadcoms.github.io/#) <!-- link: {"id":"li_tyeua0","order":0,"color":"#ef4444"} -->
 - [https://github.com/TeneBrae93](https://github.com/TeneBrae93) <!-- link: {"id":"li_mc4pvk","order":1} -->
