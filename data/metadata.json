@@ -180,8 +180,17 @@
       "id": "qg5595rq8mmdr71hl",
       "order": 1,
       "createdAt": "2026-03-05T17:42:39.945Z"
+    },
+    {
+      "name": "Внутрянка",
+      "categoryId": "cat_y74gxb",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "4qpd3cjewmn1qgdjc",
+      "order": 2,
+      "createdAt": "2026-03-22T12:28:24.072Z"
     }
   ],
-  "exportedAt": "2026-03-22T09:03:31.162Z",
+  "exportedAt": "2026-03-22T12:37:51.695Z",
   "version": "3.0"
 }
