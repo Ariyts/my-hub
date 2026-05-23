@@ -12,6 +12,15 @@ const SECTION_COLORS = [
   '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b',
 ];
 
+// Strip markdown storage metadata from display text
+function stripMdMetadata(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<!--\s*(section|cmd|prompt):\s*\{.*?\}\s*-->/g, '')
+    .replace(/_null_/g, '')
+    .trim();
+}
+
 // ============================================
 // INLINE ADD SECTION COMPONENT
 // ============================================
@@ -89,15 +98,19 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
   const [showVars, setShowVars] = useState(false);
   const [varValues, setVarValues] = useState<Record<string, string>>({});
 
+  // Clean metadata from display values
+  const displayPrompt = stripMdMetadata(item.prompt);
+  const displayDescription = item.description ? stripMdMetadata(item.description) : undefined;
+
   const extractVariables = (text: string) => {
     const matches = text.match(/\{\{([^}]+)\}\}/g) || [];
     return [...new Set(matches)];
   };
 
-  const variables = extractVariables(item.prompt);
+  const variables = extractVariables(displayPrompt);
 
   const handleCopy = () => {
-    let text = item.prompt;
+    let text = displayPrompt;
     variables.forEach(v => {
       const key = v.replace(/\{\{|\}\}/g, '');
       if (varValues[key]) text = text.replace(new RegExp(v.replace(/[{}]/g, '\\$&'), 'g'), varValues[key]);
@@ -167,7 +180,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
             <span className="font-medium text-sm truncate" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>{item.title}</span>
             {item.isFavorite && <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
-          {item.description && <p className="text-[11px] truncate mt-0.5" style={{ color: '#94a3b8' }}>{item.description}</p>}
+          {displayDescription && <p className="text-[11px] truncate mt-0.5" style={{ color: '#94a3b8' }}>{displayDescription}</p>}
         </td>
         <td className="px-2 py-2 min-w-[250px]">
           <div
@@ -176,7 +189,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
             onClick={handleCopy}
             title="Click to copy"
           >
-            {item.prompt.length > 60 ? item.prompt.slice(0, 60) + '...' : item.prompt}
+            {displayPrompt.length > 60 ? displayPrompt.slice(0, 60) + '...' : displayPrompt}
           </div>
         </td>
         <td className="px-2 py-2 w-32 hidden md:table-cell">
@@ -570,8 +583,8 @@ export function PromptsView({ container }: Props) {
           />
         )}
 
-        {/* No sections state */}
-        {sections.length === 0 && !addingSection && (
+        {/* No sections & no items state */}
+        {sections.length === 0 && container.subItems.length === 0 && !addingSection && (
           <div className="text-center py-12">
             <FolderPlus size={48} className="mx-auto mb-4" style={{ color: '#64748b' }} />
             <h3 className="text-lg font-medium mb-2" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>
@@ -640,10 +653,39 @@ export function PromptsView({ container }: Props) {
                 style={{ background: '#64748b20', color: '#64748b' }}>
                 {filteredUncategorized.length}
               </span>
-              <button onClick={() => setAddingToSection('__uncategorized__')}
-                className="p-1 rounded hover:bg-purple-500/20 ml-auto" title="Add prompt">
-                <Plus size={14} style={{ color: '#9C27B0' }} />
-              </button>
+              <div className="flex items-center gap-1 ml-auto">
+                <button
+                  onClick={() => {
+                    const newTitle = prompt('Create named section from Uncategorized prompts:', 'General');
+                    if (newTitle && newTitle.trim()) {
+                      // Create a new section and move all uncategorized items to it
+                      const { updatePromptContainer } = useStore.getState();
+                      const tempSectionId = 'temp_' + Date.now();
+                      const newSection: PromptSection = {
+                        id: tempSectionId,
+                        title: newTitle.trim(),
+                        order: sections.length,
+                        collapsed: false,
+                      };
+                      const updatedSections = [...(container.sections || []), newSection];
+                      const updatedSubItems = container.subItems.map(item =>
+                        !item.sectionId ? { ...item, sectionId: tempSectionId } : item
+                      );
+                      updatePromptContainer(container.id, {
+                        sections: updatedSections,
+                        subItems: updatedSubItems,
+                      });
+                    }
+                  }}
+                  className="p-1 rounded hover:bg-purple-500/20" title="Convert to named section"
+                >
+                  <Edit3 size={14} style={{ color: '#9C27B0' }} />
+                </button>
+                <button onClick={() => setAddingToSection('__uncategorized__')}
+                  className="p-1 rounded hover:bg-purple-500/20" title="Add prompt">
+                  <Plus size={14} style={{ color: '#9C27B0' }} />
+                </button>
+              </div>
             </div>
             <div className="border-t" style={{ borderColor: border }}>
               {filteredUncategorized.length > 0 ? (

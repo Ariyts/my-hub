@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '../store';
 import type { Folder, BaseDataType } from '../types';
 import {
@@ -385,6 +385,7 @@ export function FolderPanel() {
 
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const isAddingFolderRef = useRef(false);
 
   const activeCategory = categories.find(c => c.id === activeCategoryId);
   const baseType = activeCategory?.baseType || 'notes';
@@ -397,7 +398,9 @@ export function FolderPanel() {
     .sort((a, b) => a.order - b.order);
 
   const handleAddFolder = (parentId: string | null = null) => {
+    if (isAddingFolderRef.current) return;
     if (newFolderName.trim()) {
+      isAddingFolderRef.current = true;
       addFolder({ 
         name: newFolderName.trim(), 
         categoryId: activeCategoryId!, 
@@ -406,6 +409,8 @@ export function FolderPanel() {
       });
       setNewFolderName('');
       setShowNewFolder(false);
+      // Reset guard after event loop completes
+      setTimeout(() => { isAddingFolderRef.current = false; }, 0);
     }
   };
 

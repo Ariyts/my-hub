@@ -25,6 +25,22 @@ const SECTION_COLORS = [
   '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b',
 ];
 
+// Strip markdown storage metadata (HTML comments and _null_ placeholders) from display text
+function stripMdMetadata(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<!--\s*(section|cmd|prompt):\s*\{.*?\}\s*-->/g, '')  // Remove metadata comments
+    .replace(/_null_/g, '')                                         // Remove _null_ placeholders
+    .trim();
+}
+
+// Clean description: remove markdown metadata and _null_
+function cleanDescription(desc: string | undefined): string | undefined {
+  if (!desc) return undefined;
+  const cleaned = stripMdMetadata(desc);
+  return cleaned || undefined;
+}
+
 // Syntax highlighting
 function highlightSyntax(code: string): React.ReactElement {
   const keywords = ['git', 'npm', 'docker', 'kubectl', 'cd', 'ls', 'cat', 'echo', 'export', 'import', 'function', 'const', 'let', 'var', 'if', 'else', 'for', 'while', 'return', 'sudo', 'apt', 'brew', 'pip', 'node', 'python', 'ssh', 'scp', 'systemctl', 'nginx', 'psql', 'mysql', 'redis-cli'];
@@ -117,8 +133,12 @@ function PlaybookRow({ item, containerId, isDark, index }: PlaybookRowProps) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ ...item });
 
+  // Clean metadata from display values
+  const displayCommand = stripMdMetadata(item.command);
+  const displayDescription = cleanDescription(item.description);
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(item.command);
+    navigator.clipboard.writeText(displayCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -192,12 +212,12 @@ function PlaybookRow({ item, containerId, isDark, index }: PlaybookRowProps) {
       <td className="px-2 py-2">
         <div className="font-mono text-xs px-3 py-1.5 rounded cursor-pointer hover:bg-cyan-500/10 transition-colors"
           style={{ background: codeBg, borderLeft: `2px solid ${langColor}` }}
-          onClick={handleCopy} title={item.description || 'Click to copy'}>
-          {highlightSyntax(item.command)}
+          onClick={handleCopy} title={displayDescription || 'Click to copy'}>
+          {highlightSyntax(displayCommand)}
         </div>
       </td>
       <td className="px-2 py-2 min-w-[150px]">
-        {item.description && <p className="text-xs mb-1 truncate" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{item.description}</p>}
+        {displayDescription && <p className="text-xs mb-1 truncate" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{displayDescription}</p>}
         <div className="flex gap-1 flex-wrap">
           {item.tags.slice(0, 3).map(tag => (
             <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: isDark ? '#334155' : '#f1f5f9', color: '#64748b' }}>{tag}</span>
