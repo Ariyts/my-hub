@@ -42,6 +42,9 @@ function genId(prefix, path) {
   return prefix + "_" + hashId(path);
 }
 
+// Generate random ID (for items without stored ID)
+const genIdLocal = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+
 // Parse commands from markdown body
 function parseCommandsFromBody(body) {
   const items = [];
@@ -84,7 +87,6 @@ function parseLinksWithSectionsFromBody(body) {
   let currentSectionId = null; // Track current section ID separately
   let linkOrder = 0;
   let uncategorizedOrder = 0;
-  const genIdLocal = () => Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
   
   // Track if we've seen an empty line after last section content
   let seenEmptyLineAfterSection = false;
@@ -218,36 +220,240 @@ function parseLinksWithSectionsFromBody(body) {
   return { sections, subItems };
 }
 
-// Parse prompts from markdown body
-function parsePromptsFromBody(body) {
-  const items = [];
-  const sections = body.split(/^### /m).filter(s => s.trim());
+// ============================================
+// FIXED: Parse prompts with sections and metadata
+// Preserves section titles, IDs, and sectionId on items
+// ============================================
+function parsePromptsWithSectionsFromBody(body) {
+  const sections = [];
+  const subItems = [];
+  const lines = body.split('\n');
   
-  for (const section of sections) {
-    const lines = section.split('\n');
-    const title = lines[0].trim();
+  let currentSection = null;
+  let currentSectionId = null;
+  let promptOrder = 0;
+  let uncategorizedOrder = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
     
-    // Find description (italic)
-    const descMatch = section.match(/^_(.+?)_/m);
-    // Find code block (prompt)
-    const codeMatch = section.match(/```\n([\s\S]*?)```/);
-    // Find variables
-    const varsMatch = section.match(/\*\*Variables:\*\*\s*(.+)/);
+    if (!trimmedLine) continue;
     
-    if (codeMatch) {
-      items.push({
-        id: genId("pi", title),
-        title,
-        prompt: codeMatch[1].trim(),
+    // Section header: ## Title
+    if (trimmedLine.startsWith('## ')) {
+      let sectionTitle = trimmedLine.slice(3).trim();
+      
+      currentSection = {
+        id: genIdLocal(),
+        title: sectionTitle,
+        order: sections.length,
+        collapsed: false,
+      };
+      currentSectionId = currentSection.id;
+      
+      // Check for section metadata on next line: <!-- section: {...} -->
+      const nextLine = lines[i + 1]?.trim();
+      if (nextLine?.startsWith('<!-- section:')) {
+        const metaMatch = nextLine.match(/<!--\s*section:\s*(\{.*?\})\s*-->/);
+        if (metaMatch) {
+          try {
+            const meta = JSON.parse(metaMatch[1]);
+            currentSection.id = meta.id || currentSection.id;
+            currentSectionId = currentSection.id;
+            currentSection.order = typeof meta.order === 'number' ? meta.order : currentSection.order;
+            currentSection.collapsed = meta.collapsed ?? false;
+            currentSection.color = meta.color;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        i++; // Skip metadata line
+      }
+      
+      sections.push(currentSection);
+      promptOrder = 0;
+      continue;
+    }
+    
+    // Prompt header: ### Title
+    if (trimmedLine.startsWith('### ')) {
+      const promptTitle = trimmedLine.slice(4).trim();
+      
+      // Collect all lines until next ### or ## or end
+      const promptLines = [];
+      let j = i + 1;
+      while (j < lines.length) {
+        const nextTrimmed = lines[j].trim();
+        if (nextTrimmed.startsWith('### ') || nextTrimmed.startsWith('## ')) break;
+        promptLines.push(lines[j]);
+        j++;
+      }
+      
+      const promptBlock = promptLines.join('\n');
+      
+      // Find description (italic)
+      const descMatch = promptBlock.match(/^_(.+?)_/m);
+      // Find code block (prompt)
+      const codeMatch = promptBlock.match(/```\n([\s\S]*?)```/) || promptBlock.match(/```(\w*)\n([\s\S]*?)```/);
+      // Find variables
+      const varsMatch = promptBlock.match(/\*\*Variables:\*\*\s*(.+)/);
+      // Find prompt metadata: <!-- prompt: {...} -->
+      let promptMeta = {};
+      const metaMatch = promptBlock.match(/<!--\s*prompt:\s*(\{.*?\})\s*-->/);
+      if (metaMatch) {
+        try {
+          promptMeta = JSON.parse(metaMatch[1]);
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      const promptText = codeMatch ? (codeMatch[2] || codeMatch[1]).trim() : '';
+      
+      // Determine sectionId from metadata or current section
+      let itemSectionId = promptMeta.sectionId || currentSectionId || undefined;
+      
+      const promptItem = {
+        id: promptMeta.id || genId("pi", promptTitle),
+        title: promptTitle,
+        prompt: promptText,
         description: descMatch ? descMatch[1] : '',
         variables: varsMatch ? varsMatch[1].split(',').map(v => v.trim()) : [],
-        tags: [],
-        isFavorite: false
-      });
+        tags: promptMeta.tags || [],
+        isFavorite: promptMeta.isFavorite ?? false,
+        sectionId: itemSectionId,
+      };
+      
+      subItems.push(promptItem);
+      
+      // Skip the lines we already consumed
+      i = j - 1;
+      continue;
     }
   }
   
-  return items;
+  return { sections, subItems };
+}
+
+// ============================================
+// NEW: Parse playbooks with sections and metadata
+// Preserves section titles, IDs, and sectionId on items
+// ============================================
+function parsePlaybooksWithSectionsFromBody(body) {
+  const sections = [];
+  const subItems = [];
+  const lines = body.split('\n');
+  
+  let currentSection = null;
+  let currentSectionId = null;
+  let cmdOrder = 0;
+  let uncategorizedOrder = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+    
+    if (!trimmedLine) continue;
+    
+    // Section header: ## Title
+    if (trimmedLine.startsWith('## ')) {
+      let sectionTitle = trimmedLine.slice(3).trim();
+      
+      currentSection = {
+        id: genIdLocal(),
+        title: sectionTitle,
+        order: sections.length,
+        collapsed: false,
+      };
+      currentSectionId = currentSection.id;
+      
+      // Check for section metadata on next line: <!-- section: {...} -->
+      const nextLine = lines[i + 1]?.trim();
+      if (nextLine?.startsWith('<!-- section:')) {
+        const metaMatch = nextLine.match(/<!--\s*section:\s*(\{.*?\})\s*-->/);
+        if (metaMatch) {
+          try {
+            const meta = JSON.parse(metaMatch[1]);
+            currentSection.id = meta.id || currentSection.id;
+            currentSectionId = currentSection.id;
+            currentSection.order = typeof meta.order === 'number' ? meta.order : currentSection.order;
+            currentSection.collapsed = meta.collapsed ?? false;
+            currentSection.color = meta.color;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        i++; // Skip metadata line
+      }
+      
+      sections.push(currentSection);
+      cmdOrder = 0;
+      continue;
+    }
+    
+    // Command header: ### itemId
+    if (trimmedLine.startsWith('### ')) {
+      const itemId = trimmedLine.slice(4).trim();
+      
+      // Collect all lines until next ### or ## or end
+      const cmdLines = [];
+      let j = i + 1;
+      while (j < lines.length) {
+        const nextTrimmed = lines[j].trim();
+        if (nextTrimmed.startsWith('### ') || nextTrimmed.startsWith('## ')) break;
+        cmdLines.push(lines[j]);
+        j++;
+      }
+      
+      const cmdBlock = cmdLines.join('\n');
+      
+      // Find code block
+      const codeMatch = cmdBlock.match(/```(\w+)\n([\s\S]*?)```/);
+      // Find description (italic)
+      const descMatch = cmdBlock.match(/_(.+?)_/);
+      // Find tags
+      const tagsMatch = cmdBlock.match(/\*\*Tags:\*\*\s*(.+)/);
+      // Find command metadata: <!-- cmd: {...} -->
+      let cmdMeta = {};
+      const metaMatch = cmdBlock.match(/<!--\s*cmd:\s*(\{.*?\})\s*-->/);
+      if (metaMatch) {
+        try {
+          cmdMeta = JSON.parse(metaMatch[1]);
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      // Filter out _null_ descriptions (item had no description, stored as _null_)
+      let description = '';
+      if (descMatch) {
+        const descValue = descMatch[1].trim();
+        description = (descValue === 'null' || descValue === '_null_') ? '' : descValue;
+      }
+      
+      // Determine sectionId from metadata or current section
+      let itemSectionId = cmdMeta.sectionId || currentSectionId || undefined;
+      
+      const cmdItem = {
+        id: cmdMeta.id || itemId,
+        command: codeMatch ? codeMatch[2].trim() : '',
+        description: description,
+        language: (codeMatch ? codeMatch[1] : cmdMeta.language) || 'bash',
+        tags: cmdMeta.tags || (tagsMatch ? tagsMatch[1].split(',').map(v => v.trim()) : []),
+        isFavorite: cmdMeta.isFavorite ?? false,
+        sectionId: itemSectionId,
+      };
+      
+      subItems.push(cmdItem);
+      
+      // Skip the lines we already consumed
+      i = j - 1;
+      continue;
+    }
+  }
+  
+  return { sections, subItems };
 }
 
 // Category type icons and colors
@@ -255,7 +461,8 @@ const CATEGORY_CONFIG = {
   notes: { icon: "📝", color: "#4CAF50" },
   commands: { icon: "⌘", color: "#2196F3" },
   links: { icon: "🔗", color: "#FF9800" },
-  prompts: { icon: "💬", color: "#9C27B0" }
+  prompts: { icon: "💬", color: "#9C27B0" },
+  playbooks: { icon: "📖", color: "#00BCD4" }
 };
 
 // Determine type from category name
@@ -264,6 +471,7 @@ function getCategoryType(name) {
   if (lower.includes("command")) return "commands";
   if (lower.includes("link")) return "links";
   if (lower.includes("prompt")) return "prompts";
+  if (lower.includes("playbook")) return "playbooks";
   return "notes";
 }
 
@@ -275,6 +483,7 @@ const result = {
   commands: [],
   links: [],
   prompts: [],
+  playbooks: [],
   exportedAt: new Date().toISOString(),
   version: "3.0"
 };
@@ -353,22 +562,30 @@ if (fs.existsSync(dataDir)) {
       const config = CATEGORY_CONFIG[baseType];
       
       // Create category if not in metadata
+      // IMPORTANT: Directory names use underscores for spaces (e.g., 'New_playbooks' vs 'New playbooks')
+      // Try exact match first, then try with underscores replaced by spaces
       const catKey = `${workspace.name}_${catName}`;
-      if (!categoryMap.has(catKey)) {
+      const catKeyWithSpaces = `${workspace.name}_${catName.replace(/_/g, ' ')}`;
+      const existingCatKey = categoryMap.has(catKey) ? catKey : (categoryMap.has(catKeyWithSpaces) ? catKeyWithSpaces : null);
+      
+      if (!existingCatKey) {
         const category = {
           id: genId("cat", `${wsName}/${catName}`),
           workspaceId: workspace.id,
-          name: catName,
-          icon: config.icon,
-          color: config.color,
+          // Use the name with spaces (more natural) as the display name
+          name: catName.replace(/_/g, ' '),
+          icon: config ? config.icon : "📁",
+          color: config ? config.color : "#6366f1",
           baseType: baseType,
           order: result.categories.filter(c => c.workspaceId === workspace.id).length,
           isDefault: false
         };
         result.categories.push(category);
         categoryMap.set(catKey, category);
+        // Also register with spaces variant to prevent duplicates
+        categoryMap.set(catKeyWithSpaces, category);
       }
-      const category = categoryMap.get(catKey);
+      const category = categoryMap.get(existingCatKey || catKey);
       
       // Get folders for this category
       const folderEntries = fs.readdirSync(catPath, { withFileTypes: true })
@@ -379,21 +596,26 @@ if (fs.existsSync(dataDir)) {
         const fldPath = path.join(catPath, fldName);
         
         // Create folder if not in metadata
+        // IMPORTANT: Directory names use underscores for spaces, same as categories
         const fldKey = `${category.id}_${fldName}`;
-        if (!folderMap.has(fldKey)) {
+        const fldKeyWithSpaces = `${category.id}_${fldName.replace(/_/g, ' ')}`;
+        const existingFldKey = folderMap.has(fldKey) ? fldKey : (folderMap.has(fldKeyWithSpaces) ? fldKeyWithSpaces : null);
+        
+        if (!existingFldKey) {
           const folder = {
             id: genId("f", `${wsName}/${catName}/${fldName}`),
             categoryId: category.id,
             parentId: null,
-            name: fldName,
+            name: fldName.replace(/_/g, ' '),
             order: result.folders.filter(f => f.categoryId === category.id).length,
             isExpanded: true,
             createdAt: new Date().toISOString()
           };
           result.folders.push(folder);
           folderMap.set(fldKey, folder);
+          folderMap.set(fldKeyWithSpaces, folder);
         }
-        const folder = folderMap.get(fldKey);
+        const folder = folderMap.get(existingFldKey || fldKey);
         
         // Get notes in this folder
         const noteEntries = fs.readdirSync(fldPath, { withFileTypes: true })
@@ -435,7 +657,7 @@ if (fs.existsSync(dataDir)) {
               type: "commands"
             });
           } else if (baseType === "links") {
-            // NEW: Parse links with sections and metadata
+            // Parse links with sections and metadata
             const parsed = parseLinksWithSectionsFromBody(body);
             result.links.push({
               id: frontmatter.id || genId("lnk", notePathForId),
@@ -450,18 +672,36 @@ if (fs.existsSync(dataDir)) {
               type: "links"
             });
           } else if (baseType === "prompts") {
-            const subItems = parsePromptsFromBody(body);
+            // FIXED: Parse prompts with sections and metadata
+            const parsed = parsePromptsWithSectionsFromBody(body);
             result.prompts.push({
               id: frontmatter.id || genId("prm", notePathForId),
               folderId: folder.id,
               title,
               category: frontmatter.category || "",
-              subItems: subItems.length > 0 ? subItems : (frontmatter.subItems || []),
+              subItems: parsed.subItems.length > 0 ? parsed.subItems : (frontmatter.subItems || []),
+              sections: parsed.sections.length > 0 ? parsed.sections : (frontmatter.sections || []),
               tags: frontmatter.tags || [],
               order: frontmatter.order ?? result.prompts.filter(p => p.folderId === folder.id).length,
               createdAt: frontmatter.createdAt || new Date().toISOString(),
               updatedAt: frontmatter.updatedAt || new Date().toISOString(),
               type: "prompts"
+            });
+          } else if (baseType === "playbooks") {
+            // NEW: Parse playbooks with sections and metadata
+            const parsed = parsePlaybooksWithSectionsFromBody(body);
+            result.playbooks.push({
+              id: frontmatter.id || genId("pb", notePathForId),
+              folderId: folder.id,
+              title,
+              description: frontmatter.description || "",
+              subItems: parsed.subItems.length > 0 ? parsed.subItems : (frontmatter.subItems || []),
+              sections: parsed.sections.length > 0 ? parsed.sections : (frontmatter.sections || []),
+              tags: frontmatter.tags || [],
+              order: frontmatter.order ?? result.playbooks.filter(pb => pb.folderId === folder.id).length,
+              createdAt: frontmatter.createdAt || new Date().toISOString(),
+              updatedAt: frontmatter.updatedAt || new Date().toISOString(),
+              type: "playbooks"
             });
           }
         }
@@ -478,12 +718,19 @@ console.log("- Notes:", result.notes.length);
 console.log("- Commands:", result.commands.length);
 console.log("- Links:", result.links.length);
 console.log("- Prompts:", result.prompts.length);
+console.log("- Playbooks:", result.playbooks.length);
 
 // Log sections count for debugging
 const linksWithSections = result.links.filter(l => l.sections && l.sections.length > 0);
 console.log("- Links with sections:", linksWithSections.length);
 
-// Log detailed links info for debugging
+const promptsWithSections = result.prompts.filter(p => p.sections && p.sections.length > 0);
+console.log("- Prompts with sections:", promptsWithSections.length);
+
+const playbooksWithSections = result.playbooks.filter(pb => pb.sections && pb.sections.length > 0);
+console.log("- Playbooks with sections:", playbooksWithSections.length);
+
+// Log detailed info for debugging
 result.links.forEach(link => {
   console.log(`\nLink container "${link.title}":`);
   console.log(`  - Sections: ${link.sections?.length || 0}`);
@@ -495,6 +742,38 @@ result.links.forEach(link => {
     });
   }
   const uncategorized = link.subItems.filter(i => !i.sectionId).length;
+  if (uncategorized > 0) {
+    console.log(`    - Uncategorized: ${uncategorized} items`);
+  }
+});
+
+result.prompts.forEach(prompt => {
+  console.log(`\nPrompt container "${prompt.title}":`);
+  console.log(`  - Sections: ${prompt.sections?.length || 0}`);
+  console.log(`  - SubItems: ${prompt.subItems?.length || 0}`);
+  if (prompt.sections) {
+    prompt.sections.forEach(s => {
+      const count = prompt.subItems.filter(i => i.sectionId === s.id).length;
+      console.log(`    - Section "${s.title}": ${count} items`);
+    });
+  }
+  const uncategorized = prompt.subItems.filter(i => !i.sectionId).length;
+  if (uncategorized > 0) {
+    console.log(`    - Uncategorized: ${uncategorized} items`);
+  }
+});
+
+result.playbooks.forEach(playbook => {
+  console.log(`\nPlaybook container "${playbook.title}":`);
+  console.log(`  - Sections: ${playbook.sections?.length || 0}`);
+  console.log(`  - SubItems: ${playbook.subItems?.length || 0}`);
+  if (playbook.sections) {
+    playbook.sections.forEach(s => {
+      const count = playbook.subItems.filter(i => i.sectionId === s.id).length;
+      console.log(`    - Section "${s.title}": ${count} items`);
+    });
+  }
+  const uncategorized = playbook.subItems.filter(i => !i.sectionId).length;
   if (uncategorized > 0) {
     console.log(`    - Uncategorized: ${uncategorized} items`);
   }
