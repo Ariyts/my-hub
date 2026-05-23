@@ -7,10 +7,12 @@ order: "0"
 createdAt: "2026-03-01T13:26:39.949Z"
 updatedAt: "2026-03-22T09:03:01.682Z"
 ---
+
 ### первый
 ```
 первый
 ```
+<!-- prompt: {"id":"pi_ygat1y"} -->
 
 ### Pentest first 1 hour
 ```
@@ -58,4 +60,4 @@ nmap -iL scope.txt -p- -sV --script=vuln --version-all -Pn -A -v -T4 -oA new_pro
 Ответ должен быть структурирован, как чек-лист действий с командами.
 Без воды. Только то, что реально ускоряет взлом/доступ.
 ```
-
+<!-- prompt: {"id":"pi_sccy08"} -->
