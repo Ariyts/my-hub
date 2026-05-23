@@ -350,13 +350,24 @@ interface Props {
 }
 
 export function PromptsView({ container }: Props) {
-  const { isDarkTheme } = useStore();
+  const { isDarkTheme, addPromptItem } = useStore();
   const [search, setSearch] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [newItem, setNewItem] = useState({ title: '', prompt: '', description: '', tags: [] as string[], isFavorite: false, variables: [] as string[] });
 
   const filtered = container.subItems.filter(i =>
     i.title.toLowerCase().includes(search.toLowerCase()) ||
     i.prompt.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleAdd = () => {
+    if (newItem.title.trim() && newItem.prompt.trim()) {
+      const vars = (newItem.prompt.match(/\{\{([^}]+)\}\}/g) || []);
+      addPromptItem(container.id, { ...newItem, variables: [...new Set(vars)] });
+      setNewItem({ title: '', prompt: '', description: '', tags: [], isFavorite: false, variables: [] });
+      setAdding(false);
+    }
+  };
 
   const bg = isDarkTheme ? '#0f172a' : '#f1f5f9';
   const border = isDarkTheme ? '#1e293b' : '#e2e8f0';
@@ -381,11 +392,58 @@ export function PromptsView({ container }: Props) {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-6">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: '#94a3b8' }}>
-            <MessageSquare size={48} className="opacity-20" />
-            <p className="text-lg font-medium">No prompts yet</p>
-            <p className="text-sm">Add your first prompt using the panel below</p>
+        {container.subItems.length === 0 && !adding ? (
+          <div className="text-center py-12">
+            <MessageSquare size={48} className="mx-auto mb-4" style={{ color: '#64748b' }} />
+            <h3 className="text-lg font-medium mb-2" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>
+              No prompts yet
+            </h3>
+            <p className="text-sm mb-4" style={{ color: '#64748b' }}>
+              Create a prompt to start building your library
+            </p>
+            <button
+              onClick={() => setAdding(true)}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{ background: '#9C27B0', color: 'white' }}
+            >
+              Create Prompt
+            </button>
+          </div>
+        ) : container.subItems.length === 0 && adding ? (
+          <div className="p-4 border-2 border-dashed rounded-xl" style={{ borderColor: '#9C27B0', background: '#9C27B008' }}>
+            <div className="flex gap-2 mb-2">
+              <input
+                autoFocus
+                className="flex-1 text-sm px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: isDarkTheme ? '#0f172a' : '#fff', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                placeholder="Prompt title..."
+                value={newItem.title}
+                onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
+              />
+              <input
+                className="w-48 text-xs px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: isDarkTheme ? '#0f172a' : '#fff', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                placeholder="Description..."
+                value={newItem.description}
+                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+              />
+            </div>
+            <textarea
+              className="w-full text-xs px-3 py-2 rounded-lg border outline-none font-mono resize-none"
+              style={{ background: isDarkTheme ? '#1e1e2e' : '#f0f4f8', borderColor: border, color: isDarkTheme ? '#c4b5fd' : '#6b21a8', minHeight: '60px' }}
+              placeholder="Prompt text... Use {{variable}} for dynamic values"
+              value={newItem.prompt}
+              onChange={(e) => setNewItem({ ...newItem, prompt: e.target.value })}
+            />
+            <div className="flex gap-2 mt-2">
+              <button onClick={handleAdd} className="px-3 py-1 rounded text-xs font-medium" style={{ background: '#9C27B015', color: '#9C27B0' }}>Add</button>
+              <button onClick={() => setAdding(false)} className="px-3 py-1 rounded text-xs" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8" style={{ color: '#94a3b8' }}>
+            <MessageSquare size={32} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">No prompts found</p>
           </div>
         ) : (
           <ContainerCard container={{ ...container, subItems: filtered }} isDark={isDarkTheme} />

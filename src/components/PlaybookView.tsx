@@ -334,8 +334,10 @@ interface Props {
 }
 
 export function PlaybookView({ container }: Props) {
-  const { isDarkTheme } = useStore();
+  const { isDarkTheme, addPlaybookItem } = useStore();
   const [search, setSearch] = useState('');
+  const [addingItem, setAddingItem] = useState(false);
+  const [newCmd, setNewCmd] = useState({ command: '', description: '', language: 'bash' as PlaybookItem['language'], tags: [] as string[], isFavorite: false });
 
   // Search by service name AND by commands inside
   const filtered = container.subItems.filter(i =>
@@ -352,6 +354,14 @@ export function PlaybookView({ container }: Props) {
 
   // If search is active and title matches, show all subItems; otherwise show filtered
   const displayItems = search && matchesTitle ? container.subItems : filtered;
+
+  const handleAddItem = () => {
+    if (newCmd.command.trim()) {
+      addPlaybookItem(container.id, newCmd);
+      setNewCmd({ command: '', description: '', language: 'bash', tags: [], isFavorite: false });
+      setAddingItem(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full" style={{ background: bg }}>
@@ -376,11 +386,62 @@ export function PlaybookView({ container }: Props) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {displayItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: '#94a3b8' }}>
-            <BookOpen size={48} className="opacity-20" />
-            <p className="text-lg font-medium">No commands yet</p>
-            <p className="text-sm">Add your first command for this service</p>
+        {container.subItems.length === 0 && !addingItem ? (
+          <div className="text-center py-12">
+            <BookOpen size={48} className="mx-auto mb-4" style={{ color: '#64748b' }} />
+            <h3 className="text-lg font-medium mb-2" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>
+              No playbooks yet
+            </h3>
+            <p className="text-sm mb-4" style={{ color: '#64748b' }}>
+              Create a playbook to start organizing your services
+            </p>
+            <button
+              onClick={() => setAddingItem(true)}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{ background: '#00BCD4', color: 'white' }}
+            >
+              Create Playbook
+            </button>
+          </div>
+        ) : container.subItems.length === 0 && addingItem ? (
+          <div className="p-4 border-2 border-dashed rounded-xl" style={{ borderColor: '#00BCD4', background: '#00BCD408' }}>
+            <div className="flex gap-2 mb-2">
+              <select
+                className="text-xs px-2 py-1.5 rounded border outline-none"
+                style={{ background: isDarkTheme ? '#0f172a' : '#fff', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                value={newCmd.language}
+                onChange={(e) => setNewCmd({ ...newCmd, language: e.target.value as PlaybookItem['language'] })}
+              >
+                {PLAYBOOK_LANGUAGES.map(l => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+              <input
+                className="flex-1 font-mono text-xs px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                placeholder="command..."
+                value={newCmd.command}
+                onChange={(e) => setNewCmd({ ...newCmd, command: e.target.value })}
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(); if (e.key === 'Escape') setAddingItem(false); }}
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 text-xs px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: isDarkTheme ? '#0f172a' : '#f8fafc', borderColor: border, color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                placeholder="description..."
+                value={newCmd.description}
+                onChange={(e) => setNewCmd({ ...newCmd, description: e.target.value })}
+              />
+              <button onClick={handleAddItem} className="px-3 py-1 rounded text-xs font-medium" style={{ background: '#00BCD415', color: '#00BCD4' }}>Add</button>
+              <button onClick={() => setAddingItem(false)} className="px-3 py-1 rounded text-xs" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>Cancel</button>
+            </div>
+          </div>
+        ) : displayItems.length === 0 ? (
+          <div className="text-center py-8" style={{ color: '#94a3b8' }}>
+            <BookOpen size={32} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">No commands found</p>
           </div>
         ) : (
           <ServiceCard container={{ ...container, subItems: displayItems }} isDark={isDarkTheme} />
