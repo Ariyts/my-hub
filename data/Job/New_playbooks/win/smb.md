@@ -1,26 +1,39 @@
 ---
-id: "8ye778shtmpihohjd"
+id: "1gl6lnc8gmpikoi0e"
 title: "smb"
 description: ""
 tags: []
 order: 1
-createdAt: "2026-05-23T15:14:15.625Z"
-updatedAt: "2026-05-23T15:16:11.335Z"
+createdAt: "2026-05-23T16:38:15.086Z"
+updatedAt: "2026-05-23T16:39:35.897Z"
 ---
 
 ## smb
-<!-- section: {"id":"3rtw18f14mpihol2p","order":0,"collapsed":false,"color":"#22c55e"} -->
+<!-- section: {"id":"dcaimy5qbmpikomtb","order":0,"collapsed":false} -->
 
-### 3teuiyn2smpihp8qg
+### xh6dz3nb2mpikpfzf
 ```bash
 nxc smb $target -u '' -p '' --shares
 ```
+<!-- cmd: {"id":"xh6dz3nb2mpikpfzf","language":"bash","sectionId":"dcaimy5qbmpikomtb"} -->
 
-_null_
-<!-- cmd: {"id":"3teuiyn2smpihp8qg","language":"bash","sectionId":"3rtw18f14mpihol2p"} -->
-
-### fw4aq1ymwmpihq5ia
+### nkmrii1ftmpikpnfg
 ```bash
 nxc smb $target -u 'guest' -p '' --shares
 ```
-<!-- cmd: {"id":"fw4aq1ymwmpihq5ia","language":"bash","sectionId":"3rtw18f14mpihol2p"} -->
+<!-- cmd: {"id":"nkmrii1ftmpikpnfg","language":"bash","sectionId":"dcaimy5qbmpikomtb"} -->
+
+## smb2
+<!-- section: {"id":"ln2bkfizompikpulp","order":1,"collapsed":false} -->
+
+### hieht8ozampikq1tj
+```bash
+nxc smb $target -u '' -p '' --shares
+```
+<!-- cmd: {"id":"hieht8ozampikq1tj","language":"bash","sectionId":"ln2bkfizompikpulp"} -->
+
+### y40ouxpfrmpikq8d5
+```bash
+nxc smb $target -u '123' -p '' --shares
+```
+<!-- cmd: {"id":"y40ouxpfrmpikq8d5","language":"bash","sectionId":"ln2bkfizompikpulp"} -->
