@@ -3,7 +3,7 @@ id: "vmb03yz05mpikqr5p"
 title: "Test"
 category: "General"
 tags: []
-order: 2
+order: "2"
 createdAt: "2026-05-23T16:40:00.253Z"
 updatedAt: "2026-05-23T16:40:21.130Z"
 ---

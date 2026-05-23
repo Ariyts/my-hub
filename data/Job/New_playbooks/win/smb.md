@@ -3,7 +3,7 @@ id: "1gl6lnc8gmpikoi0e"
 title: "smb"
 description: ""
 tags: []
-order: 1
+order: "1"
 createdAt: "2026-05-23T16:38:15.086Z"
 updatedAt: "2026-05-23T16:39:35.897Z"
 ---
