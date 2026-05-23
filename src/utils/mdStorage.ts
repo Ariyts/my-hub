@@ -8,7 +8,7 @@
 //       {folderName}/
 //         {noteTitle}.md
 
-import type { DataFile, LinkContainer, LinkItem, LinkSection } from '../types';
+import type { DataFile, LinkContainer, LinkItem, LinkSection, PromptContainer, PromptItem, PlaybookContainer, PlaybookItem } from '../types';
 
 // Sanitize filename for safe file system usage
 function sanitizeFilename(name: string): string {
@@ -431,6 +431,219 @@ export function parsedSectionsToContainer(
 }
 
 // ============================================
+// PROMPTS FORMAT: Multiple Sections per File
+// ============================================
+
+/**
+ * Создаёт .md файл промптов с поддержкой множественных секций
+ * Формат:
+ * ---
+ * frontmatter
+ * ---
+ * ## Section Title
+ * <!-- section: {id, order, collapsed, color} -->
+ * ### Prompt Title
+ * _description_
+ * ```
+ * prompt text
+ * ```
+ * **Variables:** var1, var2
+ * <!-- prompt: {id, sectionId, isFavorite, tags} -->
+ */
+export function createPromptFileWithSections(container: PromptContainer): string {
+  const frontmatter = createFrontmatter({
+    id: container.id,
+    title: container.title,
+    category: container.category,
+    tags: container.tags,
+    order: container.order,
+    createdAt: container.createdAt,
+    updatedAt: container.updatedAt,
+  });
+
+  const lines: string[] = [frontmatter, ''];
+
+  // Группируем промпты по секциям
+  const sectionItemsMap = new Map<string | undefined, PromptItem[]>();
+  for (const item of container.subItems) {
+    const sectionId = item.sectionId;
+    if (!sectionItemsMap.has(sectionId)) sectionItemsMap.set(sectionId, []);
+    sectionItemsMap.get(sectionId)!.push(item);
+  }
+
+  // Сортируем секции по order
+  const sortedSections = [...(container.sections || [])].sort((a, b) => a.order - b.order);
+
+  // Пишем каждую секцию
+  for (const section of sortedSections) {
+    lines.push(`## ${section.title}`);
+
+    const sectionMeta: Record<string, unknown> = {
+      id: section.id,
+      order: section.order,
+      collapsed: section.collapsed,
+    };
+    if (section.color) sectionMeta.color = section.color;
+
+    lines.push(`<!-- section: ${JSON.stringify(sectionMeta)} -->`);
+    lines.push('');
+
+    const sectionItems = sectionItemsMap.get(section.id) || [];
+    sectionItemsMap.delete(section.id);
+
+    for (const item of sectionItems) {
+      lines.push(`### ${item.title}`);
+      if (item.description) lines.push(`_${item.description}_\n`);
+      lines.push('```');
+      lines.push(item.prompt);
+      lines.push('```');
+      if (item.variables && item.variables.length > 0) {
+        lines.push(`\n**Variables:** ${item.variables.join(', ')}`);
+      }
+
+      const promptMeta: Record<string, unknown> = { id: item.id };
+      if (item.sectionId) promptMeta.sectionId = item.sectionId;
+      if (item.isFavorite) promptMeta.isFavorite = true;
+      if (item.tags.length > 0) promptMeta.tags = item.tags;
+      lines.push(`<!-- prompt: ${JSON.stringify(promptMeta)} -->`);
+      lines.push('');
+    }
+  }
+
+  // Промпты без секции (uncategorized)
+  const uncategorizedItems = sectionItemsMap.get(undefined) || [];
+  if (uncategorizedItems.length > 0) {
+    for (const item of uncategorizedItems) {
+      lines.push(`### ${item.title}`);
+      if (item.description) lines.push(`_${item.description}_\n`);
+      lines.push('```');
+      lines.push(item.prompt);
+      lines.push('```');
+      if (item.variables && item.variables.length > 0) {
+        lines.push(`\n**Variables:** ${item.variables.join(', ')}`);
+      }
+
+      const promptMeta: Record<string, unknown> = { id: item.id };
+      if (item.isFavorite) promptMeta.isFavorite = true;
+      if (item.tags.length > 0) promptMeta.tags = item.tags;
+      lines.push(`<!-- prompt: ${JSON.stringify(promptMeta)} -->`);
+      lines.push('');
+    }
+  }
+
+  return lines.join('\n');
+}
+
+// ============================================
+// PLAYBOOKS FORMAT: Multiple Sections per File
+// ============================================
+
+/**
+ * Создаёт .md файл плейбука с поддержкой множественных секций
+ * Формат:
+ * ---
+ * frontmatter
+ * ---
+ * ## Section Title
+ * <!-- section: {id, order, collapsed, color} -->
+ * ### cmd_id
+ * ```bash
+ * command
+ * ```
+ * _description_
+ * **Tags:** tag1, tag2
+ * <!-- cmd: {id, sectionId, isFavorite, language} -->
+ */
+export function createPlaybookFileWithSections(container: PlaybookContainer): string {
+  const frontmatter = createFrontmatter({
+    id: container.id,
+    title: container.title,
+    description: container.description || '',
+    tags: container.tags,
+    order: container.order,
+    createdAt: container.createdAt,
+    updatedAt: container.updatedAt,
+  });
+
+  const lines: string[] = [frontmatter, ''];
+
+  if (container.description) {
+    lines.push(container.description);
+    lines.push('');
+  }
+
+  // Группируем команды по секциям
+  const sectionItemsMap = new Map<string | undefined, PlaybookItem[]>();
+  for (const item of container.subItems) {
+    const sectionId = item.sectionId;
+    if (!sectionItemsMap.has(sectionId)) sectionItemsMap.set(sectionId, []);
+    sectionItemsMap.get(sectionId)!.push(item);
+  }
+
+  // Сортируем секции по order
+  const sortedSections = [...(container.sections || [])].sort((a, b) => a.order - b.order);
+
+  // Пишем каждую секцию
+  for (const section of sortedSections) {
+    lines.push(`## ${section.title}`);
+
+    const sectionMeta: Record<string, unknown> = {
+      id: section.id,
+      order: section.order,
+      collapsed: section.collapsed,
+    };
+    if (section.color) sectionMeta.color = section.color;
+
+    lines.push(`<!-- section: ${JSON.stringify(sectionMeta)} -->`);
+    lines.push('');
+
+    const sectionItems = sectionItemsMap.get(section.id) || [];
+    sectionItemsMap.delete(section.id);
+
+    for (const item of sectionItems) {
+      lines.push(`### ${item.id}`);
+      lines.push(`\`\`\`${item.language}`);
+      lines.push(item.command);
+      lines.push('```');
+      if (item.description) lines.push(`\n_${item.description}_`);
+      if (item.tags && item.tags.length > 0) {
+        lines.push(`\n**Tags:** ${item.tags.join(', ')}`);
+      }
+
+      const cmdMeta: Record<string, unknown> = { id: item.id, language: item.language };
+      if (item.sectionId) cmdMeta.sectionId = item.sectionId;
+      if (item.isFavorite) cmdMeta.isFavorite = true;
+      if (item.tags && item.tags.length > 0) cmdMeta.tags = item.tags;
+      lines.push(`<!-- cmd: ${JSON.stringify(cmdMeta)} -->`);
+      lines.push('');
+    }
+  }
+
+  // Команды без секции (uncategorized)
+  const uncategorizedItems = sectionItemsMap.get(undefined) || [];
+  if (uncategorizedItems.length > 0) {
+    for (const item of uncategorizedItems) {
+      lines.push(`### ${item.id}`);
+      lines.push(`\`\`\`${item.language}`);
+      lines.push(item.command);
+      lines.push('```');
+      if (item.description) lines.push(`\n_${item.description}_`);
+      if (item.tags && item.tags.length > 0) {
+        lines.push(`\n**Tags:** ${item.tags.join(', ')}`);
+      }
+
+      const cmdMeta: Record<string, unknown> = { id: item.id, language: item.language };
+      if (item.isFavorite) cmdMeta.isFavorite = true;
+      if (item.tags && item.tags.length > 0) cmdMeta.tags = item.tags;
+      lines.push(`<!-- cmd: ${JSON.stringify(cmdMeta)} -->`);
+      lines.push('');
+    }
+  }
+
+  return lines.join('\n');
+}
+
+// ============================================
 // EXPORT TO FILES
 // ============================================
 
@@ -539,75 +752,22 @@ export function dataToFiles(data: DataFile): FileStructure[] {
           }
         }
         
-        // Process prompts
+        // Process prompts - with sections support
         if (category.baseType === 'prompts') {
           const prompts = data.prompts.filter(p => p.folderId === folder.id);
           for (const prompt of prompts) {
-            const frontmatter = createFrontmatter({
-              id: prompt.id,
-              title: prompt.title,
-              category: prompt.category,
-              tags: prompt.tags,
-              order: prompt.order,
-              createdAt: prompt.createdAt,
-              updatedAt: prompt.updatedAt,
-            });
-            
-            // Format prompts
-            let body = '';
-            for (const item of prompt.subItems) {
-              body += `### ${item.title}\n`;
-              if (item.description) {
-                body += `_${item.description}_\n\n`;
-              }
-              body += '```\n' + item.prompt + '\n```\n';
-              if (item.variables && item.variables.length > 0) {
-                body += `\n**Variables:** ${item.variables.join(', ')}\n`;
-              }
-              body += '\n';
-            }
-            
-            const content = `${frontmatter}\n${body}`;
+            const content = createPromptFileWithSections(prompt);
             const filePath = getUniquePath(`${basePath}/${sanitizeFilename(prompt.title)}`, 'md');
-            
             files.push({ path: filePath, content });
           }
         }
         
-        // Process playbooks (service commands)
+        // Process playbooks - with sections support
         if (category.baseType === 'playbooks') {
           const playbooks = data.playbooks.filter(pb => pb.folderId === folder.id);
           for (const playbook of playbooks) {
-            const frontmatter = createFrontmatter({
-              id: playbook.id,
-              title: playbook.title,
-              description: playbook.description || '',
-              tags: playbook.tags,
-              order: playbook.order,
-              createdAt: playbook.createdAt,
-              updatedAt: playbook.updatedAt,
-            });
-            
-            // Format playbooks as markdown code blocks (similar to commands)
-            let body = '';
-            if (playbook.description) {
-              body += `${playbook.description}\n\n`;
-            }
-            for (const item of playbook.subItems) {
-              body += `### ${item.id}\n`;
-              body += `\`\`\`${item.language}\n${item.command}\n\`\`\`\n`;
-              if (item.description) {
-                body += `\n_${item.description}_\n`;
-              }
-              if (item.tags && item.tags.length > 0) {
-                body += `\n**Tags:** ${item.tags.join(', ')}\n`;
-              }
-              body += '\n';
-            }
-            
-            const content = `${frontmatter}\n${body}`;
+            const content = createPlaybookFileWithSections(playbook);
             const filePath = getUniquePath(`${basePath}/${sanitizeFilename(playbook.title)}`, 'md');
-            
             files.push({ path: filePath, content });
           }
         }

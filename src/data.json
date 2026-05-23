@@ -560,7 +560,8 @@
       "order": "0",
       "createdAt": "2026-03-01T13:26:39.949Z",
       "updatedAt": "2026-03-01T14:02:53.625Z",
-      "type": "prompts"
+      "type": "prompts",
+      "sections": []
     }
   ],
   "exportedAt": "2026-03-07T13:18:27.641Z",
@@ -635,7 +636,8 @@
       "createdAt": "2026-05-13T00:00:00.000Z",
       "updatedAt": "2026-05-13T00:00:00.000Z",
       "type": "playbooks",
-      "isExpanded": true
+      "isExpanded": true,
+      "sections": []
     },
     {
       "id": "pb_docker",
@@ -707,7 +709,8 @@
       "createdAt": "2026-05-13T00:00:00.000Z",
       "updatedAt": "2026-05-13T00:00:00.000Z",
       "type": "playbooks",
-      "isExpanded": true
+      "isExpanded": true,
+      "sections": []
     },
     {
       "id": "pb_ssh",
@@ -768,7 +771,8 @@
       "createdAt": "2026-05-13T00:00:00.000Z",
       "updatedAt": "2026-05-13T00:00:00.000Z",
       "type": "playbooks",
-      "isExpanded": true
+      "isExpanded": true,
+      "sections": []
     }
   ]
 }

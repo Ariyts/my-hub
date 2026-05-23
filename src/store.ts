@@ -3,7 +3,9 @@ import { persist } from 'zustand/middleware';
 import type {
   AppState, Workspace, Category, Folder, NoteItem,
   CommandContainer, LinkContainer, PromptContainer, PlaybookContainer,
-  CommandItem, LinkItem, PromptItem, PlaybookItem, Settings, AnyItem, TrashItem
+  CommandItem, LinkItem, PromptItem, PlaybookItem,
+  PromptSection, PlaybookSection,
+  Settings, AnyItem, TrashItem
 } from './types';
 import {
   initializeGitHubSync,
@@ -88,6 +90,11 @@ interface StoreActions {
   addPromptItem: (containerId: string, item: Omit<PromptItem, 'id'>) => void;
   updatePromptItem: (containerId: string, itemId: string, updates: Partial<PromptItem>) => void;
   deletePromptItem: (containerId: string, itemId: string) => void;
+  // Prompt section actions
+  addPromptSection: (containerId: string, title: string) => void;
+  updatePromptSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; color: string}>) => void;
+  deletePromptSection: (containerId: string, sectionId: string) => void;
+  reorderPromptSections: (containerId: string, sectionIds: string[]) => void;
 
   // Playbook container actions
   addPlaybookContainer: (container: Omit<PlaybookContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
@@ -96,6 +103,11 @@ interface StoreActions {
   addPlaybookItem: (containerId: string, item: Omit<PlaybookItem, 'id'>) => void;
   updatePlaybookItem: (containerId: string, itemId: string, updates: Partial<PlaybookItem>) => void;
   deletePlaybookItem: (containerId: string, itemId: string) => void;
+  // Playbook section actions
+  addPlaybookSection: (containerId: string, title: string) => void;
+  updatePlaybookSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; color: string}>) => void;
+  deletePlaybookSection: (containerId: string, sectionId: string) => void;
+  reorderPlaybookSections: (containerId: string, sectionIds: string[]) => void;
 
   // Trash actions
   setShowTrash: (show: boolean) => void;
@@ -708,6 +720,79 @@ export const useStore = create<AppState & StoreActions>()(
       })),
 
       // ============================================
+      // PROMPT SECTION ACTIONS
+      // ============================================
+      addPromptSection: (containerId, title) => {
+        const sectionId = genId();
+        set((s) => {
+          const idx = s.prompts.findIndex(p => p.id === containerId);
+          if (idx === -1) return s;
+
+          const prompt = s.prompts[idx];
+          const sections = prompt.sections || [];
+          const newSection: PromptSection = {
+            id: sectionId,
+            title,
+            order: sections.length,
+            collapsed: false,
+          };
+
+          const newPrompts = [...s.prompts];
+          newPrompts[idx] = {
+            ...prompt,
+            sections: [...sections, newSection],
+            updatedAt: new Date().toISOString(),
+          };
+
+          return { prompts: newPrompts };
+        });
+      },
+
+      updatePromptSection: (containerId, sectionId, updates) => {
+        set((s) => ({
+          prompts: s.prompts.map(p => {
+            if (p.id !== containerId) return p;
+            const updatedSections = (p.sections || []).map(sec =>
+              sec.id === sectionId ? { ...sec, ...updates } : sec
+            );
+            return {
+              ...p,
+              sections: updatedSections,
+              updatedAt: new Date().toISOString(),
+            };
+          })
+        }));
+      },
+
+      deletePromptSection: (containerId, sectionId) => set((s) => ({
+        prompts: s.prompts.map(p => {
+          if (p.id !== containerId) return p;
+          return {
+            ...p,
+            sections: (p.sections || []).filter(sec => sec.id !== sectionId),
+            subItems: p.subItems.map(item =>
+              item.sectionId === sectionId ? { ...item, sectionId: undefined } : item
+            ),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+
+      reorderPromptSections: (containerId, sectionIds) => set((s) => ({
+        prompts: s.prompts.map(p => {
+          if (p.id !== containerId) return p;
+          return {
+            ...p,
+            sections: (p.sections || []).map(sec => ({
+              ...sec,
+              order: sectionIds.indexOf(sec.id),
+            })).sort((a, b) => a.order - b.order),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+
+      // ============================================
       // PLAYBOOK CONTAINER ACTIONS
       // ============================================
       addPlaybookContainer: (container) => {
@@ -779,6 +864,79 @@ export const useStore = create<AppState & StoreActions>()(
           ...pb, 
           subItems: pb.subItems.filter(i => i.id !== itemId)
         } : pb)
+      })),
+
+      // ============================================
+      // PLAYBOOK SECTION ACTIONS
+      // ============================================
+      addPlaybookSection: (containerId, title) => {
+        const sectionId = genId();
+        set((s) => {
+          const idx = s.playbooks.findIndex(pb => pb.id === containerId);
+          if (idx === -1) return s;
+
+          const playbook = s.playbooks[idx];
+          const sections = playbook.sections || [];
+          const newSection: PlaybookSection = {
+            id: sectionId,
+            title,
+            order: sections.length,
+            collapsed: false,
+          };
+
+          const newPlaybooks = [...s.playbooks];
+          newPlaybooks[idx] = {
+            ...playbook,
+            sections: [...sections, newSection],
+            updatedAt: new Date().toISOString(),
+          };
+
+          return { playbooks: newPlaybooks };
+        });
+      },
+
+      updatePlaybookSection: (containerId, sectionId, updates) => {
+        set((s) => ({
+          playbooks: s.playbooks.map(pb => {
+            if (pb.id !== containerId) return pb;
+            const updatedSections = (pb.sections || []).map(sec =>
+              sec.id === sectionId ? { ...sec, ...updates } : sec
+            );
+            return {
+              ...pb,
+              sections: updatedSections,
+              updatedAt: new Date().toISOString(),
+            };
+          })
+        }));
+      },
+
+      deletePlaybookSection: (containerId, sectionId) => set((s) => ({
+        playbooks: s.playbooks.map(pb => {
+          if (pb.id !== containerId) return pb;
+          return {
+            ...pb,
+            sections: (pb.sections || []).filter(sec => sec.id !== sectionId),
+            subItems: pb.subItems.map(item =>
+              item.sectionId === sectionId ? { ...item, sectionId: undefined } : item
+            ),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+
+      reorderPlaybookSections: (containerId, sectionIds) => set((s) => ({
+        playbooks: s.playbooks.map(pb => {
+          if (pb.id !== containerId) return pb;
+          return {
+            ...pb,
+            sections: (pb.sections || []).map(sec => ({
+              ...sec,
+              order: sectionIds.indexOf(sec.id),
+            })).sort((a, b) => a.order - b.order),
+            updatedAt: new Date().toISOString(),
+          };
+        })
       })),
 
       // ============================================

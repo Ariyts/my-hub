@@ -138,6 +138,16 @@ export interface PromptItem {
   description?: string;
   tags: string[];
   isFavorite: boolean;
+  sectionId?: string; // ID секции, к которой принадлежит промпт
+}
+
+// Секция промптов (категория внутри файла)
+export interface PromptSection {
+  id: string;
+  title: string;
+  order: number;
+  collapsed: boolean;
+  color?: string;
 }
 
 export interface PromptContainer {
@@ -145,6 +155,7 @@ export interface PromptContainer {
   folderId: string;
   title: string;
   subItems: PromptItem[];
+  sections?: PromptSection[]; // Секции для группировки промптов
   category: string;
   tags: string[];
   order: number;
@@ -161,6 +172,16 @@ export interface PlaybookItem {
   language: 'bash' | 'powershell' | 'cmd' | 'zsh' | 'python' | 'javascript' | 'sql' | 'yaml' | 'nginx';
   tags: string[];
   isFavorite: boolean;
+  sectionId?: string; // ID секции, к которой принадлежит команда
+}
+
+// Секция плейбука (категория внутри файла)
+export interface PlaybookSection {
+  id: string;
+  title: string;
+  order: number;
+  collapsed: boolean;
+  color?: string;
 }
 
 export interface PlaybookContainer {
@@ -169,6 +190,7 @@ export interface PlaybookContainer {
   title: string; // Название сервиса (Docker, Git, nginx, PostgreSQL и т.д.)
   description?: string;
   subItems: PlaybookItem[];
+  sections?: PlaybookSection[]; // Секции для группировки команд
   tags: string[];
   order: number;
   createdAt: string;
