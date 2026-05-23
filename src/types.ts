@@ -2,12 +2,12 @@
 // WORKSPACE ARCHITECTURE
 // ============================================
 // Workspace (главный уровень)
-// └── Category (Notes, Commands, Links, Prompts)
+// └── Category (Notes, Commands, Links, Prompts, Playbooks)
 //     └── Folder (папки пользователя)
-//         └── Items (заметки, команды, ссылки, промпты)
+//         └── Items (заметки, команды, ссылки, промпты, плейбуки)
 
 // Base data types for items
-export type BaseDataType = 'notes' | 'commands' | 'links' | 'prompts';
+export type BaseDataType = 'notes' | 'commands' | 'links' | 'prompts' | 'playbooks';
 
 // ============================================
 // WORKSPACE - главный уровень организации
@@ -154,7 +154,30 @@ export interface PromptContainer {
   isExpanded?: boolean;
 }
 
-export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContainer;
+export interface PlaybookItem {
+  id: string;
+  command: string;
+  description: string;
+  language: 'bash' | 'powershell' | 'cmd' | 'zsh' | 'python' | 'javascript' | 'sql' | 'yaml' | 'nginx';
+  tags: string[];
+  isFavorite: boolean;
+}
+
+export interface PlaybookContainer {
+  id: string;
+  folderId: string;
+  title: string; // Название сервиса (Docker, Git, nginx, PostgreSQL и т.д.)
+  description?: string;
+  subItems: PlaybookItem[];
+  tags: string[];
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  type: 'playbooks';
+  isExpanded?: boolean;
+}
+
+export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContainer | PlaybookContainer;
 
 // ============================================
 // TRASH - удаленные элементы
@@ -162,8 +185,8 @@ export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContai
 export interface TrashItem {
   id: string;
   originalId: string;
-  type: 'note' | 'command' | 'link' | 'prompt';
-  item: NoteItem | CommandContainer | LinkContainer | PromptContainer;
+  type: 'note' | 'command' | 'link' | 'prompt' | 'playbook';
+  item: NoteItem | CommandContainer | LinkContainer | PromptContainer | PlaybookContainer;
   // Path info for restoration
   workspaceId: string;
   workspaceName: string;
@@ -216,6 +239,7 @@ export interface AppState {
   commands: CommandContainer[];
   links: LinkContainer[];
   prompts: PromptContainer[];
+  playbooks: PlaybookContainer[];
   activeItemId: string | null;
   
   // Trash
@@ -242,6 +266,7 @@ export interface DataFile {
   commands: CommandContainer[];
   links: LinkContainer[];
   prompts: PromptContainer[];
+  playbooks: PlaybookContainer[];
   exportedAt: string;
   version: string;
 }

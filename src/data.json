@@ -97,6 +97,16 @@
       "isDefault": false,
       "id": "5kln5fk5pmmdr6k94",
       "order": 1
+    },
+    {
+      "workspaceId": "ws_1llp",
+      "name": "Playbooks",
+      "icon": "📖",
+      "color": "#00BCD4",
+      "baseType": "playbooks",
+      "isDefault": true,
+      "id": "cat_playbooks_job",
+      "order": 6
     }
   ],
   "folders": [
@@ -180,6 +190,15 @@
       "id": "qg5595rq8mmdr71hl",
       "order": 1,
       "createdAt": "2026-03-05T17:42:39.945Z"
+    },
+    {
+      "id": "f_playbooks",
+      "categoryId": "cat_playbooks_job",
+      "parentId": null,
+      "name": "Services",
+      "order": 0,
+      "isExpanded": true,
+      "createdAt": "2026-05-13T00:00:00.000Z"
     }
   ],
   "notes": [
@@ -545,5 +564,211 @@
     }
   ],
   "exportedAt": "2026-03-07T13:18:27.641Z",
-  "version": "3.0"
+  "version": "3.0",
+  "playbooks": [
+    {
+      "id": "pb_git",
+      "folderId": "f_playbooks",
+      "title": "Git",
+      "description": "Version control system commands",
+      "subItems": [
+        {
+          "id": "pb_git_1",
+          "command": "git log --oneline --graph --all",
+          "description": "Beautiful branch graph",
+          "language": "bash",
+          "tags": [
+            "log",
+            "visual"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_git_2",
+          "command": "git stash pop",
+          "description": "Apply stashed changes",
+          "language": "bash",
+          "tags": [
+            "stash"
+          ],
+          "isFavorite": false
+        },
+        {
+          "id": "pb_git_3",
+          "command": "git reset --soft HEAD~1",
+          "description": "Undo commit keeping changes",
+          "language": "bash",
+          "tags": [
+            "undo",
+            "commit"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_git_4",
+          "command": "git cherry-pick <commit-hash>",
+          "description": "Apply specific commit to current branch",
+          "language": "bash",
+          "tags": [
+            "commit",
+            "merge"
+          ],
+          "isFavorite": false
+        },
+        {
+          "id": "pb_git_5",
+          "command": "git rebase -i HEAD~5",
+          "description": "Interactive rebase last 5 commits",
+          "language": "bash",
+          "tags": [
+            "rebase",
+            "history"
+          ],
+          "isFavorite": false
+        }
+      ],
+      "tags": [
+        "vcs",
+        "version-control"
+      ],
+      "order": 0,
+      "createdAt": "2026-05-13T00:00:00.000Z",
+      "updatedAt": "2026-05-13T00:00:00.000Z",
+      "type": "playbooks",
+      "isExpanded": true
+    },
+    {
+      "id": "pb_docker",
+      "folderId": "f_playbooks",
+      "title": "Docker",
+      "description": "Container management commands",
+      "subItems": [
+        {
+          "id": "pb_docker_1",
+          "command": "docker ps -a",
+          "description": "All containers including stopped",
+          "language": "bash",
+          "tags": [
+            "list",
+            "containers"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_docker_2",
+          "command": "docker system prune -a",
+          "description": "Clean all unused data",
+          "language": "bash",
+          "tags": [
+            "clean",
+            "maintenance"
+          ],
+          "isFavorite": false
+        },
+        {
+          "id": "pb_docker_3",
+          "command": "docker logs -f <container>",
+          "description": "Follow container logs",
+          "language": "bash",
+          "tags": [
+            "logs",
+            "debug"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_docker_4",
+          "command": "docker exec -it <container> /bin/bash",
+          "description": "Shell into running container",
+          "language": "bash",
+          "tags": [
+            "shell",
+            "debug"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_docker_5",
+          "command": "docker compose up -d --build",
+          "description": "Rebuild and start services in background",
+          "language": "bash",
+          "tags": [
+            "compose",
+            "deploy"
+          ],
+          "isFavorite": false
+        }
+      ],
+      "tags": [
+        "containers",
+        "devops"
+      ],
+      "order": 1,
+      "createdAt": "2026-05-13T00:00:00.000Z",
+      "updatedAt": "2026-05-13T00:00:00.000Z",
+      "type": "playbooks",
+      "isExpanded": true
+    },
+    {
+      "id": "pb_ssh",
+      "folderId": "f_playbooks",
+      "title": "SSH",
+      "description": "Secure shell commands",
+      "subItems": [
+        {
+          "id": "pb_ssh_1",
+          "command": "ssh-copy-id user@host",
+          "description": "Copy key to remote server",
+          "language": "bash",
+          "tags": [
+            "keys",
+            "auth"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_ssh_2",
+          "command": "ssh -L 8080:localhost:80 user@host",
+          "description": "Local port forwarding (tunnel)",
+          "language": "bash",
+          "tags": [
+            "tunnel",
+            "forward"
+          ],
+          "isFavorite": true
+        },
+        {
+          "id": "pb_ssh_3",
+          "command": "ssh -D 1080 user@host",
+          "description": "SOCKS proxy via SSH",
+          "language": "bash",
+          "tags": [
+            "proxy",
+            "socks"
+          ],
+          "isFavorite": false
+        },
+        {
+          "id": "pb_ssh_4",
+          "command": "ssh-keygen -t ed25519 -C \"email\"",
+          "description": "Generate modern SSH key",
+          "language": "bash",
+          "tags": [
+            "keys",
+            "generate"
+          ],
+          "isFavorite": false
+        }
+      ],
+      "tags": [
+        "remote",
+        "security"
+      ],
+      "order": 2,
+      "createdAt": "2026-05-13T00:00:00.000Z",
+      "updatedAt": "2026-05-13T00:00:00.000Z",
+      "type": "playbooks",
+      "isExpanded": true
+    }
+  ]
 }

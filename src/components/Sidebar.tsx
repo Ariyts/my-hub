@@ -9,6 +9,7 @@ const BASE_TYPE_OPTIONS: { value: BaseDataType; label: string }[] = [
   { value: 'commands', label: 'Commands (code snippets)' },
   { value: 'links', label: 'Links (URLs)' },
   { value: 'prompts', label: 'Prompts (AI templates)' },
+  { value: 'playbooks', label: 'Playbooks (service commands)' },
 ];
 
 const EMOJI_OPTIONS = ['📝', '⌘', '🔗', '💬', '📁', '🏷️', '📌', '🔖', '📋', '📊', '🗂️', '📚', '💡', '🎯', '⭐', '🚀', '💻', '🎨', '🔧', '⚡'];
@@ -30,6 +31,7 @@ export function Sidebar() {
     commands,
     links,
     prompts,
+    playbooks,
     trash,
     setShowTrash,
     sidebarCompact,
@@ -103,6 +105,8 @@ export function Sidebar() {
         return links.filter(l => categoryFolderIds.includes(l.folderId)).length;
       case 'prompts': 
         return prompts.filter(p => categoryFolderIds.includes(p.folderId)).length;
+      case 'playbooks': 
+        return playbooks.filter(pb => categoryFolderIds.includes(pb.folderId)).length;
       default: 
         return 0;
     }

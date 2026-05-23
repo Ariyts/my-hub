@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
   AppState, Workspace, Category, Folder, NoteItem,
-  CommandContainer, LinkContainer, PromptContainer,
-  CommandItem, LinkItem, PromptItem, Settings, AnyItem, TrashItem
+  CommandContainer, LinkContainer, PromptContainer, PlaybookContainer,
+  CommandItem, LinkItem, PromptItem, PlaybookItem, Settings, AnyItem, TrashItem
 } from './types';
 import {
   initializeGitHubSync,
@@ -89,6 +89,14 @@ interface StoreActions {
   updatePromptItem: (containerId: string, itemId: string, updates: Partial<PromptItem>) => void;
   deletePromptItem: (containerId: string, itemId: string) => void;
 
+  // Playbook container actions
+  addPlaybookContainer: (container: Omit<PlaybookContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  updatePlaybookContainer: (id: string, updates: Partial<PlaybookContainer>) => void;
+  deletePlaybookContainer: (id: string) => void;
+  addPlaybookItem: (containerId: string, item: Omit<PlaybookItem, 'id'>) => void;
+  updatePlaybookItem: (containerId: string, itemId: string, updates: Partial<PlaybookItem>) => void;
+  deletePlaybookItem: (containerId: string, itemId: string) => void;
+
   // Trash actions
   setShowTrash: (show: boolean) => void;
   restoreFromTrash: (trashId: string) => void;
@@ -143,6 +151,7 @@ export const useStore = create<AppState & StoreActions>()(
       commands: initialData.commands || [],
       links: initialData.links || [],
       prompts: initialData.prompts || [],
+      playbooks: initialData.playbooks || [],
       activeItemId: null,
       
       // Trash
@@ -180,6 +189,7 @@ export const useStore = create<AppState & StoreActions>()(
           { id: genId(), workspaceId: newWorkspace.id, name: 'Commands', icon: '⌘', color: '#2196F3', baseType: 'commands', order: 1, isDefault: true },
           { id: genId(), workspaceId: newWorkspace.id, name: 'Links', icon: '🔗', color: '#FF9800', baseType: 'links', order: 2, isDefault: true },
           { id: genId(), workspaceId: newWorkspace.id, name: 'Prompts', icon: '💬', color: '#9C27B0', baseType: 'prompts', order: 3, isDefault: true },
+          { id: genId(), workspaceId: newWorkspace.id, name: 'Playbooks', icon: '📖', color: '#00BCD4', baseType: 'playbooks', order: 4, isDefault: true },
         ];
         
         set((s) => ({ 
@@ -210,6 +220,7 @@ export const useStore = create<AppState & StoreActions>()(
           commands: s.commands.filter(c => !categoryFolderIds.includes(c.folderId)),
           links: s.links.filter(l => !categoryFolderIds.includes(l.folderId)),
           prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
+          playbooks: s.playbooks.filter(pb => !categoryFolderIds.includes(pb.folderId)),
           activeWorkspaceId: s.activeWorkspaceId === id ? (s.workspaces[0]?.id || null) : s.activeWorkspaceId,
           activeCategoryId: null,
           activeFolderId: null,
@@ -246,6 +257,7 @@ export const useStore = create<AppState & StoreActions>()(
           commands: s.commands.filter(c => !categoryFolderIds.includes(c.folderId)),
           links: s.links.filter(l => !categoryFolderIds.includes(l.folderId)),
           prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
+          playbooks: s.playbooks.filter(pb => !categoryFolderIds.includes(pb.folderId)),
           activeCategoryId: s.activeCategoryId === id ? null : s.activeCategoryId,
         };
       }),
@@ -297,6 +309,7 @@ export const useStore = create<AppState & StoreActions>()(
           commands: s.commands.filter(c => !folderIds.includes(c.folderId)),
           links: s.links.filter(l => !folderIds.includes(l.folderId)),
           prompts: s.prompts.filter(p => !folderIds.includes(p.folderId)),
+          playbooks: s.playbooks.filter(pb => !folderIds.includes(pb.folderId)),
           activeFolderId: s.activeFolderId === id ? null : s.activeFolderId,
         };
       }),
@@ -695,6 +708,80 @@ export const useStore = create<AppState & StoreActions>()(
       })),
 
       // ============================================
+      // PLAYBOOK CONTAINER ACTIONS
+      // ============================================
+      addPlaybookContainer: (container) => {
+        const state = get();
+        const maxOrder = Math.max(0, ...state.playbooks.filter(pb => pb.folderId === container.folderId).map(pb => pb.order || 0));
+        const newC: PlaybookContainer = { 
+          ...container, 
+          id: genId(), 
+          order: maxOrder + 1,
+          createdAt: new Date().toISOString(), 
+          updatedAt: new Date().toISOString() 
+        };
+        set((s) => ({ playbooks: [...s.playbooks, newC], activeItemId: newC.id }));
+      },
+      
+      updatePlaybookContainer: (id, updates) => set((s) => ({
+        playbooks: s.playbooks.map(pb => pb.id === id ? { ...pb, ...updates, updatedAt: new Date().toISOString() } : pb)
+      })),
+      
+      deletePlaybookContainer: (id) => set((s) => {
+        const playbook = s.playbooks.find(pb => pb.id === id);
+        if (!playbook) return s;
+        
+        const folder = s.folders.find(f => f.id === playbook.folderId);
+        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
+        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
+        
+        const trashItem: TrashItem = {
+          id: genId(),
+          originalId: playbook.id,
+          type: 'playbook',
+          item: playbook,
+          workspaceId: workspace?.id || '',
+          workspaceName: workspace?.name || 'Unknown',
+          categoryId: category?.id || '',
+          categoryName: category?.name || 'Unknown',
+          folderId: folder?.id || '',
+          folderName: folder?.name || 'Unknown',
+          deletedAt: new Date().toISOString(),
+        };
+        
+        return {
+          playbooks: s.playbooks.filter(pb => pb.id !== id),
+          trash: [...s.trash, trashItem],
+          activeItemId: s.activeItemId === id ? null : s.activeItemId,
+        };
+      }),
+      
+      addPlaybookItem: (containerId, item) => {
+        const newItem: PlaybookItem = { ...item, id: genId() };
+        set((s) => ({
+          playbooks: s.playbooks.map(pb => pb.id === containerId ? { 
+            ...pb, 
+            subItems: [...pb.subItems, newItem], 
+            updatedAt: new Date().toISOString() 
+          } : pb)
+        }));
+      },
+      
+      updatePlaybookItem: (containerId, itemId, updates) => set((s) => ({
+        playbooks: s.playbooks.map(pb => pb.id === containerId ? {
+          ...pb, updatedAt: new Date().toISOString(),
+          subItems: pb.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
+        } : pb)
+      })),
+      
+      deletePlaybookItem: (containerId, itemId) => set((s) => ({
+        playbooks: s.playbooks.map(pb => pb.id === containerId ? {
+          ...pb, 
+          subItems: pb.subItems.filter(i => i.id !== itemId)
+        } : pb)
+      })),
+
+      // ============================================
       // TRASH ACTIONS
       // ============================================
       setShowTrash: (show) => set({ showTrash: show }),
@@ -719,7 +806,8 @@ export const useStore = create<AppState & StoreActions>()(
               color: '#6366f1',
               baseType: trashItem.type === 'note' ? 'notes' : 
                         trashItem.type === 'command' ? 'commands' : 
-                        trashItem.type === 'link' ? 'links' : 'prompts',
+                        trashItem.type === 'link' ? 'links' : 
+                        trashItem.type === 'playbook' ? 'playbooks' : 'prompts',
               order: 999,
               isDefault: false,
             };
@@ -759,6 +847,9 @@ export const useStore = create<AppState & StoreActions>()(
           case 'prompt':
             newState.prompts = [...s.prompts, restoredItem as PromptContainer];
             break;
+          case 'playbook':
+            newState.playbooks = [...s.playbooks, restoredItem as PlaybookContainer];
+            break;
         }
         
         return newState;
@@ -793,6 +884,7 @@ export const useStore = create<AppState & StoreActions>()(
           commands: state.commands,
           links: state.links,
           prompts: state.prompts,
+          playbooks: state.playbooks,
           exportedAt: new Date().toISOString(),
           version: '2.0',
         };
@@ -816,6 +908,7 @@ export const useStore = create<AppState & StoreActions>()(
             commands: data.commands || [],
             links: data.links || [],
             prompts: data.prompts || [],
+            playbooks: data.playbooks || [],
             activeWorkspaceId: data.workspaces?.[0]?.id || null,
             activeCategoryId: null,
             activeFolderId: null,
@@ -834,6 +927,7 @@ export const useStore = create<AppState & StoreActions>()(
         commands: [],
         links: [],
         prompts: [],
+        playbooks: [],
         trash: [],
         activeWorkspaceId: null,
         activeCategoryId: null,
@@ -854,6 +948,7 @@ export const useStore = create<AppState & StoreActions>()(
           case 'commands': return state.commands.find(c => c.id === activeItemId) || null;
           case 'links': return state.links.find(l => l.id === activeItemId) || null;
           case 'prompts': return state.prompts.find(p => p.id === activeItemId) || null;
+          case 'playbooks': return state.playbooks.find(pb => pb.id === activeItemId) || null;
           default: return null;
         }
       },
@@ -923,6 +1018,7 @@ export const useStore = create<AppState & StoreActions>()(
           commands: state.commands,
           links: state.links,
           prompts: state.prompts,
+          playbooks: state.playbooks,
           exportedAt: new Date().toISOString(),
           version: '2.0',
         };
@@ -968,6 +1064,7 @@ export const useStore = create<AppState & StoreActions>()(
         commands: state.commands,
         links: state.links,
         prompts: state.prompts,
+        playbooks: state.playbooks,
         // UI preferences
         settings: state.settings,
         isDarkTheme: state.isDarkTheme,
@@ -988,6 +1085,7 @@ export const useStore = create<AppState & StoreActions>()(
             state.commands = initialData.commands || [];
             state.links = initialData.links || [];
             state.prompts = initialData.prompts || [];
+            state.playbooks = initialData.playbooks || [];
             state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
           } else {
             console.log('[Store] Loaded data from localStorage, checking for new embedded data...');

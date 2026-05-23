@@ -31,7 +31,7 @@ export function SettingsModal() {
     exportData, importData, clearAllData,
     syncStatus, syncMessage, canSave, dataExportedAt,
     connectGitHub, syncToCloud, disconnectGitHub,
-    workspaces, categories, folders, notes, commands, links, prompts
+    workspaces, categories, folders, notes, commands, links, prompts, playbooks
   } = useStore();
   
   const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('sync');
@@ -64,6 +64,7 @@ export function SettingsModal() {
         commands,
         links,
         prompts,
+        playbooks,
         exportedAt: new Date().toISOString(),
         version: '3.0',
       });
@@ -84,6 +85,7 @@ export function SettingsModal() {
         commands,
         links,
         prompts,
+        playbooks,
         exportedAt: new Date().toISOString(),
         version: '3.0',
       });

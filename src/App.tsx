@@ -6,9 +6,10 @@ import { NoteEditor } from './components/NoteEditor';
 import { CommandsView } from './components/CommandsView';
 import { LinksView } from './components/LinksView';
 import { PromptsView } from './components/PromptsView';
+import { PlaybookView } from './components/PlaybookView';
 import { SettingsModal } from './components/SettingsModal';
 import { TrashModal } from './components/TrashModal';
-import type { NoteItem, CommandContainer, PromptContainer } from './types';
+import type { NoteItem, CommandContainer, PromptContainer, PlaybookContainer } from './types';
 import { FileText, Plus } from 'lucide-react';
 
 function MainArea() {
@@ -18,6 +19,7 @@ function MainArea() {
     commands,
     links,
     prompts,
+    playbooks,
     activeCategoryId, 
     categories,
     isDarkTheme
@@ -50,6 +52,10 @@ function MainArea() {
       case 'prompts': {
         const prompt = prompts.find(p => p.id === activeItemId);
         return prompt ? { id: prompt.id, title: prompt.title, data: prompt } : null;
+      }
+      case 'playbooks': {
+        const playbook = playbooks.find(pb => pb.id === activeItemId);
+        return playbook ? { id: playbook.id, title: playbook.title, data: playbook } : null;
       }
       default:
         return null;
@@ -124,6 +130,23 @@ function MainArea() {
         <div className="text-center">
           <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No prompt file selected</p>
           <p className="text-sm" style={{ color: mutedColor }}>Select a file from the list or create a new one</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (baseType === 'playbooks') {
+    if (activeFile?.data) {
+      return <PlaybookView container={activeFile.data as PlaybookContainer} />;
+    }
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4" style={{ background: bg }}>
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: isDarkTheme ? '#1e293b' : '#f1f5f9' }}>
+          <FileText size={36} style={{ color: '#00BCD4', opacity: 0.6 }} />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-1" style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}>No playbook selected</p>
+          <p className="text-sm" style={{ color: mutedColor }}>Select a service from the list or create a new one</p>
         </div>
       </div>
     );

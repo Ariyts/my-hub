@@ -1,5 +1,5 @@
 import { useStore } from '../store';
-import { Trash2, RotateCcw, X, FileText, Code, Link, MessageSquare } from 'lucide-react';
+import { Trash2, RotateCcw, X, FileText, Code, Link, MessageSquare, BookOpen } from 'lucide-react';
 import type { TrashItem } from '../types';
 
 const TYPE_ICONS = {
@@ -7,6 +7,7 @@ const TYPE_ICONS = {
   command: Code,
   link: Link,
   prompt: MessageSquare,
+  playbook: BookOpen,
 };
 
 const TYPE_COLORS = {
@@ -14,6 +15,7 @@ const TYPE_COLORS = {
   command: '#2196F3',
   link: '#FF9800',
   prompt: '#9C27B0',
+  playbook: '#00BCD4',
 };
 
 export function TrashModal() {

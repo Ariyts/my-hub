@@ -273,6 +273,7 @@ export function getLocalPreview(data: DataFile): SyncPreview {
   processItems(data.commands);
   processItems(data.links);
   processItems(data.prompts);
+  processItems(data.playbooks);
   
   // Remove duplicates (new takes priority over update)
   const createSet = new Set(filesToCreate);

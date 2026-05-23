@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import type { Folder, BaseDataType } from '../types';
 import {
   FolderOpen, Plus, Search, ChevronRight,
-  ChevronDown, MoreVertical, FileText, Terminal, Link2, MessageSquare, Star,
+  ChevronDown, MoreVertical, FileText, Terminal, Link2, MessageSquare, BookOpen, Star,
   Edit2, Trash2, GripVertical
 } from 'lucide-react';
 
@@ -12,6 +12,7 @@ const BASE_TYPE_ICONS: Record<BaseDataType, React.ComponentType<{ size?: number;
   commands: Terminal,
   links: Link2,
   prompts: MessageSquare,
+  playbooks: BookOpen,
 };
 
 interface FolderItemProps {
@@ -28,7 +29,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
     activeCategoryId, 
     categories,
     folders,
-    notes, commands, links, prompts, 
+    notes, commands, links, prompts, playbooks,
     toggleFolderExpanded, 
     updateFolder, 
     deleteFolder, 
@@ -40,7 +41,9 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
     updateLinkContainer, 
     deleteLinkContainer,
     updatePromptContainer, 
-    deletePromptContainer
+    deletePromptContainer,
+    updatePlaybookContainer,
+    deletePlaybookContainer
   } = useStore();
   
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: 'folder' | 'file'; itemId?: string } | null>(null);
@@ -66,6 +69,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
       case 'commands': return sortByOrder(commands.filter(c => c.folderId === folder.id));
       case 'links': return sortByOrder(links.filter(l => l.folderId === folder.id));
       case 'prompts': return sortByOrder(prompts.filter(p => p.folderId === folder.id));
+      case 'playbooks': return sortByOrder(playbooks.filter(pb => pb.folderId === folder.id));
     }
   };
 
@@ -90,6 +94,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
         case 'commands': updateCommandContainer(itemId, { title: newName.trim() }); break;
         case 'links': updateLinkContainer(itemId, { title: newName.trim() }); break;
         case 'prompts': updatePromptContainer(itemId, { title: newName.trim() }); break;
+        case 'playbooks': updatePlaybookContainer(itemId, { title: newName.trim() }); break;
       }
     }
     setRenaming(null);
@@ -102,6 +107,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
       case 'commands': deleteCommandContainer(itemId); break;
       case 'links': deleteLinkContainer(itemId); break;
       case 'prompts': deletePromptContainer(itemId); break;
+      case 'playbooks': deletePlaybookContainer(itemId); break;
     }
     setContextMenu(null);
   };
@@ -136,6 +142,7 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
           case 'commands': updateCommandContainer(data.id, { folderId: targetFolderId }); break;
           case 'links': updateLinkContainer(data.id, { folderId: targetFolderId }); break;
           case 'prompts': updatePromptContainer(data.id, { folderId: targetFolderId }); break;
+          case 'playbooks': updatePlaybookContainer(data.id, { folderId: targetFolderId }); break;
         }
       }
     } catch (err) {
@@ -372,6 +379,7 @@ export function FolderPanel() {
     addCommandContainer, 
     addLinkContainer,
     addPromptContainer, 
+    addPlaybookContainer,
     isDarkTheme,
   } = useStore();
 
@@ -414,6 +422,9 @@ export function FolderPanel() {
         break;
       case 'prompts':
         addPromptContainer({ folderId, title: 'New Prompts', subItems: [], tags: [], category: 'General', type: 'prompts', isExpanded: true });
+        break;
+      case 'playbooks':
+        addPlaybookContainer({ folderId, title: 'New Service', description: '', subItems: [], tags: [], type: 'playbooks', isExpanded: true });
         break;
     }
   };

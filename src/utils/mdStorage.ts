@@ -573,6 +573,44 @@ export function dataToFiles(data: DataFile): FileStructure[] {
             files.push({ path: filePath, content });
           }
         }
+        
+        // Process playbooks (service commands)
+        if (category.baseType === 'playbooks') {
+          const playbooks = data.playbooks.filter(pb => pb.folderId === folder.id);
+          for (const playbook of playbooks) {
+            const frontmatter = createFrontmatter({
+              id: playbook.id,
+              title: playbook.title,
+              description: playbook.description || '',
+              tags: playbook.tags,
+              order: playbook.order,
+              createdAt: playbook.createdAt,
+              updatedAt: playbook.updatedAt,
+            });
+            
+            // Format playbooks as markdown code blocks (similar to commands)
+            let body = '';
+            if (playbook.description) {
+              body += `${playbook.description}\n\n`;
+            }
+            for (const item of playbook.subItems) {
+              body += `### ${item.id}\n`;
+              body += `\`\`\`${item.language}\n${item.command}\n\`\`\`\n`;
+              if (item.description) {
+                body += `\n_${item.description}_\n`;
+              }
+              if (item.tags && item.tags.length > 0) {
+                body += `\n**Tags:** ${item.tags.join(', ')}\n`;
+              }
+              body += '\n';
+            }
+            
+            const content = `${frontmatter}\n${body}`;
+            const filePath = getUniquePath(`${basePath}/${sanitizeFilename(playbook.title)}`, 'md');
+            
+            files.push({ path: filePath, content });
+          }
+        }
       }
     }
   }
