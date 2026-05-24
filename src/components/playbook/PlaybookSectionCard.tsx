@@ -4,6 +4,7 @@ import { cn } from '../../utils/cn';
 import type { PlaybookSection, PlaybookItem, PlaybookVariable, ChecklistStatus } from '../../types';
 import { SECTION_COLORS, getPhaseTag } from './constants';
 import { CommandCard, type ViewMode } from './CommandCard';
+import { CommandListItem } from './CommandListItem';
 
 interface Props {
   section: PlaybookSection;
@@ -11,6 +12,7 @@ interface Props {
   containerId: string;
   mode: ViewMode;
   variables: PlaybookVariable[];
+  layout: 'grid' | 'list';
   getChecklistStatus: (itemId: string) => ChecklistStatus;
   onChecklistCycle: (itemId: string) => void;
   onToggleCollapse: () => void;
@@ -21,7 +23,7 @@ interface Props {
 }
 
 export function PlaybookSectionCard({
-  section, items, containerId, mode, variables,
+  section, items, containerId, mode, variables, layout,
   getChecklistStatus, onChecklistCycle,
   onToggleCollapse, onRenameSection, onDeleteSection, onColorSection, onAddItem,
 }: Props) {
@@ -230,19 +232,42 @@ export function PlaybookSectionCard({
       {!isCollapsed && (
         <div className="border-t border-slate-800/80 bg-slate-950/40">
           {items.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2.5 p-3">
-              {items.map((item) => (
-                <CommandCard
-                  key={item.id}
-                  item={item}
-                  containerId={containerId}
-                  mode={mode}
-                  variables={variables}
-                  checklistStatus={getChecklistStatus(item.id)}
-                  onChecklistCycle={() => onChecklistCycle(item.id)}
-                />
-              ))}
-            </div>
+            layout === 'list' ? (
+              /* LIST MODE — compact rows */
+              <div className="divide-y divide-slate-800/40">
+                {items.map((item) => (
+                  <CommandListItem
+                    key={item.id}
+                    item={item}
+                    containerId={containerId}
+                    mode={mode}
+                    variables={variables}
+                    checklistStatus={getChecklistStatus(item.id)}
+                    onChecklistCycle={() => onChecklistCycle(item.id)}
+                    onEdit={() => {
+                      /* Switch to grid mode and the user can edit via CommandCard */
+                      // This is the simplest approach — list mode is for quick scanning,
+                      // grid mode is for detailed editing
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              /* GRID MODE — current card layout */
+              <div className="grid grid-cols-1 gap-2.5 p-3">
+                {items.map((item) => (
+                  <CommandCard
+                    key={item.id}
+                    item={item}
+                    containerId={containerId}
+                    mode={mode}
+                    variables={variables}
+                    checklistStatus={getChecklistStatus(item.id)}
+                    onChecklistCycle={() => onChecklistCycle(item.id)}
+                  />
+                ))}
+              </div>
+            )
           ) : (
             <button
               onClick={onAddItem}

@@ -1,4 +1,4 @@
-import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, ChevronUp, X } from 'lucide-react';
+import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, ChevronUp, X, LayoutGrid, List } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { PlaybookContainer, PlaybookLanguage, PlaybookVariable } from '../../types';
 import { LANG_LABELS, PLAYBOOK_LANGUAGES, getServiceIcon } from './constants';
@@ -125,6 +125,8 @@ function StatPill({ label, value, color }: { label: string; value: number; color
 
 export type StatusFilter = 'all' | 'pending' | 'done' | 'skipped';
 
+export type ViewLayout = 'grid' | 'list';
+
 interface FiltersProps {
   search: string;
   onSearchChange: (v: string) => void;
@@ -136,11 +138,14 @@ interface FiltersProps {
   statusFilter: StatusFilter;
   onStatusFilterChange: (s: StatusFilter) => void;
   checklistCounts: { total: number; done: number; skipped: number; pending: number };
+  layout: ViewLayout;
+  onLayoutChange: (v: ViewLayout) => void;
 }
 
 export function PlaybookFilters({
   search, onSearchChange, langFilter, onLangFilterChange, resultCount,
   mode, onModeChange, statusFilter, onStatusFilterChange, checklistCounts,
+  layout, onLayoutChange,
 }: FiltersProps) {
   return (
     <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
@@ -193,6 +198,34 @@ export function PlaybookFilters({
               )}
             >
               ✅ Engagement
+            </button>
+          </div>
+
+          {/* Layout toggle: Grid / List */}
+          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-slate-900 border border-slate-800 flex-shrink-0">
+            <button
+              onClick={() => onLayoutChange('grid')}
+              className={cn(
+                'p-1.5 rounded-md transition-all',
+                layout === 'grid'
+                  ? 'bg-slate-800 text-cyan-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-200'
+              )}
+              title="Card view"
+            >
+              <LayoutGrid size={13} />
+            </button>
+            <button
+              onClick={() => onLayoutChange('list')}
+              className={cn(
+                'p-1.5 rounded-md transition-all',
+                layout === 'list'
+                  ? 'bg-slate-800 text-cyan-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-200'
+              )}
+              title="List view (compact, ⌘/Ctrl+L)"
+            >
+              <List size={13} />
             </button>
           </div>
         </div>

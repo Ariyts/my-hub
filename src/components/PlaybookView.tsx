@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../store';
 import type { PlaybookContainer, PlaybookItem, PlaybookLanguage } from '../types';
 import { PlaybookHero, PlaybookFilters, type StatusFilter } from './playbook/PlaybookHero';
@@ -11,6 +11,8 @@ import { stripMdMetadata, cleanDescription } from './playbook/utils';
 import { useChecklist } from '../hooks/useChecklist';
 import { HeroCollapsed } from './HeroCollapsed';
 import { useHeroState } from '../hooks/useHeroState';
+import { useViewLayout } from '../hooks/useViewLayout';
+import { CommandListItem } from './playbook/CommandListItem';
 
 interface Props {
   container: PlaybookContainer;
@@ -26,11 +28,26 @@ export function PlaybookView({ container }: Props) {
 
   const [search, setSearch] = useState('');
   const { heroExpanded, toggleHero } = useHeroState();
+  const [layout, setLayout] = useViewLayout();
   const [langFilter, setLangFilter] = useState<FilterMode>('all');
   const [mode, setMode] = useState<ViewMode>('reference');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [addingSection, setAddingSection] = useState(false);
   const [addingToSection, setAddingToSection] = useState<string | undefined>(undefined);
+
+  // Keyboard shortcut: Cmd/Ctrl+L to toggle layout
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        setLayout(layout === 'grid' ? 'list' : 'grid');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [layout, setLayout]);
 
   const variables = container.variables || [];
 
@@ -192,6 +209,8 @@ export function PlaybookView({ container }: Props) {
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
         checklistCounts={checklist.counts}
+        layout={layout}
+        onLayoutChange={setLayout}
       />
 
       {/* Engagement mode banner */}
@@ -270,6 +289,7 @@ export function PlaybookView({ container }: Props) {
                 containerId={container.id}
                 mode={mode}
                 variables={variables}
+                layout={layout}
                 getChecklistStatus={(id) => checklist.status(id)}
                 onChecklistCycle={(id) => checklist.cycle(id)}
                 onToggleCollapse={() => handleToggleCollapse(section.id)}
@@ -292,26 +312,46 @@ export function PlaybookView({ container }: Props) {
 
           {/* Uncategorized items (no sectionId) */}
           {container.subItems.filter((i) => !i.sectionId).length > 0 && (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-4">
-              <h3 className="text-sm font-semibold text-slate-300 mb-3">Uncategorized</h3>
-              <div className="grid grid-cols-1 gap-2.5">
-                {container.subItems
-                  .filter((i) => !i.sectionId)
-                  .filter(filterItem)
-                  .map((item) => (
-                    <CommandCard
-                      key={item.id}
-                      item={item}
-                      containerId={container.id}
-                      mode={mode}
-                      variables={variables}
-                      checklistStatus={checklist.status(item.id)}
-                      onChecklistCycle={() => checklist.cycle(item.id)}
-                    />
-                  ))}
-              </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/30 overflow-hidden">
+              <h3 className="text-sm font-semibold text-slate-300 px-4 pt-4 pb-2">Uncategorized</h3>
+              {layout === 'list' ? (
+                <div className="divide-y divide-slate-800/40">
+                  {container.subItems
+                    .filter((i) => !i.sectionId)
+                    .filter(filterItem)
+                    .map((item) => (
+                      <CommandListItem
+                        key={item.id}
+                        item={item}
+                        containerId={container.id}
+                        mode={mode}
+                        variables={variables}
+                        checklistStatus={checklist.status(item.id)}
+                        onChecklistCycle={() => checklist.cycle(item.id)}
+                        onEdit={() => {}}
+                      />
+                    ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2.5 p-4 pt-2">
+                  {container.subItems
+                    .filter((i) => !i.sectionId)
+                    .filter(filterItem)
+                    .map((item) => (
+                      <CommandCard
+                        key={item.id}
+                        item={item}
+                        containerId={container.id}
+                        mode={mode}
+                        variables={variables}
+                        checklistStatus={checklist.status(item.id)}
+                        onChecklistCycle={() => checklist.cycle(item.id)}
+                      />
+                    ))}
+                </div>
+              )}
               {addingToSection === '__uncategorized__' && (
-                <div className="mt-3">
+                <div className={layout === 'list' ? '' : 'mt-3 px-4 pb-4'}>
                   <InlineAddCommand
                     onAdd={handleAddItem}
                     onClose={() => setAddingToSection(undefined)}
