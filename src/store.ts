@@ -4,7 +4,7 @@ import type {
   AppState, Workspace, Category, Folder, NoteItem,
   CommandContainer, LinkContainer, PromptContainer, PlaybookContainer,
   CommandItem, LinkItem, PromptItem, PlaybookItem,
-  PromptSection, PlaybookSection,
+  PromptSection, PlaybookSection, PlaybookVariable,
   Settings, AnyItem, TrashItem
 } from './types';
 import {
@@ -100,7 +100,7 @@ interface StoreActions {
   addPlaybookContainer: (container: Omit<PlaybookContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
   updatePlaybookContainer: (id: string, updates: Partial<PlaybookContainer>) => void;
   deletePlaybookContainer: (id: string) => void;
-  addPlaybookItem: (containerId: string, item: Omit<PlaybookItem, 'id'>) => void;
+  addPlaybookItem: (containerId: string, item: Omit<PlaybookItem, 'id' | 'order'> & { order?: number }) => void;
   updatePlaybookItem: (containerId: string, itemId: string, updates: Partial<PlaybookItem>) => void;
   deletePlaybookItem: (containerId: string, itemId: string) => void;
   // Playbook section actions
@@ -108,6 +108,11 @@ interface StoreActions {
   updatePlaybookSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; color: string}>) => void;
   deletePlaybookSection: (containerId: string, sectionId: string) => void;
   reorderPlaybookSections: (containerId: string, sectionIds: string[]) => void;
+
+  // Playbook variable actions
+  addPlaybookVariable: (containerId: string, name: string, value: string, description?: string) => void;
+  updatePlaybookVariable: (containerId: string, variableId: string, updates: Partial<PlaybookVariable>) => void;
+  deletePlaybookVariable: (containerId: string, variableId: string) => void;
 
   // Trash actions
   setShowTrash: (show: boolean) => void;
@@ -842,14 +847,18 @@ export const useStore = create<AppState & StoreActions>()(
       }),
       
       addPlaybookItem: (containerId, item) => {
-        const newItem: PlaybookItem = { ...item, id: genId() };
-        set((s) => ({
-          playbooks: s.playbooks.map(pb => pb.id === containerId ? { 
-            ...pb, 
-            subItems: [...pb.subItems, newItem], 
-            updatedAt: new Date().toISOString() 
-          } : pb)
-        }));
+        set((s) => {
+          const container = s.playbooks.find(pb => pb.id === containerId);
+          const maxOrder = container ? Math.max(0, ...container.subItems.map(i => i.order || 0)) : 0;
+          const newItem: PlaybookItem = { ...item, id: genId(), order: item.order ?? maxOrder + 1 };
+          return {
+            playbooks: s.playbooks.map(pb => pb.id === containerId ? { 
+              ...pb, 
+              subItems: [...pb.subItems, newItem], 
+              updatedAt: new Date().toISOString() 
+            } : pb)
+          };
+        });
       },
       
       updatePlaybookItem: (containerId, itemId, updates) => set((s) => ({
@@ -934,6 +943,48 @@ export const useStore = create<AppState & StoreActions>()(
               ...sec,
               order: sectionIds.indexOf(sec.id),
             })).sort((a, b) => a.order - b.order),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+
+      // ============================================
+      // PLAYBOOK VARIABLE ACTIONS
+      // ============================================
+      addPlaybookVariable: (containerId, name, value, description) => {
+        const varId = genId();
+        set((s) => ({
+          playbooks: s.playbooks.map(pb => {
+            if (pb.id !== containerId) return pb;
+            const variables = pb.variables || [];
+            return {
+              ...pb,
+              variables: [...variables, { id: varId, name, value, description }],
+              updatedAt: new Date().toISOString(),
+            };
+          })
+        }));
+      },
+
+      updatePlaybookVariable: (containerId, variableId, updates) => set((s) => ({
+        playbooks: s.playbooks.map(pb => {
+          if (pb.id !== containerId) return pb;
+          return {
+            ...pb,
+            variables: (pb.variables || []).map(v =>
+              v.id === variableId ? { ...v, ...updates } : v
+            ),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      })),
+
+      deletePlaybookVariable: (containerId, variableId) => set((s) => ({
+        playbooks: s.playbooks.map(pb => {
+          if (pb.id !== containerId) return pb;
+          return {
+            ...pb,
+            variables: (pb.variables || []).filter(v => v.id !== variableId),
             updatedAt: new Date().toISOString(),
           };
         })

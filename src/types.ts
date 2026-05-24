@@ -165,14 +165,29 @@ export interface PromptContainer {
   isExpanded?: boolean;
 }
 
+export type PlaybookLanguage =
+  | 'bash' | 'zsh' | 'powershell' | 'cmd'
+  | 'python' | 'javascript' | 'sql' | 'yaml' | 'nginx';
+
+export type ChecklistStatus = 'pending' | 'done' | 'skipped';
+
+export interface PlaybookVariable {
+  id: string;
+  name: string;        // e.g. "TARGET" (uppercase recommended)
+  value: string;       // e.g. "10.10.10.5"
+  description?: string;
+  color?: string;      // accent color for highlighting in code
+}
+
 export interface PlaybookItem {
   id: string;
   command: string;
   description: string;
-  language: 'bash' | 'powershell' | 'cmd' | 'zsh' | 'python' | 'javascript' | 'sql' | 'yaml' | 'nginx';
+  language: PlaybookLanguage;
   tags: string[];
   isFavorite: boolean;
   sectionId?: string; // ID секции, к которой принадлежит команда
+  order: number;
 }
 
 // Секция плейбука (категория внутри файла)
@@ -191,6 +206,7 @@ export interface PlaybookContainer {
   description?: string;
   subItems: PlaybookItem[];
   sections?: PlaybookSection[]; // Секции для группировки команд
+  variables?: PlaybookVariable[]; // Context variables for engagement mode
   tags: string[];
   order: number;
   createdAt: string;
