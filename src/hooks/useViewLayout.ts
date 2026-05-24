@@ -12,7 +12,7 @@ export function useViewLayout(): [ViewLayout, (v: ViewLayout) => void] {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === 'grid' || stored === 'list') return stored;
     } catch { /* ignore */ }
-    return 'grid'; // default = текущий карточный вид
+    return 'list'; // default = компактный list view
   });
 
   useEffect(() => {
