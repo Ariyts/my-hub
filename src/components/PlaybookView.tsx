@@ -13,6 +13,7 @@ import { HeroCollapsed } from './HeroCollapsed';
 import { useHeroState } from '../hooks/useHeroState';
 import { useViewLayout } from '../hooks/useViewLayout';
 import { CommandListItem } from './playbook/CommandListItem';
+import { ImportExportModal } from './ImportExportModal';
 
 interface Props {
   container: PlaybookContainer;
@@ -34,6 +35,7 @@ export function PlaybookView({ container }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [addingSection, setAddingSection] = useState(false);
   const [addingToSection, setAddingToSection] = useState<string | undefined>(undefined);
+  const [showImportExport, setShowImportExport] = useState(false);
 
   // Keyboard shortcut: Cmd/Ctrl+L to toggle layout
   useEffect(() => {
@@ -184,6 +186,7 @@ export function PlaybookView({ container }: Props) {
           onExpandAll={handleExpandAll}
           onCollapseAll={handleCollapseAll}
           onCollapseHero={toggleHero}
+          onImportExport={() => setShowImportExport(true)}
         />
       ) : (
         <HeroCollapsed
@@ -194,6 +197,7 @@ export function PlaybookView({ container }: Props) {
           onExpand={toggleHero}
           onAddSection={() => setAddingSection(true)}
           onAddCommand={handleAddCommandToFirstSection}
+          onImportExport={() => setShowImportExport(true)}
         />
       )}
 
@@ -362,6 +366,14 @@ export function PlaybookView({ container }: Props) {
           )}
         </div>
       </div>
+
+      {/* Import/Export modal */}
+      {showImportExport && (
+        <ImportExportModal
+          playbook={container}
+          onClose={() => setShowImportExport(false)}
+        />
+      )}
     </div>
   );
 }

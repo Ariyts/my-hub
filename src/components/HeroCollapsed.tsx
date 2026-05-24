@@ -1,4 +1,4 @@
-import { ChevronDown, FolderPlus, Plus } from 'lucide-react';
+import { ChevronDown, FolderPlus, Plus, ArrowUpDown } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -8,6 +8,7 @@ interface Props {
   onExpand: () => void;
   onAddSection: () => void;
   onAddCommand: () => void;
+  onImportExport?: () => void;
 }
 
 /**
@@ -16,7 +17,7 @@ interface Props {
  */
 export function HeroCollapsed({
   title, totalCommands, sectionCount, favoriteCount,
-  onExpand, onAddSection, onAddCommand,
+  onExpand, onAddSection, onAddCommand, onImportExport,
 }: Props) {
   return (
     <div className="flex items-center gap-3 h-10 px-6 border-b border-slate-800 bg-slate-900">
@@ -51,6 +52,18 @@ export function HeroCollapsed({
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Import/Export button */}
+      {onImportExport && (
+        <button
+          onClick={onImportExport}
+          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 transition-colors flex-shrink-0"
+          title="Import/Export playbook"
+        >
+          <ArrowUpDown size={11} className="text-cyan-400" />
+          <span>I/O</span>
+        </button>
+      )}
 
       {/* Add Section button */}
       <button

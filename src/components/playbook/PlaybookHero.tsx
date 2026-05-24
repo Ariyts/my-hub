@@ -1,4 +1,4 @@
-import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, ChevronUp, X, LayoutGrid, List } from 'lucide-react';
+import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, ChevronUp, X, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { PlaybookContainer, PlaybookLanguage, PlaybookVariable } from '../../types';
 import { LANG_LABELS, PLAYBOOK_LANGUAGES, getServiceIcon } from './constants';
@@ -15,11 +15,12 @@ interface HeroProps {
   onExpandAll: () => void;
   onCollapseAll: () => void;
   onCollapseHero?: () => void;
+  onImportExport?: () => void;
 }
 
 export function PlaybookHero({
   container, totalCount, sectionCount, favoriteCount, variables,
-  onAddSection, onAddCommand, onExpandAll, onCollapseAll, onCollapseHero,
+  onAddSection, onAddCommand, onExpandAll, onCollapseAll, onCollapseHero, onImportExport,
 }: HeroProps) {
   const icon = getServiceIcon(container.title);
 
@@ -76,6 +77,16 @@ export function PlaybookHero({
               <ChevronsUp size={15} />
             </button>
             <div className="w-px h-5 bg-slate-700 mx-1" />
+            {onImportExport && (
+              <button
+                onClick={onImportExport}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 transition-colors"
+                title="Import/Export playbook"
+              >
+                <ArrowUpDown size={13} className="text-cyan-400" />
+                I/O
+              </button>
+            )}
             <button
               onClick={onAddSection}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 transition-colors"
