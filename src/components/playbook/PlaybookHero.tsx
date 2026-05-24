@@ -1,4 +1,4 @@
-import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, X } from 'lucide-react';
+import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, ChevronUp, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { PlaybookContainer, PlaybookLanguage, PlaybookVariable } from '../../types';
 import { LANG_LABELS, PLAYBOOK_LANGUAGES, getServiceIcon } from './constants';
@@ -14,11 +14,12 @@ interface HeroProps {
   onAddCommand: () => void;
   onExpandAll: () => void;
   onCollapseAll: () => void;
+  onCollapseHero?: () => void;
 }
 
 export function PlaybookHero({
   container, totalCount, sectionCount, favoriteCount, variables,
-  onAddSection, onAddCommand, onExpandAll, onCollapseAll,
+  onAddSection, onAddCommand, onExpandAll, onCollapseAll, onCollapseHero,
 }: HeroProps) {
   const icon = getServiceIcon(container.title);
 
@@ -89,6 +90,15 @@ export function PlaybookHero({
               <Plus size={13} strokeWidth={2.5} />
               Command
             </button>
+            {onCollapseHero && (
+              <button
+                onClick={onCollapseHero}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+                title="Collapse hero header"
+              >
+                <ChevronUp size={15} />
+              </button>
+            )}
           </div>
         </div>
       </div>

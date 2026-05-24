@@ -9,6 +9,8 @@ import { EmptyState } from './playbook/EmptyStates';
 import { CommandCard, type ViewMode } from './playbook/CommandCard';
 import { stripMdMetadata, cleanDescription } from './playbook/utils';
 import { useChecklist } from '../hooks/useChecklist';
+import { HeroCollapsed } from './HeroCollapsed';
+import { useHeroState } from '../hooks/useHeroState';
 
 interface Props {
   container: PlaybookContainer;
@@ -23,6 +25,7 @@ export function PlaybookView({ container }: Props) {
   } = useStore();
 
   const [search, setSearch] = useState('');
+  const { heroExpanded, toggleHero } = useHeroState();
   const [langFilter, setLangFilter] = useState<FilterMode>('all');
   const [mode, setMode] = useState<ViewMode>('reference');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -151,18 +154,31 @@ export function PlaybookView({ container }: Props) {
 
   return (
     <div className="flex flex-col h-full bg-slate-950 overflow-hidden">
-      {/* Hero header + Context panel */}
-      <PlaybookHero
-        container={container}
-        totalCount={totalCount}
-        sectionCount={sectionCount}
-        favoriteCount={favoriteCount}
-        variables={variables}
-        onAddSection={() => setAddingSection(true)}
-        onAddCommand={handleAddCommandToFirstSection}
-        onExpandAll={handleExpandAll}
-        onCollapseAll={handleCollapseAll}
-      />
+      {/* Hero header — collapsible */}
+      {heroExpanded ? (
+        <PlaybookHero
+          container={container}
+          totalCount={totalCount}
+          sectionCount={sectionCount}
+          favoriteCount={favoriteCount}
+          variables={variables}
+          onAddSection={() => setAddingSection(true)}
+          onAddCommand={handleAddCommandToFirstSection}
+          onExpandAll={handleExpandAll}
+          onCollapseAll={handleCollapseAll}
+          onCollapseHero={toggleHero}
+        />
+      ) : (
+        <HeroCollapsed
+          title={container.title}
+          totalCommands={totalCount}
+          sectionCount={sectionCount}
+          favoriteCount={favoriteCount}
+          onExpand={toggleHero}
+          onAddSection={() => setAddingSection(true)}
+          onAddCommand={handleAddCommandToFirstSection}
+        />
+      )}
 
       {/* Sticky filters */}
       <PlaybookFilters
