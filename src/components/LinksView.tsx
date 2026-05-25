@@ -2,7 +2,8 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import type { LinkItem, LinkSection } from '../types';
 import { useAutoSync } from '../hooks/useAutoSync';
-import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, Palette, LayoutGrid, LayoutList, FolderPlus } from 'lucide-react';
+import { Plus, Search, ExternalLink, Trash2, Edit3, Link2, Star, Check, Copy, Globe, RefreshCw, GripVertical, X, ChevronDown, ChevronRight, Palette, LayoutGrid, LayoutList, FolderPlus, ArrowUpDown } from 'lucide-react';
+import { LinksImportExportModal } from './LinksImportExportModal';
 
 // Fetch link metadata
 async function fetchLinkMetadata(url: string): Promise<{ title?: string; description?: string; favicon?: string }> {
@@ -1151,6 +1152,7 @@ export function LinksView({ containerId }: Props) {
   // undefined = hidden, null = uncategorized section, string = specific section ID
   const [addingLinkToSection, setAddingLinkToSection] = useState<string | undefined>(undefined);
   const [addingSection, setAddingSection] = useState(false);
+  const [showImportExport, setShowImportExport] = useState(false);
 
   // Get sections (only real sections, no null/uncategorized)
   const sections: LinkSection[] = useMemo(() => {
@@ -1559,6 +1561,17 @@ export function LinksView({ containerId }: Props) {
           <FolderPlus size={14} style={{ color: '#FF9800' }} />
           <span className="hidden sm:inline">Section</span>
         </button>
+
+        {/* Import/Export button */}
+        <button
+          onClick={() => setShowImportExport(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+          style={{ background: isDark ? '#1e293b' : '#f1f5f9', color: isDark ? '#e2e8f0' : '#1e293b' }}
+          title="Import / Export"
+        >
+          <ArrowUpDown size={14} style={{ color: '#FF9800' }} />
+          <span className="hidden sm:inline">I/O</span>
+        </button>
       </div>
 
       {/* Content */}
@@ -1643,6 +1656,14 @@ export function LinksView({ containerId }: Props) {
           </div>
         )}
       </div>
+
+      {/* Import/Export modal */}
+      {showImportExport && container && (
+        <LinksImportExportModal
+          container={container}
+          onClose={() => setShowImportExport(false)}
+        />
+      )}
     </div>
   );
 }
