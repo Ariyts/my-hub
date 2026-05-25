@@ -3,7 +3,7 @@ id: "tiaizba23mpjsqgnf"
 title: "New Service"
 description: ""
 tags: []
-order: 1
+order: "1"
 createdAt: "2026-05-24T13:11:29.739Z"
 updatedAt: "2026-05-24T13:12:59.769Z"
 ---
