@@ -2,7 +2,7 @@
 id: "zdtyhauj3mpla6nxz"
 title: "other"
 tags: []
-order: 3
+order: "3"
 createdAt: "2026-05-25T14:07:45.335Z"
 updatedAt: "2026-05-25T14:10:10.011Z"
 ---
