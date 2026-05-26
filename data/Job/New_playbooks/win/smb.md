@@ -5,7 +5,7 @@ description: ""
 tags: []
 order: 3
 createdAt: "2026-05-26T18:06:06.213Z"
-updatedAt: "2026-05-26T18:27:38.255Z"
+updatedAt: "2026-05-26T19:10:53.893Z"
 ---
 
 ## Reconnaissance
@@ -914,7 +914,7 @@ _Tags: #delegation, #constrained, #ad-abuse, #nxc, #impacket Exploit constrained
 <!-- cmd: {"id":"fyi7wx7p6mpmy5irx","language":"bash","sectionId":"19l7oqpqxmpmy5ifj","tags":["delegation","s4u","constrained","privilege-escalation","impacket"]} -->
 
 ## Remote Command Execution (RCE)
-<!-- section: {"id":"jvvpkbua5mpmy5ifl","order":19,"collapsed":true} -->
+<!-- section: {"id":"jvvpkbua5mpmy5ifl","order":19,"collapsed":false} -->
 
 ### 3jep0xtdfmpmy5is8
 ```bash
