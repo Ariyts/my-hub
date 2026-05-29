@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 
 // 'grid' = текущий карточный вид (CommandCard в grid)
 // 'list' = компактный list view (CommandListItem)
-export type ViewLayout = 'grid' | 'list';
+// 'markdown' = markdown editor/preview view
+export type ViewLayout = 'grid' | 'list' | 'markdown';
 
 const STORAGE_KEY = 'pb:viewLayout';
 
@@ -10,7 +11,7 @@ export function useViewLayout(): [ViewLayout, (v: ViewLayout) => void] {
   const [layout, setLayout] = useState<ViewLayout>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === 'grid' || stored === 'list') return stored;
+      if (stored === 'grid' || stored === 'list' || stored === 'markdown') return stored;
     } catch { /* ignore */ }
     return 'list'; // default = компактный list view
   });

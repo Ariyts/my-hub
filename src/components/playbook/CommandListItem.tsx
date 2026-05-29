@@ -114,7 +114,7 @@ export function CommandListItem({
       <div
         className={cn(
           'flex-1 min-w-0 font-mono text-[11.5px] text-slate-100',
-          'overflow-hidden text-ellipsis whitespace-nowrap',
+          'whitespace-pre-wrap break-all leading-relaxed max-h-20 overflow-hidden',
           isDone && 'line-through decoration-slate-600',
         )}
       >

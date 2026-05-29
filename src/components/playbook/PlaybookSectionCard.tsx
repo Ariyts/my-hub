@@ -49,6 +49,7 @@ export function PlaybookSectionCard({
 
   return (
     <div
+      id={`section-${section.id}`}
       className={cn(
         'rounded-xl border border-slate-800 bg-slate-900/30 backdrop-blur-sm overflow-hidden',
         'transition-all duration-200',

@@ -1,7 +1,7 @@
 import { Search, FolderPlus, Plus, ChevronsDown, ChevronsUp, ChevronUp, X, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { PlaybookContainer, PlaybookLanguage, PlaybookVariable } from '../../types';
-import { LANG_LABELS, PLAYBOOK_LANGUAGES, getServiceIcon } from './constants';
+import { getServiceIcon } from './constants';
 import { ContextPanel } from './ContextPanel';
 
 interface HeroProps {
@@ -136,7 +136,7 @@ function StatPill({ label, value, color }: { label: string; value: number; color
 
 export type StatusFilter = 'all' | 'pending' | 'done' | 'skipped';
 
-export type ViewLayout = 'grid' | 'list';
+export type ViewLayout = 'grid' | 'list' | 'markdown';
 
 interface FiltersProps {
   search: string;
@@ -151,12 +151,15 @@ interface FiltersProps {
   checklistCounts: { total: number; done: number; skipped: number; pending: number };
   layout: ViewLayout;
   onLayoutChange: (v: ViewLayout) => void;
+  phaseFilter: string | 'all';
+  onPhaseFilterChange: (p: string | 'all') => void;
+  sections: { id: string; title: string; color?: string }[];
 }
 
 export function PlaybookFilters({
   search, onSearchChange, langFilter, onLangFilterChange, resultCount,
   mode, onModeChange, statusFilter, onStatusFilterChange, checklistCounts,
-  layout, onLayoutChange,
+  layout, onLayoutChange, phaseFilter, onPhaseFilterChange, sections,
 }: FiltersProps) {
   return (
     <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
@@ -212,7 +215,7 @@ export function PlaybookFilters({
             </button>
           </div>
 
-          {/* Layout toggle: Grid / List */}
+          {/* Layout toggle: Grid / List / MD */}
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-slate-900 border border-slate-800 flex-shrink-0">
             <button
               onClick={() => onLayoutChange('grid')}
@@ -238,14 +241,26 @@ export function PlaybookFilters({
             >
               <List size={13} />
             </button>
+            <button
+              onClick={() => onLayoutChange('markdown')}
+              className={cn(
+                'px-2 py-1 rounded-md text-[11px] font-mono font-bold transition-all',
+                layout === 'markdown'
+                  ? 'bg-slate-800 text-cyan-300 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-200'
+              )}
+              title="Markdown view (edit as markdown)"
+            >
+              MD
+            </button>
           </div>
         </div>
 
         {/* Filter chips row */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <FilterChip
-            active={langFilter === 'all'}
-            onClick={() => onLangFilterChange('all')}
+            active={langFilter === 'all' && phaseFilter === 'all'}
+            onClick={() => { onLangFilterChange('all'); onPhaseFilterChange('all'); }}
             label="All"
           />
           <FilterChip
@@ -254,15 +269,56 @@ export function PlaybookFilters({
             label="★ Favorites"
             activeColor="#fbbf24"
           />
-          <div className="w-px h-4 bg-slate-800 mx-1" />
-          {PLAYBOOK_LANGUAGES.map((lang) => (
-            <FilterChip
-              key={lang}
-              active={langFilter === lang}
-              onClick={() => onLangFilterChange(lang)}
-              label={LANG_LABELS[lang]}
-            />
-          ))}
+
+          {/* Phase quick filters */}
+          {sections.length > 0 && (
+            <>
+              <div className="w-px h-4 bg-slate-800 mx-1" />
+              <FilterChip
+                active={phaseFilter === 'recon'}
+                onClick={() => onPhaseFilterChange(phaseFilter === 'recon' ? 'all' : 'recon')}
+                label="🔍 Recon"
+                activeColor="#3b82f6"
+              />
+              <FilterChip
+                active={phaseFilter === 'exploit'}
+                onClick={() => onPhaseFilterChange(phaseFilter === 'exploit' ? 'all' : 'exploit')}
+                label="💥 Exploit"
+                activeColor="#ef4444"
+              />
+              <FilterChip
+                active={phaseFilter === 'post'}
+                onClick={() => onPhaseFilterChange(phaseFilter === 'post' ? 'all' : 'post')}
+                label="🏴 Post"
+                activeColor="#22c55e"
+              />
+            </>
+          )}
+
+          {/* Jump to section dropdown */}
+          {sections.length > 0 && (
+            <>
+              <div className="flex-1" />
+              <select
+                value=""
+                onChange={(e) => {
+                  const sectionId = e.target.value;
+                  if (!sectionId) return;
+                  const el = document.getElementById(`section-${sectionId}`);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  e.target.value = '';
+                }}
+                className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 outline-none focus:border-cyan-400 cursor-pointer"
+              >
+                <option value="">Jump to section…</option>
+                {sections.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
 
           {/* Engagement mode: status filters */}
           {mode === 'engagement' && (

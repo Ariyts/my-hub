@@ -14,6 +14,7 @@ import { useHeroState } from '../hooks/useHeroState';
 import { useViewLayout } from '../hooks/useViewLayout';
 import { CommandListItem } from './playbook/CommandListItem';
 import { ImportExportModal } from './ImportExportModal';
+import { MarkdownView } from './playbook/MarkdownView';
 
 interface Props {
   container: PlaybookContainer;
@@ -36,6 +37,7 @@ export function PlaybookView({ container }: Props) {
   const [addingSection, setAddingSection] = useState(false);
   const [addingToSection, setAddingToSection] = useState<string | undefined>(undefined);
   const [showImportExport, setShowImportExport] = useState(false);
+  const [phaseFilter, setPhaseFilter] = useState<string | 'all'>('all');
 
   // Keyboard shortcut: Cmd/Ctrl+L to toggle layout
   useEffect(() => {
@@ -88,8 +90,19 @@ export function PlaybookView({ container }: Props) {
     return checklist.status(item.id) === statusFilter;
   };
 
+  const matchesPhaseFilter = (item: PlaybookItem): boolean => {
+    if (phaseFilter === 'all') return true;
+    const section = sections.find(s => s.id === item.sectionId);
+    if (!section) return false;
+    const title = section.title.toLowerCase();
+    if (phaseFilter === 'recon') return /recon|enum|discover|scan|fingerprint/.test(title);
+    if (phaseFilter === 'exploit') return /exploit|attack|vuln|rce/.test(title);
+    if (phaseFilter === 'post') return /post|privesc|persist|lateral/.test(title);
+    return true;
+  };
+
   const filterItem = (item: PlaybookItem): boolean => {
-    return matchesSearch(item) && matchesLangFilter(item) && matchesStatusFilter(item);
+    return matchesSearch(item) && matchesLangFilter(item) && matchesStatusFilter(item) && matchesPhaseFilter(item);
   };
 
   // Stats
@@ -103,11 +116,11 @@ export function PlaybookView({ container }: Props) {
       const items = getItemsForSection(sec.id);
       const filtered = items.filter(filterItem);
       return { section: sec, items: filtered };
-    }).filter(({ items }) => items.length > 0 || (!search && langFilter === 'all' && statusFilter === 'all'));
-  }, [sections, container.subItems, search, langFilter, statusFilter, mode, checklist]);
+    }).filter(({ items }) => items.length > 0 || (!search && langFilter === 'all' && phaseFilter === 'all' && statusFilter === 'all'));
+  }, [sections, container.subItems, search, langFilter, statusFilter, phaseFilter, mode, checklist]);
 
   const resultCount = filteredSections.reduce((sum, { items }) => sum + items.length, 0);
-  const isFiltered = !!search || langFilter !== 'all' || (mode === 'engagement' && statusFilter !== 'all');
+  const isFiltered = !!search || langFilter !== 'all' || phaseFilter !== 'all' || (mode === 'engagement' && statusFilter !== 'all');
 
   // Handlers
   const handleAddSection = (title: string) => {
@@ -169,6 +182,7 @@ export function PlaybookView({ container }: Props) {
     setSearch('');
     setLangFilter('all');
     setStatusFilter('all');
+    setPhaseFilter('all');
   };
 
   return (
@@ -215,6 +229,9 @@ export function PlaybookView({ container }: Props) {
         checklistCounts={checklist.counts}
         layout={layout}
         onLayoutChange={setLayout}
+        phaseFilter={phaseFilter}
+        onPhaseFilterChange={setPhaseFilter}
+        sections={sections.map(s => ({ id: s.id, title: s.title, color: s.color }))}
       />
 
       {/* Engagement mode banner */}
@@ -255,6 +272,9 @@ export function PlaybookView({ container }: Props) {
       )}
 
       {/* Content */}
+      {layout === 'markdown' ? (
+        <MarkdownView playbook={container} />
+      ) : (
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
           {/* Inline add section */}
@@ -366,6 +386,7 @@ export function PlaybookView({ container }: Props) {
           )}
         </div>
       </div>
+      )}
 
       {/* Import/Export modal */}
       {showImportExport && (

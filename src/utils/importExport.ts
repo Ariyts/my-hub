@@ -228,12 +228,9 @@ export function parseMarkdown(content: string): ParsedPlaybook {
     while ((match = codeBlockRegex.exec(block)) !== null) {
       const langRaw = (match[1] || 'bash').toLowerCase();
       const language: PlaybookLanguage = isSupportedLang(langRaw) ? langRaw : 'bash';
-      const command = match[2].trim();
+      const rawCode = match[2].trim();
 
-      if (!command || (command.startsWith('#') && command.split('\n').length === 1)) {
-        // Skip empty or comment-only blocks
-        continue;
-      }
+      if (!rawCode) continue;
 
       const blockStart = match.index;
       const blockEnd = match.index + match[0].length;
@@ -252,15 +249,9 @@ export function parseMarkdown(content: string): ParsedPlaybook {
         .join(' ')
         .trim();
 
-      // Also check for "# comment" INSIDE the code block as description
-      const inlineDescMatch = command.match(/^#\s*(.+)\n/);
-      if (inlineDescMatch && !description) {
-        description = inlineDescMatch[1].trim();
-      }
-
       // Text AFTER the code block — look for Tags: and Favorite:
       const after = block.slice(blockEnd);
-      const afterLines = after.split('\n').slice(0, 5); // only check next 5 lines
+      const afterLines = after.split('\n').slice(0, 5);
 
       const tags: string[] = [];
       let isFavorite = false;
@@ -269,7 +260,6 @@ export function parseMarkdown(content: string): ParsedPlaybook {
         const tagsMatch = line.match(/^Tags?:\s*(.+)$/i);
         if (tagsMatch) {
           const raw = tagsMatch[1];
-          // Extract hashtags
           const found = raw.match(/#?[\w-]+/g) || [];
           for (const t of found) {
             const clean = t.replace(/^#/, '').trim();
@@ -278,16 +268,46 @@ export function parseMarkdown(content: string): ParsedPlaybook {
         }
         const favMatch = line.match(/^Favorite:\s*(true|yes|1)/i);
         if (favMatch) isFavorite = true;
-        // Stop at next code block or section
         if (line.startsWith('```') || line.startsWith('## ')) break;
       }
 
-      section.items.push({
-        command,
-        language,
-        description,
-        tags,
-        isFavorite,
+      // ====================================================================
+      // SPLIT MULTI-LINE CODE BLOCKS INTO SEPARATE COMMANDS
+      // ====================================================================
+      // Each non-empty, non-comment line becomes its own command.
+      // If the first line is a "# comment", use it as description for ALL commands in the block.
+      const codeLines = rawCode.split('\n');
+      let blockInlineDesc = '';
+      let startIndex = 0;
+
+      if (codeLines.length > 0 && codeLines[0].trim().startsWith('#')) {
+        blockInlineDesc = codeLines[0].trim().replace(/^#\s*/, '');
+        startIndex = 1;
+      }
+
+      const commandsInBlock: string[] = [];
+      for (let i = startIndex; i < codeLines.length; i++) {
+        const line = codeLines[i].trim();
+        // Skip empty lines and pure comment lines
+        if (!line) continue;
+        if (line.startsWith('#')) continue;
+        commandsInBlock.push(codeLines[i]);
+      }
+
+      // If no commands found (only comments), skip the block
+      if (commandsInBlock.length === 0) continue;
+
+      // Create one item per command line
+      const baseDescription = description || blockInlineDesc;
+      commandsInBlock.forEach((cmd, idx) => {
+        section.items.push({
+          command: cmd,
+          language,
+          // Only the first command gets the description (it applies to the block)
+          description: idx === 0 ? baseDescription : '',
+          tags: idx === 0 ? tags : [...tags], // first gets the tags, rest get copies
+          isFavorite: idx === 0 ? isFavorite : false,
+        });
       });
     }
 
