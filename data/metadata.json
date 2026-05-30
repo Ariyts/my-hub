@@ -97,6 +97,26 @@
       "isDefault": false,
       "id": "scgl60kqqmpn0qsp3",
       "order": 1
+    },
+    {
+      "id": "yw8tggkt3mpsiq3qz",
+      "workspaceId": "ws_1llp",
+      "name": "Nmap",
+      "icon": "📡",
+      "color": "#8B5CF6",
+      "baseType": "nmap",
+      "order": 9,
+      "isDefault": true
+    },
+    {
+      "id": "2u6ctt1r5mpsiq3qz",
+      "workspaceId": "ws_1xo",
+      "name": "Nmap",
+      "icon": "📡",
+      "color": "#8B5CF6",
+      "baseType": "nmap",
+      "order": 2,
+      "isDefault": true
     }
   ],
   "folders": [
@@ -198,8 +218,17 @@
       "id": "b29mq3ahlmpn0qvsa",
       "order": 1,
       "createdAt": "2026-05-26T19:19:04.810Z"
+    },
+    {
+      "name": "other",
+      "categoryId": "xme7v1v4dmpikob7m",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "c8jftl0mqmpsire3q",
+      "order": 3,
+      "createdAt": "2026-05-30T15:42:12.518Z"
     }
   ],
-  "exportedAt": "2026-05-28T07:09:09.705Z",
+  "exportedAt": "2026-05-30T15:49:30.157Z",
   "version": "3.0"
 }
