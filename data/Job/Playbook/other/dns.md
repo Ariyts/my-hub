@@ -3,7 +3,7 @@ id: "wb5ns5vq7mpsirfqt"
 title: "dns"
 description: ""
 tags: []
-order: 1
+order: "1"
 createdAt: "2026-05-30T15:42:14.645Z"
 updatedAt: "2026-05-30T15:42:51.480Z"
 ---
@@ -161,7 +161,7 @@ dig NS $DOMAIN | grep "NS" | awk '{print $5}' | while read ns; do
 
 ### nh5vzab7zmpsis7zj
 ```bash
-  echo "[*] Trying zone transfer from $ns"
+echo "[*] Trying zone transfer from $ns"
 ```
 
 **Tags:** dns, zone-transfer, axfr, misconfiguration, unauthenticated, high-impact
@@ -169,7 +169,7 @@ dig NS $DOMAIN | grep "NS" | awk '{print $5}' | while read ns; do
 
 ### tgcvxpdzampsis7zp
 ```bash
-  dig axfr $DOMAIN @$ns
+dig axfr $DOMAIN @$ns
 ```
 
 **Tags:** dns, zone-transfer, axfr, misconfiguration, unauthenticated, high-impact
@@ -400,7 +400,7 @@ nmap --script dns-recursion -p 53 $TARGET
 dig @$DC _ldap._tcp.$DOMAIN SRV
 ```
 
-_Internal DNS Recon (from inside network)_
+_ldap._
 
 **Tags:** dns, internal, ad, dc-discovery, recon
 <!-- cmd: {"id":"0brjr9j62mpsis83h","language":"bash","sectionId":"7q5jndnxzmpsis7w3","tags":["dns","internal","ad","dc-discovery","recon"]} -->
@@ -410,6 +410,8 @@ _Internal DNS Recon (from inside network)_
 dig @$DC _kerberos._tcp.$DOMAIN SRV
 ```
 
+_kerberos._
+
 **Tags:** dns, internal, ad, dc-discovery, recon
 <!-- cmd: {"id":"qb7lgxt20mpsis83l","language":"bash","sectionId":"7q5jndnxzmpsis7w3","tags":["dns","internal","ad","dc-discovery","recon"]} -->
 
@@ -418,6 +420,8 @@ dig @$DC _kerberos._tcp.$DOMAIN SRV
 dig @$DC _gc._tcp.$DOMAIN SRV
 ```
 
+_gc._
+
 **Tags:** dns, internal, ad, dc-discovery, recon
 <!-- cmd: {"id":"eidoov5kimpsis83o","language":"bash","sectionId":"7q5jndnxzmpsis7w3","tags":["dns","internal","ad","dc-discovery","recon"]} -->
 
@@ -425,6 +429,8 @@ dig @$DC _gc._tcp.$DOMAIN SRV
 ```bash
 nslookup -type=SRV _ldap._tcp.dc._msdcs.$DOMAIN $DC
 ```
+
+_ldap._
 
 **Tags:** dns, internal, ad, dc-discovery, recon
 <!-- cmd: {"id":"6w17yfdk3mpsis83t","language":"bash","sectionId":"7q5jndnxzmpsis7w3","tags":["dns","internal","ad","dc-discovery","recon"]} -->

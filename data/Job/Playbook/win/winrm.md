@@ -3,7 +3,7 @@ id: "mdwkjvq0bmpsiwv0h"
 title: "winrm"
 description: ""
 tags: []
-order: 11
+order: "11"
 createdAt: "2026-05-30T15:46:27.713Z"
 updatedAt: "2026-05-30T15:46:47.102Z"
 ---
@@ -214,7 +214,7 @@ impacket-psexec $DOMAIN/$USER:'$PASS'@$TARGET
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout winrm_client.key -out winrm_client.crt -subj "/CN=$USER"
 ```
 
-_Certificate-Based Auth (WinRM over HTTPS)_
+_client.key -out winrm_
 
 **Tags:** winrm, certificate, https, authentication
 <!-- cmd: {"id":"cfxxyhqc7mpsix005","language":"bash","sectionId":"4xw7gtw9bmpsiwzv0","tags":["winrm","certificate","https","authentication"]} -->
@@ -223,6 +223,8 @@ _Certificate-Based Auth (WinRM over HTTPS)_
 ```bash
 evil-winrm -i $TARGET -u $USER -S -c winrm_client.crt -k winrm_client.key
 ```
+
+_client.crt -k winrm_
 
 **Tags:** winrm, certificate, https, authentication
 <!-- cmd: {"id":"lt3lpt6h6mpsix009","language":"bash","sectionId":"4xw7gtw9bmpsiwzv0","tags":["winrm","certificate","https","authentication"]} -->

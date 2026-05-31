@@ -3,7 +3,7 @@ id: "89zv5s5ftmpsivfg3"
 title: "rdp"
 description: ""
 tags: []
-order: 10
+order: "10"
 createdAt: "2026-05-30T15:45:20.883Z"
 updatedAt: "2026-05-30T15:45:30.056Z"
 ---
@@ -248,6 +248,8 @@ nmap -p 3389 --script rdp-enum-encryption $TARGET
 use auxiliary/scanner/rdp/cve_2019_0708_bluekeep
 ```
 
+_2019_
+
 **Tags:** rdp, bluekeep, cve-2019-0708, exploitation, rce, pre-auth
 <!-- cmd: {"id":"li31lqv9ympsivmd6","language":"bash","sectionId":"w1m9zpycgmpsivm7z","tags":["rdp","bluekeep","cve-2019-0708","exploitation","rce","pre-auth"]} -->
 
@@ -271,6 +273,8 @@ run
 ```bash
 use exploit/windows/rdp/cve_2019_0708_bluekeep_rce
 ```
+
+_2019_
 
 **Tags:** rdp, bluekeep, cve-2019-0708, exploitation, rce, pre-auth
 <!-- cmd: {"id":"nyvbishrsmpsivmdh","language":"bash","sectionId":"w1m9zpycgmpsivm7z","tags":["rdp","bluekeep","cve-2019-0708","exploitation","rce","pre-auth"]} -->
@@ -317,6 +321,8 @@ _DejaBlue (CVE-2019-1181/1182) Check_
 use auxiliary/scanner/rdp/cve_2019_1181_dejablue
 ```
 
+_2019_
+
 **Tags:** rdp, dejablue, cve, vulnerability-check
 <!-- cmd: {"id":"9w4fcbtbempsivmec","language":"bash","sectionId":"h288e65qwmpsivm82","tags":["rdp","dejablue","cve","vulnerability-check"]} -->
 
@@ -353,6 +359,8 @@ _MS12-020 (CVE-2012-0152) DoS Check_
 ```bash
 use auxiliary/scanner/rdp/ms12_020_check
 ```
+
+_020_
 
 **Tags:** rdp, ms12-020, dos, vulnerability-check
 <!-- cmd: {"id":"2ibzlhtjfmpsivmf1","language":"bash","sectionId":"2l3rjab7vmpsivm87","tags":["rdp","ms12-020","dos","vulnerability-check"]} -->
@@ -463,7 +471,7 @@ python3 bmc-tools.py -s C:\Users\$USER\AppData\Local\Microsoft\Terminal\ Server\
 Get-WinEvent -LogName "Security" | Where-Object {$_.Id -eq 4624 -and $_.Message -like "*RDP*"}
 ```
 
-_RDP Honeypot / Canary Check_
+_.Id -eq 4624 -and $_
 
 **Tags:** rdp, opsec, detection
 <!-- cmd: {"id":"vaeuz9jnxmpsivmgy","language":"bash","sectionId":"0d0x9e40lmpsivm8i","tags":["rdp","opsec","detection"]} -->

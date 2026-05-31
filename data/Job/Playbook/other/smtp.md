@@ -3,7 +3,7 @@ id: "lzicbe0u1mpsivqqf"
 title: "smtp"
 description: ""
 tags: []
-order: 7
+order: "7"
 createdAt: "2026-05-30T15:45:35.511Z"
 updatedAt: "2026-05-30T15:45:45.870Z"
 ---
@@ -540,6 +540,8 @@ _CVE-2010-4344 (Exim Heap Overflow)_
 use exploit/unix/smtp/exim4_string_format
 ```
 
+_string_
+
 **Tags:** smtp, exim, cve, exploitation, rce
 <!-- cmd: {"id":"ambtfnp3wmpsivynw","language":"bash","sectionId":"owvg22am6mpsivyd9","tags":["smtp","exim","cve","exploitation","rce"]} -->
 
@@ -608,6 +610,8 @@ nc $TARGET 25
 ```bash
 AUTH PLAIN (base64_encoded_creds)
 ```
+
+_encoded_
 
 **Tags:** smtp, misconfiguration, open-relay, vrfy, spoofing
 <!-- cmd: {"id":"a046adm50mpsivyp5","language":"bash","sectionId":"sv36wnfp3mpsivydd","tags":["smtp","misconfiguration","open-relay","vrfy","spoofing"]} -->

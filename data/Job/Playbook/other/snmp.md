@@ -3,7 +3,7 @@ id: "tmfhl8w9ompsiw5ep"
 title: "snmp"
 description: ""
 tags: []
-order: 8
+order: "8"
 createdAt: "2026-05-30T15:45:54.529Z"
 updatedAt: "2026-05-30T15:46:06.271Z"
 ---
@@ -281,7 +281,7 @@ snmpwalk -v2c -c public $TARGET 1.3.6.1.2.1.4.22.1.2
 snmpwalk -v3 -l authPriv -u $USER -a SHA -A '$AUTH_PASS' -x AES -X '$PRIV_PASS' $TARGET
 ```
 
-_SNMPv3 Enumeration_
+_PASS' -x AES -X '$PRIV_
 
 **Tags:** snmp, snmpv3, authenticated, enumeration
 <!-- cmd: {"id":"351wuzqm0mpsiwec9","language":"bash","sectionId":"k2c6twg46mpsiwe6p","tags":["snmp","snmpv3","authenticated","enumeration"]} -->
