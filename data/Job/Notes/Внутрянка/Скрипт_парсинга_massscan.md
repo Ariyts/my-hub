@@ -5,7 +5,7 @@ tags: []
 isFavorite: false
 order: 6
 createdAt: "2026-06-06T15:58:00.085Z"
-updatedAt: "2026-06-06T15:58:15.203Z"
+updatedAt: "2026-06-15T18:47:49.381Z"
 ---
 #!/bin/bash
 
