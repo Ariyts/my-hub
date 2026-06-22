@@ -3,7 +3,7 @@ id: "3fqyno2dcmqfkfqgv"
 title: "SCCM gaid"
 tags: []
 isFavorite: false
-order: 7
+order: "7"
 createdAt: "2026-06-15T18:47:49.951Z"
 updatedAt: "2026-06-15T18:48:21.215Z"
 ---
