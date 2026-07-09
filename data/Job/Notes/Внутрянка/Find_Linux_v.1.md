@@ -3,7 +3,7 @@ id: "bcul1o9qemqow0gjs"
 title: "Find Linux v.1"
 tags: []
 isFavorite: false
-order: 8
+order: "8"
 createdAt: "2026-06-22T07:21:48.232Z"
 updatedAt: "2026-06-22T07:25:01.139Z"
 ---
@@ -112,6 +112,3 @@ grep -oP '[A-Za-z0-9+/]{20,}={0,2}' "$F" | sort -u | while read b; do
 done
 EOF
 chmod +x parse.sh && bash parse.sh
-
-
-
