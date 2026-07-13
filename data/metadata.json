@@ -236,8 +236,17 @@
       "id": "fr3oqsn3bmptks1kd",
       "order": 1,
       "createdAt": "2026-05-31T09:26:28.333Z"
+    },
+    {
+      "name": "exploit_linux",
+      "categoryId": "cat_y74gxb",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "7dwiz4vlomrj17w89",
+      "order": 3,
+      "createdAt": "2026-07-13T09:40:38.505Z"
     }
   ],
-  "exportedAt": "2026-07-09T12:00:19.249Z",
+  "exportedAt": "2026-07-13T09:54:59.406Z",
   "version": "3.0"
 }
