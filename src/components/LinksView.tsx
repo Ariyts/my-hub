@@ -150,6 +150,13 @@ function LinkCard({
             value={editData.url}
             onChange={(e) => setEditData({ ...editData, url: e.target.value })}
             placeholder="URL..."
+            // Клавиатура для адресов; без автозаглавных и автозамены — иначе телефон
+            // норовит превратить "github.com" в "Github.com"
+            type="url"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             autoFocus
           />
           <input
@@ -516,6 +523,10 @@ function CompactLinkItem({
             onChange={(e) => setEditUrl(e.target.value)}
             onKeyDown={handleEditKeyDown}
             placeholder="URL"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className="w-full rounded border px-2 py-0.5 text-[10px] outline-none focus:border-orange-400"
             style={{
               background: isDark ? "#0f172a" : "#ffffff",
@@ -757,6 +768,11 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
         onChange={(e) => setUrl(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Paste URL and press Enter..."
+        inputMode="url"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        enterKeyHint="done"
         className="flex-1 rounded border px-2 py-1 text-xs outline-none focus:border-orange-400"
         style={{
           background: inputBg,
@@ -1003,7 +1019,7 @@ function Section({
 
       {/* Section Header */}
       <div
-        className="flex cursor-pointer items-center gap-2 px-4 py-2"
+        className="flex cursor-pointer items-center gap-2 px-2 py-2 sm:px-4"
         style={{ background: headerBg }}
         onClick={() => onToggleCollapse(section.id)}
       >
@@ -1672,13 +1688,17 @@ export function LinksView({ containerId }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
+      {/* Header. На узком экране переносится по строкам: в один ряд заголовок,
+          переключатель вида, поиск и две кнопки на 360px не помещаются */}
       <div
-        className="flex items-center gap-3 border-b px-4 py-3"
+        className="flex flex-wrap items-center gap-2 border-b px-3 py-2 sm:gap-3 sm:px-4 sm:py-3"
         style={{ borderColor: isDark ? "#1e293b" : "#e2e8f0" }}
       >
-        <Link2 size={18} style={{ color: "#FF9800" }} />
-        <h2 className="flex-1 font-semibold" style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}>
+        <Link2 size={18} className="shrink-0" style={{ color: "#FF9800" }} />
+        <h2
+          className="min-w-0 flex-1 truncate font-semibold"
+          style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+        >
           {container.title}
         </h2>
 
@@ -1709,8 +1729,8 @@ export function LinksView({ containerId }: Props) {
           </button>
         </div>
 
-        {/* Search */}
-        <div className="relative">
+        {/* Search. На мобильном уезжает на всю ширину отдельной строкой */}
+        <div className="relative order-last w-full sm:order-0 sm:w-auto">
           <Search
             size={14}
             className="absolute top-1/2 left-3 -translate-y-1/2"
@@ -1721,7 +1741,7 @@ export function LinksView({ containerId }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search links..."
-            className="w-48 rounded-lg border py-1.5 pr-4 pl-9 text-sm outline-none"
+            className="w-full rounded-lg border py-1.5 pr-4 pl-9 text-sm outline-none sm:w-48"
             style={{
               background: isDark ? "#1e293b" : "#ffffff",
               borderColor: isDark ? "#334155" : "#e2e8f0",
@@ -1759,7 +1779,7 @@ export function LinksView({ containerId }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-4 overflow-auto p-4">
+      <div className="flex-1 space-y-4 overflow-auto p-2 sm:p-4">
         {/* Inline Add Section */}
         {addingSection && (
           <InlineAddSection

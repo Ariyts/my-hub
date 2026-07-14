@@ -1,5 +1,147 @@
 @import "tailwindcss";
 
+/* ============================================
+   MOBILE BASICS
+   ============================================ */
+
+/* На мобильных браузерах 100vh считается без учёта адресной строки, из-за чего
+   низ интерфейса уезжает под неё. Динамическая высота (dvh) учитывает её всегда */
+html,
+body,
+#root {
+  height: 100%;
+  height: 100dvh;
+}
+
+/* Горизонтальной прокрутки быть не должно ни при каких обстоятельствах:
+   на телефоне она сдвигает вёрстку и ловится случайными свайпами */
+body {
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+/* Безопасные зоны: «чёлка» и полоса жестов на iPhone */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* ============================================
+   TOUCH: ДЕЙСТВИЯ БЕЗ НАВЕДЕНИЯ
+   ============================================ */
+
+/* Кнопки правки/удаления скрыты через `opacity-0 group-hover:opacity-100`.
+   На тач-экранах наведения не существует — там они были бы недоступны навсегда,
+   поэтому показываем их всегда */
+@media (hover: none) {
+  [class*="group-hover"][class*="opacity-0"] {
+    opacity: 1 !important;
+  }
+}
+
+/* 44×44 — минимальная тач-цель по рекомендациям Apple HIG и Material Design.
+   Только для грубого указателя (палец): под мышью компактные строки удобнее */
+@media (pointer: coarse) {
+  .tap-target {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ============================================
+   ПОЛЯ ВВОДА НА МОБИЛЬНОМ
+   ============================================ */
+
+/* iOS Safari автоматически зумит страницу при фокусе на поле, если шрифт в нём
+   меньше 16px. В проекте почти все поля с text-sm (14px) и text-xs (12px), то есть
+   интерфейс «прыгал» бы на каждом вводе. Ниже 768px принудительно 16px.
+
+   Правило работает без !important: утилиты Tailwind живут в @layer utilities,
+   а этот файл — вне слоёв, поэтому он выигрывает у .text-sm независимо от специфичности */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* ============================================
+   МОДАЛЬНЫЕ ОКНА НА МОБИЛЬНОМ
+   ============================================ */
+
+/* Модалки центрированы и занимают 80–85% высоты. На телефоне поля по краям —
+   пустая трата и без того малого экрана, а содержимое (например, длинные
+   настройки) не помещается. Ниже 768px раскрываем их на весь экран */
+@media (max-width: 767px) {
+  .modal-backdrop {
+    padding: 0 !important;
+  }
+
+  .modal-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    /* «Чёлка» сверху и полоса жестов снизу не должны перекрывать шапку и кнопки */
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+}
+
+/* ============================================
+   ТАБЛИЦЫ → КАРТОЧКИ НА МОБИЛЬНОМ
+   ============================================ */
+
+/* Таблицы промптов и команд задают колонкам min-width (до 250px), поэтому на 360px
+   они уезжают в горизонтальную прокрутку. Ниже 768px разбираем таблицу на блоки:
+   каждая строка становится карточкой, ячейки идут друг под другом.
+   Разметку строк при этом трогать не нужно */
+@media (max-width: 767px) {
+  .table-cards thead {
+    display: none;
+  }
+
+  .table-cards,
+  .table-cards tbody,
+  .table-cards tr,
+  .table-cards td {
+    display: block;
+    width: 100%;
+    /* Перебиваем min-w-[150px] / min-w-[250px] и фиксированные w-8 / w-32 из разметки */
+    min-width: 0 !important;
+  }
+
+  .table-cards tr {
+    margin-bottom: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table-cards td {
+    padding: 6px 10px;
+  }
+
+  /* Порядковый номер в отдельной строке-карточке смысла не несёт */
+  .table-cards td.cell-index {
+    display: none;
+  }
+
+  /* Колонки, скрытые в разметке через `hidden md:table-cell` (Vars, Tags), должны
+     остаться скрытыми: правило `display: block` выше специфичнее утилиты .hidden
+     и без этого показало бы их обратно */
+  .table-cards td.hidden {
+    display: none;
+  }
+}
+
 /* Compact grid - vertical column flow (Google Drive style) */
 .compact-grid {
   display: block;

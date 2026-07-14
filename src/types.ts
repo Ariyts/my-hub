@@ -291,6 +291,11 @@ export interface AppState {
   sidebarCollapsed: boolean;
   sidebarCompact: boolean;
   isDarkTheme: boolean;
+
+  // Мобильная навигация: выдвижные панели. Не сохраняются между сессиями —
+  // при новом заходе панели всегда закрыты
+  isFolderPanelOpen: boolean;
+  isSidebarOpen: boolean;
 }
 
 // ============================================

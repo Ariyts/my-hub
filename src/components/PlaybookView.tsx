@@ -258,7 +258,7 @@ export function PlaybookView({ container }: Props) {
 
       {/* Engagement mode banner */}
       {mode === "engagement" && (
-        <div className="flex items-center gap-3 border-b border-emerald-500/20 bg-emerald-500/5 px-6 py-2">
+        <div className="flex flex-wrap items-center gap-3 border-b border-emerald-500/20 bg-emerald-500/5 px-3 py-2 sm:px-6">
           <div className="flex items-center gap-2 text-[11px]">
             <span className="font-semibold text-emerald-300">Engagement Mode</span>
             <span className="text-slate-500">·</span>

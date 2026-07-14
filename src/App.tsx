@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useStore } from "./store";
+import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./components/Sidebar";
 import { FolderPanel } from "./components/FolderPanel";
 import { NoteEditor } from "./components/NoteEditor";
@@ -10,7 +11,7 @@ import { PlaybookView } from "./components/PlaybookView";
 import { SettingsModal } from "./components/SettingsModal";
 import { TrashModal } from "./components/TrashModal";
 import type { NoteItem, CommandContainer, PromptContainer, PlaybookContainer } from "./types";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Menu, FolderOpen } from "lucide-react";
 
 function MainArea() {
   const {
@@ -220,8 +221,91 @@ function MainArea() {
   return null;
 }
 
+/**
+ * Шапка контентной области на мобильном: кнопка вызова панели папок
+ * и название текущей категории — чтобы было понятно, где находишься
+ */
+function MobileTopBar() {
+  const {
+    isDarkTheme,
+    categories,
+    activeCategoryId,
+    isFolderPanelOpen,
+    isSidebarOpen,
+    toggleFolderPanel,
+    toggleSidebar,
+  } = useStore();
+
+  const sidebarButtonRef = useRef<HTMLButtonElement>(null);
+  const folderButtonRef = useRef<HTMLButtonElement>(null);
+  const wasSidebarOpen = useRef(false);
+  const wasFolderOpen = useRef(false);
+
+  // Панель закрылась — возвращаем фокус на кнопку, которой её открывали
+  useEffect(() => {
+    if (wasSidebarOpen.current && !isSidebarOpen) sidebarButtonRef.current?.focus();
+    wasSidebarOpen.current = isSidebarOpen;
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
+    if (wasFolderOpen.current && !isFolderPanelOpen) folderButtonRef.current?.focus();
+    wasFolderOpen.current = isFolderPanelOpen;
+  }, [isFolderPanelOpen]);
+
+  const activeCategory = categories.find((c) => c.id === activeCategoryId);
+  const iconColor = isDarkTheme ? "#e2e8f0" : "#1e293b";
+
+  // 44×44 — минимальный размер тач-цели по рекомендациям Apple и Material Design
+  const buttonClass =
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-slate-200 dark:hover:bg-slate-700";
+
+  return (
+    <div
+      className="flex items-center gap-1 border-b px-2 py-2"
+      style={{
+        paddingTop: "calc(var(--safe-top) + 0.5rem)",
+        background: isDarkTheme ? "#0f172a" : "#ffffff",
+        borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
+      }}
+    >
+      <button
+        ref={sidebarButtonRef}
+        onClick={toggleSidebar}
+        aria-label="Open categories panel"
+        aria-expanded={isSidebarOpen}
+        title="Categories"
+        className={buttonClass}
+      >
+        <Menu size={22} style={{ color: iconColor }} />
+      </button>
+
+      <button
+        ref={folderButtonRef}
+        onClick={toggleFolderPanel}
+        aria-label="Open folders panel"
+        aria-expanded={isFolderPanelOpen}
+        title="Folders"
+        className={buttonClass}
+        // Без выбранной категории показывать нечего
+        disabled={!activeCategoryId}
+        style={{ opacity: activeCategoryId ? 1 : 0.4 }}
+      >
+        <FolderOpen size={20} style={{ color: iconColor }} />
+      </button>
+
+      <span
+        className="truncate text-sm font-bold tracking-wider uppercase"
+        style={{ color: activeCategory?.color || (isDarkTheme ? "#94a3b8" : "#64748b") }}
+      >
+        {activeCategory?.name || "Knowledge Hub"}
+      </span>
+    </div>
+  );
+}
+
 export function App() {
   const { isDarkTheme, showSettings, workspaces, activeWorkspaceId } = useStore();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (isDarkTheme) {
@@ -237,7 +321,7 @@ export function App() {
   if (!activeWorkspaceId || workspaces.length === 0) {
     return (
       <div
-        className="flex h-screen items-center justify-center"
+        className="flex h-dvh items-center justify-center"
         style={{ background: isDarkTheme ? "#0f172a" : "#f8fafc" }}
       >
         <div className="text-center">
@@ -271,7 +355,7 @@ export function App() {
 
   return (
     <div
-      className="flex h-screen overflow-hidden"
+      className="flex h-dvh overflow-hidden"
       style={{
         background: isDarkTheme ? "#0f172a" : "#ffffff",
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
@@ -280,12 +364,15 @@ export function App() {
       {/* Sidebar - Categories */}
       <Sidebar />
 
-      {/* Folder Panel */}
+      {/* Folder Panel: на мобильном — выдвижная панель поверх контента */}
       <FolderPanel />
 
       {/* Main Area */}
-      <main className="flex-1 overflow-hidden">
-        <MainArea />
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {isMobile && <MobileTopBar />}
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <MainArea />
+        </div>
       </main>
 
       {/* Settings Modal */}

@@ -51,10 +51,11 @@ export function PlaybookHero({
       <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
       <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
 
-      <div className="relative px-6 py-6">
-        <div className="flex items-start gap-4">
+      <div className="relative px-3 py-4 sm:px-6 sm:py-6">
+        {/* На мобильном кнопки действий переносятся на свою строку */}
+        <div className="flex flex-wrap items-start gap-3 sm:gap-4">
           {/* Icon tile */}
-          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl border border-slate-700/60 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-3xl shadow-xl shadow-black/20 backdrop-blur-sm">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-700/60 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-2xl shadow-xl shadow-black/20 backdrop-blur-sm sm:h-16 sm:w-16 sm:text-3xl">
             {icon}
           </div>
 
@@ -71,7 +72,7 @@ export function PlaybookHero({
             <h1 className="truncate text-2xl font-bold text-slate-50">{container.title}</h1>
 
             {/* Stats */}
-            <div className="mt-2.5 flex items-center gap-4 text-[11px]">
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
               <StatPill label="Commands" value={totalCount} color="#00BCD4" />
               <StatPill label="Sections" value={sectionCount} color="#8b5cf6" />
               <StatPill label="Favorites" value={favoriteCount} color="#fbbf24" />
@@ -79,7 +80,7 @@ export function PlaybookHero({
           </div>
 
           {/* Actions */}
-          <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto">
             <button
               onClick={onExpandAll}
               className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
@@ -193,15 +194,17 @@ export function PlaybookFilters({
 }: FiltersProps) {
   return (
     <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
-      <div className="space-y-2.5 px-6 py-3">
-        {/* Search row + mode toggle */}
-        <div className="flex items-center gap-3">
-          <div className="relative max-w-xl flex-1">
+      <div className="space-y-2.5 px-3 py-3 sm:px-6">
+        {/* Search row + mode toggle. На мобильном переносится по строкам */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="relative max-w-xl min-w-[180px] flex-1">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" />
             <input
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search commands, descriptions, tags…"
+              inputMode="search"
+              enterKeyHint="search"
               className="w-full rounded-lg border border-slate-800 bg-slate-900/80 py-2 pr-8 pl-9 text-sm text-slate-100 placeholder-slate-500 transition-colors outline-none focus:border-cyan-400/60 focus:bg-slate-900"
             />
             {search && (

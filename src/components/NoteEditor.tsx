@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useStore } from "../store";
+import { useIsMobile } from "../hooks/useIsMobile";
 import type { NoteItem } from "../types";
 import {
   Save,
@@ -33,6 +34,11 @@ export function NoteEditor({ note }: Props) {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [previewMode, setPreviewMode] = useState<"edit" | "split" | "preview">("split");
+
+  const isMobile = useIsMobile();
+  // Режим «split» по умолчанию: на телефоне это две колонки по ~180px — читать
+  // и редактировать в них невозможно, поэтому там показываем одну панель
+  const viewMode = isMobile && previewMode === "split" ? "edit" : previewMode;
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
@@ -125,17 +131,17 @@ export function NoteEditor({ note }: Props) {
       }}
     >
       {/* Title bar */}
-      <div className="border-b px-6 pt-5 pb-3" style={{ borderColor: border }}>
-        <div className="mb-3 flex items-start gap-3">
+      <div className="border-b px-3 pt-3 pb-3 sm:px-6 sm:pt-5" style={{ borderColor: border }}>
+        <div className="mb-3 flex flex-wrap items-start gap-2 sm:gap-3">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 border-none bg-transparent text-2xl font-bold outline-none"
+            className="min-w-0 flex-1 border-none bg-transparent text-xl font-bold outline-none sm:text-2xl"
             style={{ color: textColor }}
             placeholder="Note title..."
           />
-          <div className="mt-1 flex flex-shrink-0 items-center gap-2">
+          <div className="mt-1 flex shrink-0 items-center gap-2">
             <button
               onClick={() => updateNote(note.id, { isFavorite: !note.isFavorite })}
               className="rounded-lg p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -227,9 +233,9 @@ export function NoteEditor({ note }: Props) {
         </div>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar. На узком экране кнопки переносятся, а не обрезаются */}
       <div
-        className="flex items-center gap-1 border-b px-4 py-1.5"
+        className="flex flex-wrap items-center gap-1 border-b px-2 py-1.5 sm:px-4"
         style={{ background: toolbarBg, borderColor: border }}
       >
         {toolbarButtons.map((btn, i) => (
@@ -261,43 +267,50 @@ export function NoteEditor({ note }: Props) {
               label: "Split",
             },
             { mode: "preview" as const, icon: <Eye size={12} />, label: "Preview" },
-          ].map(({ mode, icon, label }) => (
-            <button
-              key={mode}
-              onClick={() => setPreviewMode(mode)}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors"
-              style={{
-                background: previewMode === mode ? "#4CAF5020" : "transparent",
-                color: previewMode === mode ? "#4CAF50" : mutedColor,
-              }}
-              title={label}
-            >
-              {icon}
-            </button>
-          ))}
+          ]
+            // Кнопку «split» на мобильном не показываем: этот режим там всё равно
+            // сводится к «edit», и активная, но ничего не меняющая кнопка сбивала бы с толку
+            .filter(({ mode }) => !(isMobile && mode === "split"))
+            .map(({ mode, icon, label }) => (
+              <button
+                key={mode}
+                onClick={() => setPreviewMode(mode)}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors"
+                style={{
+                  background: viewMode === mode ? "#4CAF5020" : "transparent",
+                  color: viewMode === mode ? "#4CAF50" : mutedColor,
+                }}
+                title={label}
+              >
+                {icon}
+              </button>
+            ))}
         </div>
       </div>
 
       {/* Editor / Preview */}
       <div className="flex flex-1 overflow-hidden">
-        {(previewMode === "edit" || previewMode === "split") && (
+        {(viewMode === "edit" || viewMode === "split") && (
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="flex-1 resize-none p-6 font-mono text-sm leading-relaxed outline-none"
+            className="flex-1 resize-none p-3 font-mono text-sm leading-relaxed outline-none sm:p-6"
             style={{
               background: bg,
               color: textColor,
-              borderRight: previewMode === "split" ? `1px solid ${border}` : "none",
+              borderRight: viewMode === "split" ? `1px solid ${border}` : "none",
               fontFamily: '"Fira Code", "Cascadia Code", "JetBrains Mono", monospace',
             }}
             placeholder="Write your note in Markdown..."
             spellCheck={false}
           />
         )}
-        {(previewMode === "preview" || previewMode === "split") && (
-          <div className="flex-1 overflow-y-auto px-8 py-6" style={{ background: bg }}>
+        {(viewMode === "preview" || viewMode === "split") && (
+          <div
+            className="flex-1 overflow-y-auto px-3 py-4 sm:px-8 sm:py-6"
+            style={{ background: bg }}
+          >
             <div className="prose prose-sm max-w-none" style={{ color: textColor }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}

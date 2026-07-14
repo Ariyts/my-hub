@@ -171,6 +171,12 @@ interface StoreActions {
   toggleTheme: () => void;
   setSettings: (settings: Partial<Settings>) => void;
 
+  // Мобильные выдвижные панели. Две панели одновременно на узком экране
+  // не помещаются, поэтому открытие одной закрывает другую
+  toggleFolderPanel: () => void;
+  toggleSidebar: () => void;
+  closeMobilePanels: () => void;
+
   // Data operations
   exportData: () => void;
   importData: (data: string) => void;
@@ -224,6 +230,9 @@ export const useStore = create<AppState & StoreActions>()(
       sidebarCollapsed: false,
       sidebarCompact: false,
       isDarkTheme: false,
+
+      isFolderPanelOpen: false,
+      isSidebarOpen: false,
 
       // ============================================
       // WORKSPACE ACTIONS
@@ -1330,6 +1339,12 @@ export const useStore = create<AppState & StoreActions>()(
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       toggleSidebarCompact: () => set((s) => ({ sidebarCompact: !s.sidebarCompact })),
       toggleTheme: () => set((s) => ({ isDarkTheme: !s.isDarkTheme })),
+
+      toggleFolderPanel: () =>
+        set((s) => ({ isFolderPanelOpen: !s.isFolderPanelOpen, isSidebarOpen: false })),
+      toggleSidebar: () =>
+        set((s) => ({ isSidebarOpen: !s.isSidebarOpen, isFolderPanelOpen: false })),
+      closeMobilePanels: () => set({ isFolderPanelOpen: false, isSidebarOpen: false }),
       setSettings: (settings) => set((s) => ({ settings: { ...s.settings, ...settings } })),
 
       // ============================================

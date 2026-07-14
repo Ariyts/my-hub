@@ -223,7 +223,7 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
       style={{ borderBottom: `1px solid ${border}` }}
     >
       {/* Number */}
-      <td className="w-8 px-2 py-2 text-center">
+      <td className="cell-index w-8 px-2 py-2 text-center">
         <span className="font-mono text-xs" style={{ color: isDark ? "#475569" : "#94a3b8" }}>
           {index + 1}
         </span>
@@ -404,6 +404,8 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
                   color: isDark ? "#e2e8f0" : "#1e293b",
                 }}
                 placeholder="Search..."
+                inputMode="search"
+                enterKeyHint="search"
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
               />
@@ -491,7 +493,7 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
 
           {/* Commands table */}
           {filtered.length > 0 ? (
-            <table className="w-full">
+            <table className="table-cards w-full">
               <tbody>
                 {filtered.map((item, idx) => (
                   <CommandRow
@@ -561,6 +563,8 @@ export function CommandsView({ container }: Props) {
               color: isDarkTheme ? "#e2e8f0" : "#1e293b",
             }}
             placeholder="Search commands..."
+            inputMode="search"
+            enterKeyHint="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

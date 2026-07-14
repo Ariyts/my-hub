@@ -58,12 +58,12 @@ export function TrashModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.6)" }}
       onClick={() => setShowTrash(false)}
     >
       <div
-        className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl"
+        className="modal-sheet flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl"
         style={{
           background: isDarkTheme ? "#1e293b" : "#fff",
           border: "1px solid #334155",

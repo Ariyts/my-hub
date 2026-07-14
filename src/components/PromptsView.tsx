@@ -238,7 +238,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
         className="group transition-colors hover:bg-purple-500/5"
         style={{ borderBottom: `1px solid ${border}` }}
       >
-        <td className="w-8 px-2 py-2 text-center">
+        <td className="cell-index w-8 px-2 py-2 text-center">
           <span className="font-mono text-xs" style={{ color: isDark ? "#475569" : "#94a3b8" }}>
             {index + 1}
           </span>
@@ -512,7 +512,7 @@ function PromptSectionCard({
       {!isCollapsed && (
         <div className="border-t" style={{ borderColor: border, background: bg }}>
           {items.length > 0 ? (
-            <table className="w-full">
+            <table className="table-cards w-full">
               <thead>
                 <tr
                   className="text-[10px] tracking-wider uppercase"
@@ -807,6 +807,8 @@ export function PromptsView({ container }: Props) {
               color: isDarkTheme ? "#e2e8f0" : "#1e293b",
             }}
             placeholder="Search prompts..."
+            inputMode="search"
+            enterKeyHint="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -966,7 +968,7 @@ export function PromptsView({ container }: Props) {
             </div>
             <div className="border-t" style={{ borderColor: border }}>
               {filteredUncategorized.length > 0 ? (
-                <table className="w-full">
+                <table className="table-cards w-full">
                   <thead>
                     <tr
                       className="text-[10px] tracking-wider uppercase"

@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
 import { useStore } from "../store";
+import { useIsMobile } from "../hooks/useIsMobile";
+import { useMobileDrawer } from "../hooks/useMobileDrawer";
+import { useLongPress } from "../hooks/useLongPress";
 import type { Folder, BaseDataType } from "../types";
 import {
   FolderOpen,
@@ -17,6 +20,7 @@ import {
   Edit2,
   Trash2,
   GripVertical,
+  X,
 } from "lucide-react";
 
 const BASE_TYPE_ICONS: Record<
@@ -94,6 +98,11 @@ function FolderItem({
     .filter((f) => f.parentId === folder.id)
     .sort((a, b) => a.order - b.order);
 
+  // Куда можно перенести файл из этой папки
+  const otherFolders = folders
+    .filter((f) => f.categoryId === activeCategoryId && f.id !== folder.id)
+    .sort((a, b) => a.order - b.order);
+
   // Get files in this folder (sorted by order)
   const getFiles = () => {
     const sortByOrder = (items: any[]) =>
@@ -120,6 +129,15 @@ function FolderItem({
     e.stopPropagation();
     setContextMenu({ x: e.clientX, y: e.clientY, type, itemId });
   };
+
+  // Какой именно файл удерживают: обработчики общие для всех строк списка
+  const longPressFileId = useRef<string | undefined>(undefined);
+
+  // На тач-экранах правого клика нет — те же меню открываются долгим нажатием
+  const folderLongPress = useLongPress((x, y) => setContextMenu({ x, y, type: "folder" }));
+  const fileLongPress = useLongPress((x, y) =>
+    setContextMenu({ x, y, type: "file", itemId: longPressFileId.current }),
+  );
 
   const handleRenameFolder = () => {
     if (newName.trim()) updateFolder(folder.id, { name: newName.trim() });
@@ -195,28 +213,34 @@ function FolderItem({
     setDropTarget(null);
   };
 
+  // Перенос файла в другую папку. Мышью — перетаскиванием, пальцем — пунктом меню:
+  // HTML5 drag-and-drop на тач-экранах не работает
+  const moveFileToFolder = (fileId: string, targetFolderId: string) => {
+    switch (baseType) {
+      case "notes":
+        updateNote(fileId, { folderId: targetFolderId });
+        break;
+      case "commands":
+        updateCommandContainer(fileId, { folderId: targetFolderId });
+        break;
+      case "links":
+        updateLinkContainer(fileId, { folderId: targetFolderId });
+        break;
+      case "prompts":
+        updatePromptContainer(fileId, { folderId: targetFolderId });
+        break;
+      case "playbooks":
+        updatePlaybookContainer(fileId, { folderId: targetFolderId });
+        break;
+    }
+  };
+
   const handleDrop = (e: React.DragEvent, targetFolderId: string) => {
     e.preventDefault();
     try {
       const data = JSON.parse(e.dataTransfer.getData("application/json"));
       if (data && data.folderId !== targetFolderId) {
-        switch (baseType) {
-          case "notes":
-            updateNote(data.id, { folderId: targetFolderId });
-            break;
-          case "commands":
-            updateCommandContainer(data.id, { folderId: targetFolderId });
-            break;
-          case "links":
-            updateLinkContainer(data.id, { folderId: targetFolderId });
-            break;
-          case "prompts":
-            updatePromptContainer(data.id, { folderId: targetFolderId });
-            break;
-          case "playbooks":
-            updatePlaybookContainer(data.id, { folderId: targetFolderId });
-            break;
-        }
+        moveFileToFolder(data.id, targetFolderId);
       }
     } catch (err) {
       console.error("Drop failed:", err);
@@ -296,6 +320,42 @@ function FolderItem({
                 >
                   <Edit2 size={12} /> Rename
                 </button>
+
+                {/* Перенос в другую папку: пальцем файл не перетащишь */}
+                {otherFolders.length > 0 && (
+                  <>
+                    <div
+                      className="mt-1 border-t px-3 pt-1.5 pb-1 text-[10px] tracking-wider uppercase"
+                      style={{
+                        color: "#64748b",
+                        borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
+                      }}
+                    >
+                      Move to folder
+                    </div>
+                    <div className="max-h-40 overflow-y-auto">
+                      {otherFolders.map((target) => (
+                        <button
+                          key={target.id}
+                          className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                          style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                          onClick={() => {
+                            if (contextMenu.itemId) moveFileToFolder(contextMenu.itemId, target.id);
+                            setContextMenu(null);
+                          }}
+                        >
+                          <FolderOpen size={12} className="shrink-0 text-slate-400" />
+                          <span className="truncate">{target.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div
+                      className="mt-1 border-t"
+                      style={{ borderColor: isDarkTheme ? "#334155" : "#e2e8f0" }}
+                    />
+                  </>
+                )}
+
                 <button
                   className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
                   style={{ color: "#ef4444" }}
@@ -319,6 +379,7 @@ function FolderItem({
         }}
         onClick={() => toggleFolderExpanded(folder.id)} // ИЗМЕНЕНО: только toggle
         onContextMenu={(e) => handleContextMenu(e, "folder")}
+        {...folderLongPress}
       >
         <button
           onClick={(e) => {
@@ -366,19 +427,20 @@ function FolderItem({
 
         {/* Add file button */}
         <button
-          className="rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+          className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
           onClick={(e) => {
             e.stopPropagation();
             onAddFileToFolder(folder.id);
           }}
           title="Add file"
+          aria-label="Add file to folder"
         >
           <Plus size={12} style={{ color: typeColor }} />
         </button>
 
         {/* More options */}
         <button
-          className="rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+          className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
           onClick={(e) => {
             e.stopPropagation();
             handleContextMenu(e, "folder");
@@ -424,6 +486,11 @@ function FolderItem({
               }}
               onClick={() => onSelectFile(file.id)} // ИЗМЕНЕНО: открывает файл
               onContextMenu={(e) => handleContextMenu(e, "file", file.id)}
+              {...fileLongPress}
+              onPointerDown={(e) => {
+                longPressFileId.current = file.id;
+                fileLongPress.onPointerDown(e);
+              }}
             >
               {/* Drag handle */}
               <div className="cursor-grab opacity-0 group-hover/file:opacity-30">
@@ -460,22 +527,24 @@ function FolderItem({
 
               {/* Edit/Delete buttons */}
               <button
-                className="rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-slate-700"
+                className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-slate-700"
                 onClick={(e) => {
                   e.stopPropagation();
                   startRenameFile(file.id, file.title);
                 }}
                 title="Rename"
+                aria-label="Rename file"
               >
                 <Edit2 size={10} className="text-slate-400 hover:text-slate-200" />
               </button>
               <button
-                className="rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-red-900/30"
+                className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-red-900/30"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteFile(file.id);
                 }}
                 title="Delete"
+                aria-label="Delete file"
               >
                 <Trash2 size={10} className="text-slate-400 hover:text-red-400" />
               </button>
@@ -502,11 +571,22 @@ export function FolderPanel() {
     addPromptContainer,
     addPlaybookContainer,
     isDarkTheme,
+    isFolderPanelOpen,
+    closeMobilePanels,
   } = useStore();
+
+  const isMobile = useIsMobile();
 
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const isAddingFolderRef = useRef(false);
+
+  // Esc, блокировка прокрутки фона, фокус в панели, закрытие свайпом
+  const { panelRef, swipeHandlers } = useMobileDrawer(
+    isMobile,
+    isFolderPanelOpen,
+    closeMobilePanels,
+  );
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId);
   const baseType = activeCategory?.baseType || "notes";
@@ -598,14 +678,18 @@ export function FolderPanel() {
   // handleSelectFile теперь открывает файл на просмотр
   const handleSelectFile = (itemId: string) => {
     setActiveItemId(itemId);
+    // Иначе выбранный файл останется за открытой панелью
+    if (isMobile) closeMobilePanels();
   };
 
   const filteredFolders = categoryFolders.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // No category selected
+  // Категория не выбрана. На мобильном заглушка-колонка бессмысленна:
+  // панели там нет в потоке, и место занимать нечем — пусто место отдаём контенту
   if (!activeCategoryId) {
+    if (isMobile) return null;
     return (
       <div
         className="flex h-full flex-col items-center justify-center border-r"
@@ -622,142 +706,201 @@ export function FolderPanel() {
     );
   }
 
-  return (
-    <div
-      className="flex h-full flex-col border-r"
-      style={{
+  // На десктопе — обычная колонка в потоке.
+  // На мобильном — выдвижная панель поверх контента (анимация через transform: она
+  // идёт на GPU и не дёргается на слабых телефонах, в отличие от анимации width)
+  const panelStyle: React.CSSProperties = isMobile
+    ? {
+        position: "fixed",
+        top: 0,
+        bottom: 0,
+        left: 0,
+        zIndex: 40,
+        width: "min(85vw, 320px)",
+        paddingTop: "var(--safe-top)",
+        paddingBottom: "var(--safe-bottom)",
+        transform: isFolderPanelOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.25s ease-out",
+        boxShadow: isFolderPanelOpen ? "0 0 24px rgba(0, 0, 0, 0.35)" : "none",
+        background: isDarkTheme ? "#111827" : "#f8fafc",
+        borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
+      }
+    : {
         width: "260px",
         minWidth: "260px",
         background: isDarkTheme ? "#111827" : "#f8fafc",
         borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
-      }}
-    >
-      {/* Header */}
+      };
+
+  const isHidden = isMobile && !isFolderPanelOpen;
+
+  return (
+    <>
+      {/* Затемнение фона: клик по нему закрывает панель */}
+      {isMobile && isFolderPanelOpen && (
+        <div
+          onClick={closeMobilePanels}
+          aria-hidden="true"
+          className="fixed inset-0 z-30"
+          style={{ background: "rgba(0, 0, 0, 0.5)" }}
+        />
+      )}
+
       <div
-        className="border-b px-4 pt-4 pb-2"
-        style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
+        ref={panelRef}
+        tabIndex={-1}
+        role={isMobile ? "dialog" : undefined}
+        aria-modal={isMobile && isFolderPanelOpen ? true : undefined}
+        aria-label={isMobile ? "Folders" : undefined}
+        aria-hidden={isHidden || undefined}
+        {...swipeHandlers}
+        className={`flex h-full flex-col border-r outline-none ${isHidden ? "pointer-events-none" : ""}`}
+        style={panelStyle}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold tracking-wider uppercase" style={{ color: typeColor }}>
-            {categoryName}
-          </h2>
+        {/* Header */}
+        <div
+          className="border-b px-4 pt-4 pb-2"
+          style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold tracking-wider uppercase" style={{ color: typeColor }}>
+              {categoryName}
+            </h2>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  if (categoryFolders.length > 0) {
+                    handleAddFile(categoryFolders[0].id);
+                  }
+                }}
+                title="New File"
+                className="rounded-lg p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+                style={{ background: `${typeColor}15` }}
+              >
+                <Plus size={16} style={{ color: typeColor }} />
+              </button>
+              {isMobile && (
+                <button
+                  onClick={closeMobilePanels}
+                  title="Close"
+                  aria-label="Close folders panel"
+                  className="rounded-lg p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+                >
+                  <X size={18} className="text-slate-400" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <Search
+              size={14}
+              className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="Search..."
+              inputMode="search"
+              enterKeyHint="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border py-1.5 pr-3 pl-8 text-sm transition-all outline-none"
+              style={{
+                background: isDarkTheme ? "#1e293b" : "#fff",
+                borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
+                color: isDarkTheme ? "#e2e8f0" : "#1e293b",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Folder tree */}
+        <div className="flex-1 space-y-0.5 overflow-y-auto py-2">
+          {filteredFolders.length === 0 && (
+            <div className="px-4 py-6 text-center text-sm text-slate-400">
+              No folders yet.
+              <br />
+              <button
+                onClick={() => setShowNewFolder(true)}
+                className="mt-1 text-blue-400 hover:underline"
+              >
+                Create one
+              </button>
+            </div>
+          )}
+          {filteredFolders.map((folder) => (
+            <FolderItem
+              key={folder.id}
+              folder={folder}
+              depth={0}
+              activeItemId={activeItemId}
+              onSelectFile={handleSelectFile}
+              onAddFileToFolder={handleAddFile}
+              onAddSubfolder={(parentId) => {
+                setNewFolderName("");
+                addFolder({
+                  name: "New Subfolder",
+                  categoryId: activeCategoryId!,
+                  parentId,
+                  isExpanded: true,
+                });
+              }}
+            />
+          ))}
+        </div>
+
+        {/* New folder input */}
+        {showNewFolder && (
+          <div className="px-3 pb-2">
+            <input
+              autoFocus
+              className="w-full rounded-lg border px-3 py-1.5 text-sm outline-none"
+              style={{
+                background: isDarkTheme ? "#1e293b" : "#fff",
+                borderColor: typeColor,
+                color: isDarkTheme ? "#e2e8f0" : "#1e293b",
+              }}
+              placeholder="Folder name..."
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddFolder(null);
+                if (e.key === "Escape") setShowNewFolder(false);
+              }}
+              onBlur={() => handleAddFolder(null)}
+            />
+          </div>
+        )}
+
+        {/* Footer */}
+        <div
+          className="flex gap-2 border-t p-2"
+          style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
+        >
+          <button
+            onClick={() => setShowNewFolder(true)}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+            style={{
+              background: isDarkTheme ? "#1e293b" : "#f1f5f9",
+              color: isDarkTheme ? "#94a3b8" : "#6b7280",
+            }}
+          >
+            <FolderOpen size={13} />
+            New Folder
+          </button>
           <button
             onClick={() => {
               if (categoryFolders.length > 0) {
                 handleAddFile(categoryFolders[0].id);
               }
             }}
-            title="New File"
-            className="rounded-lg p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
-            style={{ background: `${typeColor}15` }}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+            style={{ background: `${typeColor}20`, color: typeColor }}
           >
-            <Plus size={16} style={{ color: typeColor }} />
+            <Plus size={13} />
+            New File
           </button>
         </div>
-        <div className="relative">
-          <Search size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border py-1.5 pr-3 pl-8 text-sm transition-all outline-none"
-            style={{
-              background: isDarkTheme ? "#1e293b" : "#fff",
-              borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
-              color: isDarkTheme ? "#e2e8f0" : "#1e293b",
-            }}
-          />
-        </div>
       </div>
-
-      {/* Folder tree */}
-      <div className="flex-1 space-y-0.5 overflow-y-auto py-2">
-        {filteredFolders.length === 0 && (
-          <div className="px-4 py-6 text-center text-sm text-slate-400">
-            No folders yet.
-            <br />
-            <button
-              onClick={() => setShowNewFolder(true)}
-              className="mt-1 text-blue-400 hover:underline"
-            >
-              Create one
-            </button>
-          </div>
-        )}
-        {filteredFolders.map((folder) => (
-          <FolderItem
-            key={folder.id}
-            folder={folder}
-            depth={0}
-            activeItemId={activeItemId}
-            onSelectFile={handleSelectFile}
-            onAddFileToFolder={handleAddFile}
-            onAddSubfolder={(parentId) => {
-              setNewFolderName("");
-              addFolder({
-                name: "New Subfolder",
-                categoryId: activeCategoryId!,
-                parentId,
-                isExpanded: true,
-              });
-            }}
-          />
-        ))}
-      </div>
-
-      {/* New folder input */}
-      {showNewFolder && (
-        <div className="px-3 pb-2">
-          <input
-            autoFocus
-            className="w-full rounded-lg border px-3 py-1.5 text-sm outline-none"
-            style={{
-              background: isDarkTheme ? "#1e293b" : "#fff",
-              borderColor: typeColor,
-              color: isDarkTheme ? "#e2e8f0" : "#1e293b",
-            }}
-            placeholder="Folder name..."
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddFolder(null);
-              if (e.key === "Escape") setShowNewFolder(false);
-            }}
-            onBlur={() => handleAddFolder(null)}
-          />
-        </div>
-      )}
-
-      {/* Footer */}
-      <div
-        className="flex gap-2 border-t p-2"
-        style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
-      >
-        <button
-          onClick={() => setShowNewFolder(true)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
-          style={{
-            background: isDarkTheme ? "#1e293b" : "#f1f5f9",
-            color: isDarkTheme ? "#94a3b8" : "#6b7280",
-          }}
-        >
-          <FolderOpen size={13} />
-          New Folder
-        </button>
-        <button
-          onClick={() => {
-            if (categoryFolders.length > 0) {
-              handleAddFile(categoryFolders[0].id);
-            }
-          }}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
-          style={{ background: `${typeColor}20`, color: typeColor }}
-        >
-          <Plus size={13} />
-          New File
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
