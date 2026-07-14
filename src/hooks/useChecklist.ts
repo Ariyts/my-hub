@@ -1,16 +1,16 @@
-import { useState, useCallback, useEffect } from 'react';
-import type { ChecklistStatus } from '../types';
+import { useState, useCallback, useEffect } from "react";
+import type { ChecklistStatus } from "../types";
 
 type ChecklistMap = Record<string, ChecklistStatus>;
 
-const STORAGE_PREFIX = 'pb:checklist:';
+const STORAGE_PREFIX = "pb:checklist:";
 
 function readFromStorage(playbookId: string): ChecklistMap {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + playbookId);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') return parsed as ChecklistMap;
+    if (parsed && typeof parsed === "object") return parsed as ChecklistMap;
     return {};
   } catch {
     return {};
@@ -47,14 +47,11 @@ export function useChecklist(playbookId: string, itemIds: string[]): ChecklistAp
     setMap(readFromStorage(playbookId));
   }, [playbookId]);
 
-  const status = useCallback(
-    (itemId: string): ChecklistStatus => map[itemId] || 'pending',
-    [map]
-  );
+  const status = useCallback((itemId: string): ChecklistStatus => map[itemId] || "pending", [map]);
 
   const setStatus = useCallback((itemId: string, s: ChecklistStatus) => {
     setMap((prev) => {
-      if (s === 'pending') {
+      if (s === "pending") {
         const { [itemId]: _removed, ...rest } = prev;
         return rest;
       }
@@ -65,19 +62,20 @@ export function useChecklist(playbookId: string, itemIds: string[]): ChecklistAp
   const toggle = useCallback((itemId: string) => {
     setMap((prev) => {
       const cur = prev[itemId];
-      if (cur === 'done') {
+      if (cur === "done") {
         const { [itemId]: _removed, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [itemId]: 'done' };
+      return { ...prev, [itemId]: "done" };
     });
   }, []);
 
   const cycle = useCallback((itemId: string) => {
     setMap((prev) => {
-      const cur: ChecklistStatus = prev[itemId] || 'pending';
-      const next: ChecklistStatus = cur === 'pending' ? 'done' : cur === 'done' ? 'skipped' : 'pending';
-      if (next === 'pending') {
+      const cur: ChecklistStatus = prev[itemId] || "pending";
+      const next: ChecklistStatus =
+        cur === "pending" ? "done" : cur === "done" ? "skipped" : "pending";
+      if (next === "pending") {
         const { [itemId]: _removed, ...rest } = prev;
         return rest;
       }
@@ -87,14 +85,18 @@ export function useChecklist(playbookId: string, itemIds: string[]): ChecklistAp
 
   const reset = useCallback(() => {
     setMap({});
-    try { localStorage.removeItem(STORAGE_PREFIX + playbookId); } catch { /* */ }
+    try {
+      localStorage.removeItem(STORAGE_PREFIX + playbookId);
+    } catch {
+      /* */
+    }
   }, [playbookId]);
 
   const counts = {
     total: itemIds.length,
-    done: itemIds.filter((id) => map[id] === 'done').length,
-    skipped: itemIds.filter((id) => map[id] === 'skipped').length,
-    pending: itemIds.filter((id) => !map[id] || map[id] === 'pending').length,
+    done: itemIds.filter((id) => map[id] === "done").length,
+    skipped: itemIds.filter((id) => map[id] === "skipped").length,
+    pending: itemIds.filter((id) => !map[id] || map[id] === "pending").length,
   };
 
   return { status, setStatus, toggle, cycle, reset, counts };

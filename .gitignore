@@ -1,1 +1,42 @@
-node_modules/.cache/
+# Зависимости — ставятся через npm ci из package-lock.json
+node_modules/
+
+# Результат сборки — CI собирает сам и деплоит в ветку gh-pages
+dist/
+dist-ssr/
+
+# Локальные бэкапы данных (src/data.json остаётся под контролем версий)
+src/data_backup_*.json
+src/settings-backup.json
+
+# Логи
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Кэш инструментов
+.eslintcache
+.cache/
+.vite/
+*.tsbuildinfo
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local
+
+# Редакторы и IDE
+# .vscode/ коммитим целиком: extensions.json и settings.json — общие настройки проекта
+.idea/
+*.swp
+*~
+
+# Claude Code: инструкции и локальные настройки не публикуем
+.claude/settings.local.json
+CLAUDE.md
+
+# Служебные файлы ОС
+.DS_Store
+Thumbs.db
+desktop.ini

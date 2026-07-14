@@ -1,4 +1,4 @@
-import type { PlaybookContainer, PlaybookLanguage } from '../types';
+import type { PlaybookContainer, PlaybookLanguage } from "../types";
 
 /**
  * Markdown Import/Export utilities.
@@ -67,25 +67,25 @@ Privilege escalation and persistence.
 export function generateFullExport(playbook: PlaybookContainer): string {
   const lines: string[] = [];
   lines.push(`# Playbook: ${playbook.title}`);
-  lines.push('');
+  lines.push("");
 
   // Variables (if any)
   if (playbook.variables && playbook.variables.length > 0) {
-    lines.push('<!-- Variables:');
+    lines.push("<!-- Variables:");
     for (const v of playbook.variables) {
-      const desc = v.description ? ` — ${v.description}` : '';
+      const desc = v.description ? ` — ${v.description}` : "";
       lines.push(`  $${v.name} = ${v.value}${desc}`);
     }
-    lines.push('-->');
-    lines.push('');
+    lines.push("-->");
+    lines.push("");
   }
 
   // Sections
   const sections = [...(playbook.sections || [])].sort((a, b) => a.order - b.order);
 
   if (sections.length === 0) {
-    lines.push('_No sections yet._');
-    return lines.join('\n');
+    lines.push("_No sections yet._");
+    return lines.join("\n");
   }
 
   for (const section of sections) {
@@ -93,58 +93,58 @@ export function generateFullExport(playbook: PlaybookContainer): string {
     if (section.color) {
       lines.push(`<!-- color: ${section.color} -->`);
     }
-    lines.push('');
+    lines.push("");
 
     const items = playbook.subItems
       .filter((i) => i.sectionId === section.id)
       .sort((a, b) => a.order - b.order);
 
     if (items.length === 0) {
-      lines.push('_Empty section._');
-      lines.push('');
+      lines.push("_Empty section._");
+      lines.push("");
       continue;
     }
 
     for (const item of items) {
       if (item.description) {
         lines.push(item.description);
-        lines.push('');
+        lines.push("");
       }
-      const lang = item.language || 'bash';
-      lines.push('```' + lang);
+      const lang = item.language || "bash";
+      lines.push("```" + lang);
       lines.push(item.command);
-      lines.push('```');
+      lines.push("```");
       if (item.tags && item.tags.length > 0) {
-        lines.push('Tags: ' + item.tags.map((t) => '#' + t).join(', '));
+        lines.push("Tags: " + item.tags.map((t) => "#" + t).join(", "));
       }
       if (item.isFavorite) {
-        lines.push('Favorite: true');
+        lines.push("Favorite: true");
       }
-      lines.push('');
+      lines.push("");
     }
   }
 
   // Uncategorized
   const uncategorized = playbook.subItems.filter((i) => !i.sectionId);
   if (uncategorized.length > 0) {
-    lines.push('## Uncategorized');
-    lines.push('');
+    lines.push("## Uncategorized");
+    lines.push("");
     for (const item of uncategorized) {
       if (item.description) {
         lines.push(item.description);
-        lines.push('');
+        lines.push("");
       }
-      lines.push('```' + (item.language || 'bash'));
+      lines.push("```" + (item.language || "bash"));
       lines.push(item.command);
-      lines.push('```');
+      lines.push("```");
       if (item.tags && item.tags.length > 0) {
-        lines.push('Tags: ' + item.tags.map((t) => '#' + t).join(', '));
+        lines.push("Tags: " + item.tags.map((t) => "#" + t).join(", "));
       }
-      lines.push('');
+      lines.push("");
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 // ============================================================================
@@ -172,8 +172,15 @@ export interface ParsedPlaybook {
 }
 
 const SUPPORTED_LANGS: PlaybookLanguage[] = [
-  'bash', 'zsh', 'powershell', 'cmd',
-  'python', 'javascript', 'sql', 'yaml', 'nginx',
+  "bash",
+  "zsh",
+  "powershell",
+  "cmd",
+  "python",
+  "javascript",
+  "sql",
+  "yaml",
+  "nginx",
 ];
 
 function isSupportedLang(s: string): s is PlaybookLanguage {
@@ -182,7 +189,7 @@ function isSupportedLang(s: string): s is PlaybookLanguage {
 
 export function parseMarkdown(content: string): ParsedPlaybook {
   const result: ParsedPlaybook = {
-    title: 'Untitled Playbook',
+    title: "Untitled Playbook",
     sections: [],
   };
 
@@ -196,7 +203,7 @@ export function parseMarkdown(content: string): ParsedPlaybook {
   const varsComment = content.match(/<!--\s*Variables:\s*([\s\S]*?)-->/);
   if (varsComment) {
     result.variables = [];
-    const varsLines = varsComment[1].split('\n');
+    const varsLines = varsComment[1].split("\n");
     for (const line of varsLines) {
       const m = line.match(/\s*\$(\w+)\s*=\s*(.+?)(?:\s*—\s*(.+))?$/);
       if (m) {
@@ -213,8 +220,8 @@ export function parseMarkdown(content: string): ParsedPlaybook {
   const sectionBlocks = content.split(/^##\s+/m).slice(1); // remove preamble before first ##
 
   for (const block of sectionBlocks) {
-    const lines = block.split('\n');
-    const sectionTitle = lines[0]?.trim() || 'Untitled Section';
+    const lines = block.split("\n");
+    const sectionTitle = lines[0]?.trim() || "Untitled Section";
     const section: ParsedSection = { title: sectionTitle, items: [] };
 
     // Extract color from HTML comment
@@ -226,8 +233,8 @@ export function parseMarkdown(content: string): ParsedPlaybook {
     let match: RegExpExecArray | null;
 
     while ((match = codeBlockRegex.exec(block)) !== null) {
-      const langRaw = (match[1] || 'bash').toLowerCase();
-      const language: PlaybookLanguage = isSupportedLang(langRaw) ? langRaw : 'bash';
+      const langRaw = (match[1] || "bash").toLowerCase();
+      const language: PlaybookLanguage = isSupportedLang(langRaw) ? langRaw : "bash";
       const rawCode = match[2].trim();
 
       if (!rawCode) continue;
@@ -237,21 +244,21 @@ export function parseMarkdown(content: string): ParsedPlaybook {
 
       // Text BEFORE the code block (between previous code block or section start)
       const before = block.slice(0, blockStart);
-      const afterPrevBlock = before.split('```').pop() || '';
+      const afterPrevBlock = before.split("```").pop() || "";
       // Strip HTML comments, section title line, and clean up
-      let description = afterPrevBlock
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/^#+\s+.*$/gm, '')
+      const description = afterPrevBlock
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .replace(/^#+\s+.*$/gm, "")
         .trim()
-        .split('\n')
+        .split("\n")
         .map((l) => l.trim())
         .filter(Boolean)
-        .join(' ')
+        .join(" ")
         .trim();
 
       // Text AFTER the code block — look for Tags: and Favorite:
       const after = block.slice(blockEnd);
-      const afterLines = after.split('\n').slice(0, 5);
+      const afterLines = after.split("\n").slice(0, 5);
 
       const tags: string[] = [];
       let isFavorite = false;
@@ -262,13 +269,13 @@ export function parseMarkdown(content: string): ParsedPlaybook {
           const raw = tagsMatch[1];
           const found = raw.match(/#?[\w-]+/g) || [];
           for (const t of found) {
-            const clean = t.replace(/^#/, '').trim();
+            const clean = t.replace(/^#/, "").trim();
             if (clean) tags.push(clean);
           }
         }
         const favMatch = line.match(/^Favorite:\s*(true|yes|1)/i);
         if (favMatch) isFavorite = true;
-        if (line.startsWith('```') || line.startsWith('## ')) break;
+        if (line.startsWith("```") || line.startsWith("## ")) break;
       }
 
       // ====================================================================
@@ -276,12 +283,12 @@ export function parseMarkdown(content: string): ParsedPlaybook {
       // ====================================================================
       // Each non-empty, non-comment line becomes its own command.
       // If the first line is a "# comment", use it as description for ALL commands in the block.
-      const codeLines = rawCode.split('\n');
-      let blockInlineDesc = '';
+      const codeLines = rawCode.split("\n");
+      let blockInlineDesc = "";
       let startIndex = 0;
 
-      if (codeLines.length > 0 && codeLines[0].trim().startsWith('#')) {
-        blockInlineDesc = codeLines[0].trim().replace(/^#\s*/, '');
+      if (codeLines.length > 0 && codeLines[0].trim().startsWith("#")) {
+        blockInlineDesc = codeLines[0].trim().replace(/^#\s*/, "");
         startIndex = 1;
       }
 
@@ -290,7 +297,7 @@ export function parseMarkdown(content: string): ParsedPlaybook {
         const line = codeLines[i].trim();
         // Skip empty lines and pure comment lines
         if (!line) continue;
-        if (line.startsWith('#')) continue;
+        if (line.startsWith("#")) continue;
         commandsInBlock.push(codeLines[i]);
       }
 
@@ -304,14 +311,14 @@ export function parseMarkdown(content: string): ParsedPlaybook {
           command: cmd,
           language,
           // Only the first command gets the description (it applies to the block)
-          description: idx === 0 ? baseDescription : '',
+          description: idx === 0 ? baseDescription : "",
           tags: idx === 0 ? tags : [...tags], // first gets the tags, rest get copies
           isFavorite: idx === 0 ? isFavorite : false,
         });
       });
     }
 
-    if (section.items.length > 0 || sectionTitle !== 'Untitled Section') {
+    if (section.items.length > 0 || sectionTitle !== "Untitled Section") {
       result.sections.push(section);
     }
   }
@@ -322,14 +329,14 @@ export function parseMarkdown(content: string): ParsedPlaybook {
 export function parseJson(content: string): ParsedPlaybook {
   const data = JSON.parse(content);
   return {
-    title: data.title || 'Untitled Playbook',
+    title: data.title || "Untitled Playbook",
     sections: (data.sections || []).map((s: any) => ({
-      title: s.title || 'Untitled',
+      title: s.title || "Untitled",
       color: s.color,
       items: (s.items || []).map((i: any) => ({
-        command: i.command || '',
-        language: (i.language as PlaybookLanguage) || 'bash',
-        description: i.description || '',
+        command: i.command || "",
+        language: (i.language as PlaybookLanguage) || "bash",
+        description: i.description || "",
         tags: i.tags || [],
         isFavorite: i.isFavorite || false,
       })),
@@ -340,7 +347,7 @@ export function parseJson(content: string): ParsedPlaybook {
 
 export function autoDetect(content: string): ParsedPlaybook {
   const trimmed = content.trim();
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
       return parseJson(trimmed);
     } catch {
@@ -365,8 +372,8 @@ export function validateParsed(parsed: ParsedPlaybook): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  if (!parsed.title || parsed.title.trim() === '') {
-    errors.push('Playbook title is missing');
+  if (!parsed.title || parsed.title.trim() === "") {
+    errors.push("Playbook title is missing");
   }
 
   let commands = 0;
@@ -383,7 +390,7 @@ export function validateParsed(parsed: ParsedPlaybook): ValidationResult {
   }
 
   if (parsed.sections.length === 0) {
-    warnings.push('No sections found — content will be added as uncategorized');
+    warnings.push("No sections found — content will be added as uncategorized");
   }
 
   return {

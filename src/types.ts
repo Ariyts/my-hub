@@ -7,7 +7,7 @@
 //         └── Items (заметки, команды, ссылки, промпты, плейбуки)
 
 // Base data types for items
-export type BaseDataType = 'notes' | 'commands' | 'links' | 'prompts' | 'playbooks';
+export type BaseDataType = "notes" | "commands" | "links" | "prompts" | "playbooks";
 
 // ============================================
 // WORKSPACE - главный уровень организации
@@ -63,14 +63,14 @@ export interface NoteItem {
   order: number;
   createdAt: string;
   updatedAt: string;
-  type: 'notes';
+  type: "notes";
 }
 
 export interface CommandItem {
   id: string;
   command: string;
   description: string;
-  language: 'bash' | 'powershell' | 'cmd' | 'zsh' | 'python' | 'javascript';
+  language: "bash" | "powershell" | "cmd" | "zsh" | "python" | "javascript";
   tags: string[];
   isFavorite: boolean;
 }
@@ -85,7 +85,7 @@ export interface CommandContainer {
   order: number;
   createdAt: string;
   updatedAt: string;
-  type: 'commands';
+  type: "commands";
   isExpanded?: boolean;
 }
 
@@ -126,7 +126,7 @@ export interface LinkContainer {
   order: number;
   createdAt: string;
   updatedAt: string;
-  type: 'links';
+  type: "links";
   isExpanded?: boolean;
 }
 
@@ -161,22 +161,21 @@ export interface PromptContainer {
   order: number;
   createdAt: string;
   updatedAt: string;
-  type: 'prompts';
+  type: "prompts";
   isExpanded?: boolean;
 }
 
 export type PlaybookLanguage =
-  | 'bash' | 'zsh' | 'powershell' | 'cmd'
-  | 'python' | 'javascript' | 'sql' | 'yaml' | 'nginx';
+  "bash" | "zsh" | "powershell" | "cmd" | "python" | "javascript" | "sql" | "yaml" | "nginx";
 
-export type ChecklistStatus = 'pending' | 'done' | 'skipped';
+export type ChecklistStatus = "pending" | "done" | "skipped";
 
 export interface PlaybookVariable {
   id: string;
-  name: string;        // e.g. "TARGET" (uppercase recommended)
-  value: string;       // e.g. "10.10.10.5"
+  name: string; // e.g. "TARGET" (uppercase recommended)
+  value: string; // e.g. "10.10.10.5"
   description?: string;
-  color?: string;      // accent color for highlighting in code
+  color?: string; // accent color for highlighting in code
 }
 
 export interface PlaybookItem {
@@ -211,11 +210,12 @@ export interface PlaybookContainer {
   order: number;
   createdAt: string;
   updatedAt: string;
-  type: 'playbooks';
+  type: "playbooks";
   isExpanded?: boolean;
 }
 
-export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContainer | PlaybookContainer;
+export type AnyItem =
+  NoteItem | CommandContainer | LinkContainer | PromptContainer | PlaybookContainer;
 
 // ============================================
 // TRASH - удаленные элементы
@@ -223,7 +223,7 @@ export type AnyItem = NoteItem | CommandContainer | LinkContainer | PromptContai
 export interface TrashItem {
   id: string;
   originalId: string;
-  type: 'note' | 'command' | 'link' | 'prompt' | 'playbook';
+  type: "note" | "command" | "link" | "prompt" | "playbook";
   item: NoteItem | CommandContainer | LinkContainer | PromptContainer | PlaybookContainer;
   // Path info for restoration
   workspaceId: string;
@@ -245,10 +245,10 @@ export interface GitHubSyncConfig {
 }
 
 export interface Settings {
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   fontSize: number;
-  editorWidth: 'full' | 'centered';
-  previewMode: 'split' | 'tab' | 'off';
+  editorWidth: "full" | "centered";
+  previewMode: "split" | "tab" | "off";
   autoSave: boolean;
   spellCheck: boolean;
   lineNumbers: boolean;
@@ -263,15 +263,15 @@ export interface AppState {
   // Workspaces
   workspaces: Workspace[];
   activeWorkspaceId: string | null;
-  
+
   // Categories
   categories: Category[];
   activeCategoryId: string | null;
-  
+
   // Folders
   folders: Folder[];
   activeFolderId: string | null;
-  
+
   // Items
   notes: NoteItem[];
   commands: CommandContainer[];
@@ -279,11 +279,11 @@ export interface AppState {
   prompts: PromptContainer[];
   playbooks: PlaybookContainer[];
   activeItemId: string | null;
-  
+
   // Trash
   trash: TrashItem[];
   showTrash: boolean;
-  
+
   // UI State
   settings: Settings;
   searchQuery: string;

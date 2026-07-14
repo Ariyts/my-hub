@@ -1,56 +1,54 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useStore } from '../store';
-import type { PlaybookContainer, PlaybookItem, PlaybookLanguage } from '../types';
-import { PlaybookHero, PlaybookFilters, type StatusFilter } from './playbook/PlaybookHero';
-import { PlaybookSectionCard } from './playbook/PlaybookSectionCard';
-import { InlineAddSection } from './playbook/InlineAddSection';
-import { InlineAddCommand } from './playbook/InlineAddCommand';
-import { EmptyState } from './playbook/EmptyStates';
-import { CommandCard, type ViewMode } from './playbook/CommandCard';
-import { stripMdMetadata, cleanDescription } from './playbook/utils';
-import { useChecklist } from '../hooks/useChecklist';
-import { HeroCollapsed } from './HeroCollapsed';
-import { useHeroState } from '../hooks/useHeroState';
-import { useViewLayout } from '../hooks/useViewLayout';
-import { CommandListItem } from './playbook/CommandListItem';
-import { ImportExportModal } from './ImportExportModal';
-import { MarkdownView } from './playbook/MarkdownView';
+import { useState, useMemo, useEffect } from "react";
+import { useStore } from "../store";
+import type { PlaybookContainer, PlaybookItem, PlaybookLanguage } from "../types";
+import { PlaybookHero, PlaybookFilters, type StatusFilter } from "./playbook/PlaybookHero";
+import { PlaybookSectionCard } from "./playbook/PlaybookSectionCard";
+import { InlineAddSection } from "./playbook/InlineAddSection";
+import { InlineAddCommand } from "./playbook/InlineAddCommand";
+import { EmptyState } from "./playbook/EmptyStates";
+import { CommandCard, type ViewMode } from "./playbook/CommandCard";
+import { stripMdMetadata, cleanDescription } from "./playbook/utils";
+import { useChecklist } from "../hooks/useChecklist";
+import { HeroCollapsed } from "./HeroCollapsed";
+import { useHeroState } from "../hooks/useHeroState";
+import { useViewLayout } from "../hooks/useViewLayout";
+import { CommandListItem } from "./playbook/CommandListItem";
+import { ImportExportModal } from "./ImportExportModal";
+import { MarkdownView } from "./playbook/MarkdownView";
 
 interface Props {
   container: PlaybookContainer;
 }
 
-type FilterMode = PlaybookLanguage | 'all' | 'favorites';
+type FilterMode = PlaybookLanguage | "all" | "favorites";
 
 export function PlaybookView({ container }: Props) {
-  const {
-    addPlaybookItem, addPlaybookSection,
-    updatePlaybookSection, deletePlaybookSection,
-  } = useStore();
+  const { addPlaybookItem, addPlaybookSection, updatePlaybookSection, deletePlaybookSection } =
+    useStore();
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const { heroExpanded, toggleHero } = useHeroState();
   const [layout, setLayout] = useViewLayout();
-  const [langFilter, setLangFilter] = useState<FilterMode>('all');
-  const [mode, setMode] = useState<ViewMode>('reference');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [langFilter, setLangFilter] = useState<FilterMode>("all");
+  const [mode, setMode] = useState<ViewMode>("reference");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [addingSection, setAddingSection] = useState(false);
   const [addingToSection, setAddingToSection] = useState<string | undefined>(undefined);
   const [showImportExport, setShowImportExport] = useState(false);
-  const [phaseFilter, setPhaseFilter] = useState<string | 'all'>('all');
+  const [phaseFilter, setPhaseFilter] = useState<string | "all">("all");
 
   // Keyboard shortcut: Cmd/Ctrl+L to toggle layout
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "l") {
         const tag = (e.target as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
         e.preventDefault();
-        setLayout(layout === 'grid' ? 'list' : 'grid');
+        setLayout(layout === "grid" ? "list" : "grid");
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [layout, setLayout]);
 
   const variables = container.variables || [];
@@ -74,35 +72,40 @@ export function PlaybookView({ container }: Props) {
     const q = search.toLowerCase();
     if (container.title.toLowerCase().includes(q)) return true;
     const cmd = stripMdMetadata(item.command).toLowerCase();
-    const desc = (cleanDescription(item.description) || '').toLowerCase();
-    const tags = item.tags.join(' ').toLowerCase();
+    const desc = (cleanDescription(item.description) || "").toLowerCase();
+    const tags = item.tags.join(" ").toLowerCase();
     return cmd.includes(q) || desc.includes(q) || tags.includes(q);
   };
 
   const matchesLangFilter = (item: PlaybookItem): boolean => {
-    if (langFilter === 'all') return true;
-    if (langFilter === 'favorites') return item.isFavorite;
+    if (langFilter === "all") return true;
+    if (langFilter === "favorites") return item.isFavorite;
     return item.language === langFilter;
   };
 
   const matchesStatusFilter = (item: PlaybookItem): boolean => {
-    if (mode !== 'engagement' || statusFilter === 'all') return true;
+    if (mode !== "engagement" || statusFilter === "all") return true;
     return checklist.status(item.id) === statusFilter;
   };
 
   const matchesPhaseFilter = (item: PlaybookItem): boolean => {
-    if (phaseFilter === 'all') return true;
-    const section = sections.find(s => s.id === item.sectionId);
+    if (phaseFilter === "all") return true;
+    const section = sections.find((s) => s.id === item.sectionId);
     if (!section) return false;
     const title = section.title.toLowerCase();
-    if (phaseFilter === 'recon') return /recon|enum|discover|scan|fingerprint/.test(title);
-    if (phaseFilter === 'exploit') return /exploit|attack|vuln|rce/.test(title);
-    if (phaseFilter === 'post') return /post|privesc|persist|lateral/.test(title);
+    if (phaseFilter === "recon") return /recon|enum|discover|scan|fingerprint/.test(title);
+    if (phaseFilter === "exploit") return /exploit|attack|vuln|rce/.test(title);
+    if (phaseFilter === "post") return /post|privesc|persist|lateral/.test(title);
     return true;
   };
 
   const filterItem = (item: PlaybookItem): boolean => {
-    return matchesSearch(item) && matchesLangFilter(item) && matchesStatusFilter(item) && matchesPhaseFilter(item);
+    return (
+      matchesSearch(item) &&
+      matchesLangFilter(item) &&
+      matchesStatusFilter(item) &&
+      matchesPhaseFilter(item)
+    );
   };
 
   // Stats
@@ -112,15 +115,34 @@ export function PlaybookView({ container }: Props) {
 
   // Filtered items per section
   const filteredSections = useMemo(() => {
-    return sections.map((sec) => {
-      const items = getItemsForSection(sec.id);
-      const filtered = items.filter(filterItem);
-      return { section: sec, items: filtered };
-    }).filter(({ items }) => items.length > 0 || (!search && langFilter === 'all' && phaseFilter === 'all' && statusFilter === 'all'));
-  }, [sections, container.subItems, search, langFilter, statusFilter, phaseFilter, mode, checklist]);
+    return sections
+      .map((sec) => {
+        const items = getItemsForSection(sec.id);
+        const filtered = items.filter(filterItem);
+        return { section: sec, items: filtered };
+      })
+      .filter(
+        ({ items }) =>
+          items.length > 0 ||
+          (!search && langFilter === "all" && phaseFilter === "all" && statusFilter === "all"),
+      );
+  }, [
+    sections,
+    container.subItems,
+    search,
+    langFilter,
+    statusFilter,
+    phaseFilter,
+    mode,
+    checklist,
+  ]);
 
   const resultCount = filteredSections.reduce((sum, { items }) => sum + items.length, 0);
-  const isFiltered = !!search || langFilter !== 'all' || phaseFilter !== 'all' || (mode === 'engagement' && statusFilter !== 'all');
+  const isFiltered =
+    !!search ||
+    langFilter !== "all" ||
+    phaseFilter !== "all" ||
+    (mode === "engagement" && statusFilter !== "all");
 
   // Handlers
   const handleAddSection = (title: string) => {
@@ -174,19 +196,19 @@ export function PlaybookView({ container }: Props) {
     if (sections.length > 0) {
       setAddingToSection(sections[0].id);
     } else {
-      setAddingToSection('__uncategorized__');
+      setAddingToSection("__uncategorized__");
     }
   };
 
   const handleClearFilters = () => {
-    setSearch('');
-    setLangFilter('all');
-    setStatusFilter('all');
-    setPhaseFilter('all');
+    setSearch("");
+    setLangFilter("all");
+    setStatusFilter("all");
+    setPhaseFilter("all");
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden bg-slate-950">
       {/* Hero header — collapsible */}
       {heroExpanded ? (
         <PlaybookHero
@@ -231,39 +253,58 @@ export function PlaybookView({ container }: Props) {
         onLayoutChange={setLayout}
         phaseFilter={phaseFilter}
         onPhaseFilterChange={setPhaseFilter}
-        sections={sections.map(s => ({ id: s.id, title: s.title, color: s.color }))}
+        sections={sections.map((s) => ({ id: s.id, title: s.title, color: s.color }))}
       />
 
       {/* Engagement mode banner */}
-      {mode === 'engagement' && (
-        <div className="px-6 py-2 bg-emerald-500/5 border-b border-emerald-500/20 flex items-center gap-3">
+      {mode === "engagement" && (
+        <div className="flex items-center gap-3 border-b border-emerald-500/20 bg-emerald-500/5 px-6 py-2">
           <div className="flex items-center gap-2 text-[11px]">
-            <span className="text-emerald-300 font-semibold">Engagement Mode</span>
+            <span className="font-semibold text-emerald-300">Engagement Mode</span>
             <span className="text-slate-500">·</span>
             <span className="text-slate-400">
-              Progress: <span className="text-emerald-300 font-medium">{checklist.counts.done}</span> done
-              {checklist.counts.skipped > 0 && <> · <span className="text-amber-300 font-medium">{checklist.counts.skipped}</span> skipped</>}
+              Progress:{" "}
+              <span className="font-medium text-emerald-300">{checklist.counts.done}</span> done
+              {checklist.counts.skipped > 0 && (
+                <>
+                  {" "}
+                  · <span className="font-medium text-amber-300">
+                    {checklist.counts.skipped}
+                  </span>{" "}
+                  skipped
+                </>
+              )}
               <span className="text-slate-500"> / {checklist.counts.total}</span>
             </span>
           </div>
-          <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden max-w-xs">
-            <div className="h-full flex">
+          <div className="h-1.5 max-w-xs flex-1 overflow-hidden rounded-full bg-slate-800">
+            <div className="flex h-full">
               <div
                 className="h-full bg-emerald-500"
-                style={{ width: checklist.counts.total > 0 ? `${(checklist.counts.done / checklist.counts.total) * 100}%` : 0 }}
+                style={{
+                  width:
+                    checklist.counts.total > 0
+                      ? `${(checklist.counts.done / checklist.counts.total) * 100}%`
+                      : 0,
+                }}
               />
               <div
                 className="h-full bg-amber-500/70"
-                style={{ width: checklist.counts.total > 0 ? `${(checklist.counts.skipped / checklist.counts.total) * 100}%` : 0 }}
+                style={{
+                  width:
+                    checklist.counts.total > 0
+                      ? `${(checklist.counts.skipped / checklist.counts.total) * 100}%`
+                      : 0,
+                }}
               />
             </div>
           </div>
           {checklist.counts.done + checklist.counts.skipped > 0 && (
             <button
               onClick={() => {
-                if (confirm('Reset all progress for this playbook?')) checklist.reset();
+                if (confirm("Reset all progress for this playbook?")) checklist.reset();
               }}
-              className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
+              className="text-[11px] text-slate-400 transition-colors hover:text-slate-200"
             >
               Reset progress
             </button>
@@ -272,128 +313,124 @@ export function PlaybookView({ container }: Props) {
       )}
 
       {/* Content */}
-      {layout === 'markdown' ? (
+      {layout === "markdown" ? (
         <MarkdownView playbook={container} />
       ) : (
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
-          {/* Inline add section */}
-          {addingSection && (
-            <InlineAddSection
-              onAdd={handleAddSection}
-              onClose={() => setAddingSection(false)}
-            />
-          )}
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-6xl space-y-4 px-6 py-6">
+            {/* Inline add section */}
+            {addingSection && (
+              <InlineAddSection onAdd={handleAddSection} onClose={() => setAddingSection(false)} />
+            )}
 
-          {/* Empty state */}
-          {sections.length === 0 && !addingSection && (
-            <EmptyState
-              hasSections={false}
-              isFiltered={false}
-              onAddSection={() => setAddingSection(true)}
-            />
-          )}
-
-          {/* No results from filters */}
-          {sections.length > 0 && filteredSections.length === 0 && isFiltered && (
-            <EmptyState
-              hasSections={true}
-              isFiltered={true}
-              onAddSection={() => {}}
-              onClearFilters={handleClearFilters}
-            />
-          )}
-
-          {/* Sections */}
-          {filteredSections.map(({ section, items }) => (
-            <div key={section.id} className="space-y-2">
-              <PlaybookSectionCard
-                section={section}
-                items={items}
-                containerId={container.id}
-                mode={mode}
-                variables={variables}
-                layout={layout}
-                getChecklistStatus={(id) => checklist.status(id)}
-                onChecklistCycle={(id) => checklist.cycle(id)}
-                onToggleCollapse={() => handleToggleCollapse(section.id)}
-                onRenameSection={(newTitle) => handleRenameSection(section.id, newTitle)}
-                onDeleteSection={() => handleDeleteSection(section.id)}
-                onColorSection={(color) => handleColorSection(section.id, color)}
-                onAddItem={() => setAddingToSection(section.id)}
+            {/* Empty state */}
+            {sections.length === 0 && !addingSection && (
+              <EmptyState
+                hasSections={false}
+                isFiltered={false}
+                onAddSection={() => setAddingSection(true)}
               />
+            )}
 
-              {/* Inline add command to this section */}
-              {addingToSection === section.id && (
-                <InlineAddCommand
-                  onAdd={handleAddItem}
-                  onClose={() => setAddingToSection(undefined)}
-                  sectionId={section.id}
+            {/* No results from filters */}
+            {sections.length > 0 && filteredSections.length === 0 && isFiltered && (
+              <EmptyState
+                hasSections={true}
+                isFiltered={true}
+                onAddSection={() => {}}
+                onClearFilters={handleClearFilters}
+              />
+            )}
+
+            {/* Sections */}
+            {filteredSections.map(({ section, items }) => (
+              <div key={section.id} className="space-y-2">
+                <PlaybookSectionCard
+                  section={section}
+                  items={items}
+                  containerId={container.id}
+                  mode={mode}
+                  variables={variables}
+                  layout={layout}
+                  getChecklistStatus={(id) => checklist.status(id)}
+                  onChecklistCycle={(id) => checklist.cycle(id)}
+                  onToggleCollapse={() => handleToggleCollapse(section.id)}
+                  onRenameSection={(newTitle) => handleRenameSection(section.id, newTitle)}
+                  onDeleteSection={() => handleDeleteSection(section.id)}
+                  onColorSection={(color) => handleColorSection(section.id, color)}
+                  onAddItem={() => setAddingToSection(section.id)}
                 />
-              )}
-            </div>
-          ))}
 
-          {/* Uncategorized items (no sectionId) */}
-          {container.subItems.filter((i) => !i.sectionId).length > 0 && (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/30 overflow-hidden">
-              <h3 className="text-sm font-semibold text-slate-300 px-4 pt-4 pb-2">Uncategorized</h3>
-              {layout === 'list' ? (
-                <div className="divide-y divide-slate-800/40">
-                  {container.subItems
-                    .filter((i) => !i.sectionId)
-                    .filter(filterItem)
-                    .map((item) => (
-                      <CommandListItem
-                        key={item.id}
-                        item={item}
-                        containerId={container.id}
-                        mode={mode}
-                        variables={variables}
-                        checklistStatus={checklist.status(item.id)}
-                        onChecklistCycle={() => checklist.cycle(item.id)}
-                        onEdit={() => {}}
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2.5 p-4 pt-2">
-                  {container.subItems
-                    .filter((i) => !i.sectionId)
-                    .filter(filterItem)
-                    .map((item) => (
-                      <CommandCard
-                        key={item.id}
-                        item={item}
-                        containerId={container.id}
-                        mode={mode}
-                        variables={variables}
-                        checklistStatus={checklist.status(item.id)}
-                        onChecklistCycle={() => checklist.cycle(item.id)}
-                      />
-                    ))}
-                </div>
-              )}
-              {addingToSection === '__uncategorized__' && (
-                <div className={layout === 'list' ? '' : 'mt-3 px-4 pb-4'}>
+                {/* Inline add command to this section */}
+                {addingToSection === section.id && (
                   <InlineAddCommand
                     onAdd={handleAddItem}
                     onClose={() => setAddingToSection(undefined)}
+                    sectionId={section.id}
                   />
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            ))}
+
+            {/* Uncategorized items (no sectionId) */}
+            {container.subItems.filter((i) => !i.sectionId).length > 0 && (
+              <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/30">
+                <h3 className="px-4 pt-4 pb-2 text-sm font-semibold text-slate-300">
+                  Uncategorized
+                </h3>
+                {layout === "list" ? (
+                  <div className="divide-y divide-slate-800/40">
+                    {container.subItems
+                      .filter((i) => !i.sectionId)
+                      .filter(filterItem)
+                      .map((item) => (
+                        <CommandListItem
+                          key={item.id}
+                          item={item}
+                          containerId={container.id}
+                          mode={mode}
+                          variables={variables}
+                          checklistStatus={checklist.status(item.id)}
+                          onChecklistCycle={() => checklist.cycle(item.id)}
+                          onEdit={() => {}}
+                        />
+                      ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2.5 p-4 pt-2">
+                    {container.subItems
+                      .filter((i) => !i.sectionId)
+                      .filter(filterItem)
+                      .map((item) => (
+                        <CommandCard
+                          key={item.id}
+                          item={item}
+                          containerId={container.id}
+                          mode={mode}
+                          variables={variables}
+                          checklistStatus={checklist.status(item.id)}
+                          onChecklistCycle={() => checklist.cycle(item.id)}
+                        />
+                      ))}
+                  </div>
+                )}
+                {addingToSection === "__uncategorized__" && (
+                  <div className={layout === "list" ? "" : "mt-3 px-4 pb-4"}>
+                    <InlineAddCommand
+                      onAdd={handleAddItem}
+                      onClose={() => setAddingToSection(undefined)}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* Import/Export modal */}
       {showImportExport && (
-        <ImportExportModal
-          playbook={container}
-          onClose={() => setShowImportExport(false)}
-        />
+        <ImportExportModal playbook={container} onClose={() => setShowImportExport(false)} />
       )}
     </div>
   );

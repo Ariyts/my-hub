@@ -1,0 +1,10 @@
+node_modules/
+dist/
+public/
+data/
+package-lock.json
+
+# Сгенерированные / импортированные данные — не форматируем
+src/data.json
+src/data_backup_*.json
+src/settings-backup.json

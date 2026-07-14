@@ -1,7 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useStore } from '../store';
-import { X, Download, Upload, Trash2, Moon, Sun, Save, RefreshCw, Check, AlertCircle, Cloud, CloudOff, Lock, Zap, Edit, Trash, Plus, ChevronDown, ChevronRight, File } from 'lucide-react';
-import { previewSync, getLocalPreview, type SyncPreview } from '../utils/githubSync';
+import { useState, useEffect } from "react";
+import { useStore } from "../store";
+import {
+  X,
+  Download,
+  Upload,
+  Trash2,
+  Moon,
+  Sun,
+  Save,
+  RefreshCw,
+  Check,
+  AlertCircle,
+  Cloud,
+  CloudOff,
+  Lock,
+  Zap,
+  Edit,
+  Trash,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  File,
+} from "lucide-react";
+import { previewSync, getLocalPreview, type SyncPreview } from "../utils/githubSync";
 
 interface TabProps {
   active: boolean;
@@ -14,10 +35,10 @@ function Tab({ active, onClick, children }: TabProps) {
   return (
     <button
       onClick={onClick}
-      className="px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+      className="rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
       style={{
-        background: active ? '#6366f120' : 'transparent',
-        color: active ? '#6366f1' : isDarkTheme ? '#94a3b8' : '#64748b',
+        background: active ? "#6366f120" : "transparent",
+        color: active ? "#6366f1" : isDarkTheme ? "#94a3b8" : "#64748b",
       }}
     >
       {children}
@@ -26,27 +47,53 @@ function Tab({ active, onClick, children }: TabProps) {
 }
 
 export function SettingsModal() {
-  const { 
-    setShowSettings, settings, setSettings, isDarkTheme, toggleTheme, 
-    exportData, importData, clearAllData,
-    syncStatus, syncMessage, canSave, dataExportedAt,
-    connectGitHub, syncToCloud, disconnectGitHub,
-    workspaces, categories, folders, notes, commands, links, prompts, playbooks
+  const {
+    setShowSettings,
+    settings,
+    setSettings,
+    isDarkTheme,
+    toggleTheme,
+    exportData,
+    importData,
+    clearAllData,
+    syncStatus,
+    syncMessage,
+    canSave,
+    dataExportedAt,
+    connectGitHub,
+    syncToCloud,
+    disconnectGitHub,
+    workspaces,
+    categories,
+    folders,
+    notes,
+    commands,
+    links,
+    prompts,
+    playbooks,
   } = useStore();
-  
-  const [activeTab, setActiveTab] = useState<'sync' | 'appearance' | 'editor' | 'data'>('sync');
+
+  const [activeTab, setActiveTab] = useState<"sync" | "appearance" | "editor" | "data">("sync");
   const [saved, setSaved] = useState(false);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [preview, setPreview] = useState<SyncPreview | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<{new: boolean, update: boolean, delete: boolean, all: boolean}>({
-    new: false, update: false, delete: false, all: false
+  const [expandedSections, setExpandedSections] = useState<{
+    new: boolean;
+    update: boolean;
+    delete: boolean;
+    all: boolean;
+  }>({
+    new: false,
+    update: false,
+    delete: false,
+    all: false,
   });
 
   // Load preview when tab opens (local preview works without token)
   useEffect(() => {
-    if (activeTab === 'sync') {
+    if (activeTab === "sync") {
       loadLocalPreview();
       if (canSave && settings.github.token) {
         loadRemotePreview();
@@ -66,11 +113,11 @@ export function SettingsModal() {
         prompts,
         playbooks,
         exportedAt: new Date().toISOString(),
-        version: '3.0',
+        version: "3.0",
       });
       setPreview(result);
     } catch (e) {
-      console.error('Local preview error:', e);
+      console.error("Local preview error:", e);
     }
   };
 
@@ -87,11 +134,11 @@ export function SettingsModal() {
         prompts,
         playbooks,
         exportedAt: new Date().toISOString(),
-        version: '3.0',
+        version: "3.0",
       });
       setPreview(result);
     } catch (e) {
-      console.error('Remote preview error:', e);
+      console.error("Remote preview error:", e);
     }
     setLoadingPreview(false);
   };
@@ -105,7 +152,7 @@ export function SettingsModal() {
     if (token.trim()) {
       const success = await connectGitHub(token.trim());
       if (success) {
-        setToken('');
+        setToken("");
         // Load remote preview after connecting
         setTimeout(() => loadRemotePreview(), 500);
       }
@@ -117,22 +164,22 @@ export function SettingsModal() {
     // Reload preview after sync
     setTimeout(() => loadRemotePreview(), 1000);
   };
-  
-  const toggleSection = (section: 'new' | 'update' | 'delete' | 'all') => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+
+  const toggleSection = (section: "new" | "update" | "delete" | "all") => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
-  
+
   // Helper to get short filename from path
   const getShortPath = (path: string) => {
-    const parts = path.split('/');
+    const parts = path.split("/");
     // Show: workspace/category/folder/file.md
-    return parts.slice(-4).join('/');
+    return parts.slice(-4).join("/");
   };
 
   const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
@@ -140,7 +187,7 @@ export function SettingsModal() {
         reader.onload = (ev) => {
           const data = ev.target?.result as string;
           importData(data);
-          alert('Data imported!');
+          alert("Data imported!");
         };
         reader.readAsText(file);
       }
@@ -148,14 +195,14 @@ export function SettingsModal() {
     input.click();
   };
 
-  const bg = isDarkTheme ? '#111827' : '#ffffff';
-  const bgSecondary = isDarkTheme ? '#1e293b' : '#f8fafc';
-  const border = isDarkTheme ? '#334155' : '#e2e8f0';
-  const textColor = isDarkTheme ? '#e2e8f0' : '#1e293b';
-  const mutedColor = isDarkTheme ? '#64748b' : '#94a3b8';
+  const bg = isDarkTheme ? "#111827" : "#ffffff";
+  const bgSecondary = isDarkTheme ? "#1e293b" : "#f8fafc";
+  const border = isDarkTheme ? "#334155" : "#e2e8f0";
+  const textColor = isDarkTheme ? "#e2e8f0" : "#1e293b";
+  const mutedColor = isDarkTheme ? "#64748b" : "#94a3b8";
 
   const inputStyle = {
-    background: isDarkTheme ? '#0f172a' : '#fff',
+    background: isDarkTheme ? "#0f172a" : "#fff",
     borderColor: border,
     color: textColor,
     border: `1px solid ${border}`,
@@ -173,46 +220,84 @@ export function SettingsModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+    >
       <div
-        className="w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl"
         style={{ background: bg, border: `1px solid ${border}` }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: border }}>
-          <h2 className="text-lg font-bold" style={{ color: textColor }}>Settings</h2>
-          <button onClick={() => setShowSettings(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <div
+          className="flex items-center justify-between border-b px-6 py-4"
+          style={{ borderColor: border }}
+        >
+          <h2 className="text-lg font-bold" style={{ color: textColor }}>
+            Settings
+          </h2>
+          <button
+            onClick={() => setShowSettings(false)}
+            className="rounded-lg p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
             <X size={18} style={{ color: mutedColor }} />
           </button>
         </div>
 
-        <div className="flex gap-1 px-4 pt-3 pb-1 border-b overflow-x-auto" style={{ borderColor: border }}>
-          <Tab active={activeTab === 'sync'} onClick={() => setActiveTab('sync')}>🔄 Sync</Tab>
-          <Tab active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>🎨 Appearance</Tab>
-          <Tab active={activeTab === 'editor'} onClick={() => setActiveTab('editor')}>📝 Editor</Tab>
-          <Tab active={activeTab === 'data'} onClick={() => setActiveTab('data')}>💾 Data</Tab>
+        <div
+          className="flex gap-1 overflow-x-auto border-b px-4 pt-3 pb-1"
+          style={{ borderColor: border }}
+        >
+          <Tab active={activeTab === "sync"} onClick={() => setActiveTab("sync")}>
+            🔄 Sync
+          </Tab>
+          <Tab active={activeTab === "appearance"} onClick={() => setActiveTab("appearance")}>
+            🎨 Appearance
+          </Tab>
+          <Tab active={activeTab === "editor"} onClick={() => setActiveTab("editor")}>
+            📝 Editor
+          </Tab>
+          <Tab active={activeTab === "data"} onClick={() => setActiveTab("data")}>
+            💾 Data
+          </Tab>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {activeTab === 'sync' && (
+        <div className="flex-1 space-y-5 overflow-y-auto p-6">
+          {activeTab === "sync" && (
             <>
               {/* Data Summary */}
-              <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <h4 className="text-sm font-medium mb-3" style={{ color: textColor }}>📊 Current Data</h4>
+              <div
+                className="rounded-xl border p-4"
+                style={{ borderColor: border, background: bgSecondary }}
+              >
+                <h4 className="mb-3 text-sm font-medium" style={{ color: textColor }}>
+                  📊 Current Data
+                </h4>
                 <div className="grid grid-cols-4 gap-2 text-center">
                   {[
-                    { label: 'Workspaces', value: dataStats.workspaces },
-                    { label: 'Categories', value: dataStats.categories },
-                    { label: 'Folders', value: dataStats.folders },
-                    { label: 'Notes', value: dataStats.notes },
-                  ].map(item => (
-                    <div key={item.label} className="p-2 rounded-lg" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
-                      <div className="text-lg font-bold" style={{ color: '#6366f1' }}>{item.value}</div>
-                      <div className="text-[10px]" style={{ color: mutedColor }}>{item.label}</div>
+                    { label: "Workspaces", value: dataStats.workspaces },
+                    { label: "Categories", value: dataStats.categories },
+                    { label: "Folders", value: dataStats.folders },
+                    { label: "Notes", value: dataStats.notes },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-lg p-2"
+                      style={{ background: isDarkTheme ? "#0f172a" : "#fff" }}
+                    >
+                      <div className="text-lg font-bold" style={{ color: "#6366f1" }}>
+                        {item.value}
+                      </div>
+                      <div className="text-[10px]" style={{ color: mutedColor }}>
+                        {item.label}
+                      </div>
                     </div>
                   ))}
                 </div>
-                {(dataStats.commands + dataStats.links + dataStats.prompts) > 0 && (
-                  <div className="mt-2 pt-2 border-t flex justify-center gap-4 text-xs" style={{ borderColor: border, color: mutedColor }}>
+                {dataStats.commands + dataStats.links + dataStats.prompts > 0 && (
+                  <div
+                    className="mt-2 flex justify-center gap-4 border-t pt-2 text-xs"
+                    style={{ borderColor: border, color: mutedColor }}
+                  >
                     <span>Commands: {dataStats.commands}</span>
                     <span>Links: {dataStats.links}</span>
                     <span>Prompts: {dataStats.prompts}</span>
@@ -221,10 +306,15 @@ export function SettingsModal() {
               </div>
 
               {/* Info Banner */}
-              <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: '#6366f115', border: '1px solid #6366f140' }}>
-                <Zap size={20} style={{ color: '#6366f1' }} />
+              <div
+                className="flex items-center gap-3 rounded-xl p-4"
+                style={{ background: "#6366f115", border: "1px solid #6366f140" }}
+              >
+                <Zap size={20} style={{ color: "#6366f1" }} />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: '#6366f1' }}>Auto-rebuild enabled</p>
+                  <p className="text-sm font-medium" style={{ color: "#6366f1" }}>
+                    Auto-rebuild enabled
+                  </p>
                   <p className="text-xs" style={{ color: mutedColor }}>
                     One commit → site rebuilds (~1 min)
                   </p>
@@ -232,40 +322,56 @@ export function SettingsModal() {
               </div>
 
               {syncMessage && (
-                <div 
-                  className="flex items-center gap-2 p-3 rounded-lg text-sm"
-                  style={{ 
-                    background: syncStatus === 'error' ? '#ef444415' : syncStatus === 'success' ? '#4CAF5015' : '#6366f115',
-                    color: syncStatus === 'error' ? '#ef4444' : syncStatus === 'success' ? '#4CAF50' : '#6366f1'
+                <div
+                  className="flex items-center gap-2 rounded-lg p-3 text-sm"
+                  style={{
+                    background:
+                      syncStatus === "error"
+                        ? "#ef444415"
+                        : syncStatus === "success"
+                          ? "#4CAF5015"
+                          : "#6366f115",
+                    color:
+                      syncStatus === "error"
+                        ? "#ef4444"
+                        : syncStatus === "success"
+                          ? "#4CAF50"
+                          : "#6366f1",
                   }}
                 >
-                  {(syncStatus === 'connecting' || syncStatus === 'syncing') && (
+                  {(syncStatus === "connecting" || syncStatus === "syncing") && (
                     <RefreshCw size={14} className="animate-spin" />
                   )}
-                  {syncStatus === 'success' && <Check size={14} />}
-                  {syncStatus === 'error' && <AlertCircle size={14} />}
+                  {syncStatus === "success" && <Check size={14} />}
+                  {syncStatus === "error" && <AlertCircle size={14} />}
                   {syncMessage}
                 </div>
               )}
 
               {/* Save Section */}
-              <div className="p-5 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: canSave ? '#4CAF5015' : '#6366f115' }}>
+              <div
+                className="rounded-xl border p-5"
+                style={{ borderColor: border, background: bgSecondary }}
+              >
+                <div className="mb-4 flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl"
+                    style={{ background: canSave ? "#4CAF5015" : "#6366f115" }}
+                  >
                     {canSave ? (
-                      <Cloud size={20} style={{ color: '#4CAF50' }} />
+                      <Cloud size={20} style={{ color: "#4CAF50" }} />
                     ) : (
-                      <Lock size={20} style={{ color: '#6366f1' }} />
+                      <Lock size={20} style={{ color: "#6366f1" }} />
                     )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-sm" style={{ color: textColor }}>
-                      {canSave ? 'Ready to Save' : 'Enable Saving'}
+                    <h3 className="text-sm font-semibold" style={{ color: textColor }}>
+                      {canSave ? "Ready to Save" : "Enable Saving"}
                     </h3>
                     <p className="text-xs" style={{ color: mutedColor }}>
-                      {canSave 
-                        ? `Connected as @${settings.github.username}` 
-                        : 'Enter token to save changes'}
+                      {canSave
+                        ? `Connected as @${settings.github.username}`
+                        : "Enter token to save changes"}
                     </p>
                   </div>
                 </div>
@@ -274,46 +380,75 @@ export function SettingsModal() {
                   <div className="space-y-3">
                     {/* Local Preview - shows changes before token */}
                     {preview && (
-                      <div className="p-3 rounded-lg text-xs" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
+                      <div
+                        className="rounded-lg p-3 text-xs"
+                        style={{ background: isDarkTheme ? "#0f172a" : "#fff" }}
+                      >
                         {/* Has changes */}
-                        {(preview.filesToCreate.length > 0 || preview.filesToUpdate.length > 0 || preview.filesToDelete.length > 0) ? (
+                        {preview.filesToCreate.length > 0 ||
+                        preview.filesToUpdate.length > 0 ||
+                        preview.filesToDelete.length > 0 ? (
                           <>
-                            <div className="font-medium mb-2" style={{ color: textColor }}>
+                            <div className="mb-2 font-medium" style={{ color: textColor }}>
                               Changes to commit:
                             </div>
-                            
+
                             {/* Summary */}
-                            <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                              <div className="flex items-center justify-center gap-1" style={{ color: '#4CAF50' }}>
+                            <div className="mb-2 grid grid-cols-3 gap-2 text-center">
+                              <div
+                                className="flex items-center justify-center gap-1"
+                                style={{ color: "#4CAF50" }}
+                              >
                                 <Plus size={12} />
                                 <span>{preview.filesToCreate.length}</span>
                               </div>
-                              <div className="flex items-center justify-center gap-1" style={{ color: '#2196F3' }}>
+                              <div
+                                className="flex items-center justify-center gap-1"
+                                style={{ color: "#2196F3" }}
+                              >
                                 <Edit size={12} />
                                 <span>{preview.filesToUpdate.length}</span>
                               </div>
-                              <div className="flex items-center justify-center gap-1" style={{ color: '#ef4444' }}>
+                              <div
+                                className="flex items-center justify-center gap-1"
+                                style={{ color: "#ef4444" }}
+                              >
                                 <Trash size={12} />
                                 <span>{preview.filesToDelete.length}</span>
                               </div>
                             </div>
-                            
+
                             {/* Changed files list */}
-                            <div className="max-h-40 overflow-y-auto space-y-0.5 border-t pt-2" style={{ borderColor: border }}>
+                            <div
+                              className="max-h-40 space-y-0.5 overflow-y-auto border-t pt-2"
+                              style={{ borderColor: border }}
+                            >
                               {preview.filesToCreate.map((path, i) => (
-                                <div key={`new-${i}`} className="flex items-center gap-1.5 py-0.5" style={{ color: '#4CAF50' }}>
+                                <div
+                                  key={`new-${i}`}
+                                  className="flex items-center gap-1.5 py-0.5"
+                                  style={{ color: "#4CAF50" }}
+                                >
                                   <Plus size={9} />
                                   <span className="truncate">{getShortPath(path)}</span>
                                 </div>
                               ))}
                               {preview.filesToUpdate.map((path, i) => (
-                                <div key={`upd-${i}`} className="flex items-center gap-1.5 py-0.5" style={{ color: '#2196F3' }}>
+                                <div
+                                  key={`upd-${i}`}
+                                  className="flex items-center gap-1.5 py-0.5"
+                                  style={{ color: "#2196F3" }}
+                                >
                                   <Edit size={9} />
                                   <span className="truncate">{getShortPath(path)}</span>
                                 </div>
                               ))}
                               {preview.filesToDelete.map((path, i) => (
-                                <div key={`del-${i}`} className="flex items-center gap-1.5 py-0.5 line-through opacity-60" style={{ color: '#ef4444' }}>
+                                <div
+                                  key={`del-${i}`}
+                                  className="flex items-center gap-1.5 py-0.5 line-through opacity-60"
+                                  style={{ color: "#ef4444" }}
+                                >
                                   <Trash size={9} />
                                   <span className="truncate">{getShortPath(path)}</span>
                                 </div>
@@ -322,46 +457,53 @@ export function SettingsModal() {
                           </>
                         ) : (
                           /* No changes */
-                          <div className="text-center py-2">
-                            <Check size={20} className="mx-auto mb-1" style={{ color: '#4CAF50' }} />
-                            <div style={{ color: '#4CAF50' }}>No changes to commit</div>
-                            <div className="mt-1" style={{ color: mutedColor, fontSize: '10px' }}>
+                          <div className="py-2 text-center">
+                            <Check
+                              size={20}
+                              className="mx-auto mb-1"
+                              style={{ color: "#4CAF50" }}
+                            />
+                            <div style={{ color: "#4CAF50" }}>No changes to commit</div>
+                            <div className="mt-1" style={{ color: mutedColor, fontSize: "10px" }}>
                               All files are in sync
                             </div>
                           </div>
                         )}
                       </div>
                     )}
-                    
+
                     <div>
-                      <label className="text-xs font-medium block mb-1.5" style={{ color: mutedColor }}>
+                      <label
+                        className="mb-1.5 block text-xs font-medium"
+                        style={{ color: mutedColor }}
+                      >
                         GitHub Token (repo scope)
                       </label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <input
-                            type={showToken ? 'text' : 'password'}
-                            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none pr-10"
+                            type={showToken ? "text" : "password"}
+                            className="w-full rounded-lg px-3 py-2.5 pr-10 text-sm outline-none"
                             style={inputStyle}
                             placeholder="ghp_xxx..."
                             value={token}
                             onChange={(e) => setToken(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
+                            onKeyDown={(e) => e.key === "Enter" && handleConnect()}
                           />
                           <button
                             type="button"
                             onClick={() => setShowToken(!showToken)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
+                            className="absolute top-1/2 right-2 -translate-y-1/2 text-xs"
                             style={{ color: mutedColor }}
                           >
-                            {showToken ? 'Hide' : 'Show'}
+                            {showToken ? "Hide" : "Show"}
                           </button>
                         </div>
                         <button
                           onClick={handleConnect}
-                          disabled={!token.trim() || syncStatus === 'connecting'}
-                          className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
-                          style={{ background: '#6366f1', color: 'white' }}
+                          disabled={!token.trim() || syncStatus === "connecting"}
+                          className="rounded-lg px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+                          style={{ background: "#6366f1", color: "white" }}
                         >
                           Connect
                         </button>
@@ -372,41 +514,63 @@ export function SettingsModal() {
                   <div className="space-y-3">
                     {/* Remote Preview - with detailed changes */}
                     {preview && (
-                      <div className="p-3 rounded-lg text-xs" style={{ background: isDarkTheme ? '#0f172a' : '#fff' }}>
-                        <div className="font-medium mb-2" style={{ color: textColor }}>Changes to commit:</div>
-                        
+                      <div
+                        className="rounded-lg p-3 text-xs"
+                        style={{ background: isDarkTheme ? "#0f172a" : "#fff" }}
+                      >
+                        <div className="mb-2 font-medium" style={{ color: textColor }}>
+                          Changes to commit:
+                        </div>
+
                         {/* Summary */}
-                        <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                          <div className="flex items-center justify-center gap-1" style={{ color: '#4CAF50' }}>
+                        <div className="mb-2 grid grid-cols-3 gap-2 text-center">
+                          <div
+                            className="flex items-center justify-center gap-1"
+                            style={{ color: "#4CAF50" }}
+                          >
                             <Plus size={12} />
                             <span>{preview.filesToCreate.length} new</span>
                           </div>
-                          <div className="flex items-center justify-center gap-1" style={{ color: '#2196F3' }}>
+                          <div
+                            className="flex items-center justify-center gap-1"
+                            style={{ color: "#2196F3" }}
+                          >
                             <Edit size={12} />
                             <span>{preview.filesToUpdate.length} update</span>
                           </div>
-                          <div className="flex items-center justify-center gap-1" style={{ color: '#ef4444' }}>
+                          <div
+                            className="flex items-center justify-center gap-1"
+                            style={{ color: "#ef4444" }}
+                          >
                             <Trash size={12} />
                             <span>{preview.filesToDelete.length} delete</span>
                           </div>
                         </div>
-                        
+
                         {/* New files */}
                         {preview.filesToCreate.length > 0 && (
-                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
-                            <button 
-                              onClick={() => toggleSection('new')}
-                              className="flex items-center gap-1 w-full text-left"
-                              style={{ color: '#4CAF50' }}
+                          <div className="mt-2 border-t pt-2" style={{ borderColor: border }}>
+                            <button
+                              onClick={() => toggleSection("new")}
+                              className="flex w-full items-center gap-1 text-left"
+                              style={{ color: "#4CAF50" }}
                             >
-                              {expandedSections.new ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              {expandedSections.new ? (
+                                <ChevronDown size={12} />
+                              ) : (
+                                <ChevronRight size={12} />
+                              )}
                               <Plus size={10} />
                               <span>New files ({preview.filesToCreate.length})</span>
                             </button>
                             {expandedSections.new && (
-                              <div className="mt-1 ml-4 space-y-0.5 max-h-24 overflow-y-auto">
+                              <div className="mt-1 ml-4 max-h-24 space-y-0.5 overflow-y-auto">
                                 {preview.filesToCreate.map((path, i) => (
-                                  <div key={i} className="flex items-center gap-1 py-0.5" style={{ color: mutedColor }}>
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-1 py-0.5"
+                                    style={{ color: mutedColor }}
+                                  >
                                     <File size={9} />
                                     <span className="truncate">{getShortPath(path)}</span>
                                   </div>
@@ -415,23 +579,31 @@ export function SettingsModal() {
                             )}
                           </div>
                         )}
-                        
+
                         {/* Updated files */}
                         {preview.filesToUpdate.length > 0 && (
-                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
-                            <button 
-                              onClick={() => toggleSection('update')}
-                              className="flex items-center gap-1 w-full text-left"
-                              style={{ color: '#2196F3' }}
+                          <div className="mt-2 border-t pt-2" style={{ borderColor: border }}>
+                            <button
+                              onClick={() => toggleSection("update")}
+                              className="flex w-full items-center gap-1 text-left"
+                              style={{ color: "#2196F3" }}
                             >
-                              {expandedSections.update ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              {expandedSections.update ? (
+                                <ChevronDown size={12} />
+                              ) : (
+                                <ChevronRight size={12} />
+                              )}
                               <Edit size={10} />
                               <span>Updated ({preview.filesToUpdate.length})</span>
                             </button>
                             {expandedSections.update && (
-                              <div className="mt-1 ml-4 space-y-0.5 max-h-24 overflow-y-auto">
+                              <div className="mt-1 ml-4 max-h-24 space-y-0.5 overflow-y-auto">
                                 {preview.filesToUpdate.map((path, i) => (
-                                  <div key={i} className="flex items-center gap-1 py-0.5" style={{ color: mutedColor }}>
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-1 py-0.5"
+                                    style={{ color: mutedColor }}
+                                  >
                                     <File size={9} />
                                     <span className="truncate">{getShortPath(path)}</span>
                                   </div>
@@ -440,23 +612,31 @@ export function SettingsModal() {
                             )}
                           </div>
                         )}
-                        
+
                         {/* Deleted files */}
                         {preview.filesToDelete.length > 0 && (
-                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
-                            <button 
-                              onClick={() => toggleSection('delete')}
-                              className="flex items-center gap-1 w-full text-left"
-                              style={{ color: '#ef4444' }}
+                          <div className="mt-2 border-t pt-2" style={{ borderColor: border }}>
+                            <button
+                              onClick={() => toggleSection("delete")}
+                              className="flex w-full items-center gap-1 text-left"
+                              style={{ color: "#ef4444" }}
                             >
-                              {expandedSections.delete ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              {expandedSections.delete ? (
+                                <ChevronDown size={12} />
+                              ) : (
+                                <ChevronRight size={12} />
+                              )}
                               <Trash size={10} />
                               <span>Deleted ({preview.filesToDelete.length})</span>
                             </button>
                             {expandedSections.delete && (
-                              <div className="mt-1 ml-4 space-y-0.5 max-h-24 overflow-y-auto">
+                              <div className="mt-1 ml-4 max-h-24 space-y-0.5 overflow-y-auto">
                                 {preview.filesToDelete.map((path, i) => (
-                                  <div key={i} className="flex items-center gap-1 py-0.5 line-through opacity-60" style={{ color: mutedColor }}>
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-1 py-0.5 line-through opacity-60"
+                                    style={{ color: mutedColor }}
+                                  >
                                     <File size={9} />
                                     <span className="truncate">{getShortPath(path)}</span>
                                   </div>
@@ -465,49 +645,67 @@ export function SettingsModal() {
                             )}
                           </div>
                         )}
-                        
+
                         {/* All files (when no remote comparison) */}
-                        {preview.filesToCreate.length === 0 && preview.filesToUpdate.length === 0 && preview.filesToDelete.length === 0 && preview.allFiles.length > 0 && (
-                          <div className="border-t pt-2 mt-2" style={{ borderColor: border }}>
-                            <button 
-                              onClick={() => toggleSection('all')}
-                              className="flex items-center gap-1 w-full text-left"
-                              style={{ color: mutedColor }}
-                            >
-                              {expandedSections.all ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                              <File size={10} />
-                              <span>All files ({preview.allFiles.length})</span>
-                            </button>
-                            {expandedSections.all && (
-                              <div className="mt-1 ml-4 space-y-0.5 max-h-32 overflow-y-auto">
-                                {preview.allFiles.map((path, i) => (
-                                  <div key={i} className="flex items-center gap-1 py-0.5" style={{ color: mutedColor }}>
-                                    <File size={9} />
-                                    <span className="truncate">{getShortPath(path)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        {preview.filesToCreate.length === 0 &&
+                          preview.filesToUpdate.length === 0 &&
+                          preview.filesToDelete.length === 0 &&
+                          preview.allFiles.length > 0 && (
+                            <div className="mt-2 border-t pt-2" style={{ borderColor: border }}>
+                              <button
+                                onClick={() => toggleSection("all")}
+                                className="flex w-full items-center gap-1 text-left"
+                                style={{ color: mutedColor }}
+                              >
+                                {expandedSections.all ? (
+                                  <ChevronDown size={12} />
+                                ) : (
+                                  <ChevronRight size={12} />
+                                )}
+                                <File size={10} />
+                                <span>All files ({preview.allFiles.length})</span>
+                              </button>
+                              {expandedSections.all && (
+                                <div className="mt-1 ml-4 max-h-32 space-y-0.5 overflow-y-auto">
+                                  {preview.allFiles.map((path, i) => (
+                                    <div
+                                      key={i}
+                                      className="flex items-center gap-1 py-0.5"
+                                      style={{ color: mutedColor }}
+                                    >
+                                      <File size={9} />
+                                      <span className="truncate">{getShortPath(path)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                       </div>
                     )}
-                    
+
                     {loadingPreview && (
-                      <div className="flex items-center justify-center gap-2 p-2 text-xs" style={{ color: mutedColor }}>
+                      <div
+                        className="flex items-center justify-center gap-2 p-2 text-xs"
+                        style={{ color: mutedColor }}
+                      >
                         <RefreshCw size={12} className="animate-spin" />
                         Loading preview...
                       </div>
                     )}
-                    
+
                     <div className="flex gap-2">
                       <button
                         onClick={handleSync}
-                        disabled={syncStatus === 'syncing'}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all"
-                        style={{ background: '#4CAF50', color: 'white', opacity: syncStatus === 'syncing' ? 0.5 : 1 }}
+                        disabled={syncStatus === "syncing"}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all"
+                        style={{
+                          background: "#4CAF50",
+                          color: "white",
+                          opacity: syncStatus === "syncing" ? 0.5 : 1,
+                        }}
                       >
-                        {syncStatus === 'syncing' ? (
+                        {syncStatus === "syncing" ? (
                           <>
                             <RefreshCw size={16} className="animate-spin" />
                             Saving...
@@ -521,14 +719,14 @@ export function SettingsModal() {
                       </button>
                       <button
                         onClick={disconnectGitHub}
-                        className="flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium border"
+                        className="flex items-center justify-center rounded-lg border px-4 py-3 text-sm font-medium"
                         style={{ borderColor: border, color: mutedColor }}
                       >
                         <CloudOff size={16} />
                       </button>
                     </div>
                     {dataExportedAt && (
-                      <p className="text-xs text-center" style={{ color: mutedColor }}>
+                      <p className="text-center text-xs" style={{ color: mutedColor }}>
                         Last sync: {new Date(dataExportedAt).toLocaleString()}
                       </p>
                     )}
@@ -537,19 +735,39 @@ export function SettingsModal() {
               </div>
 
               {/* How it works */}
-              <div className="p-4 rounded-xl border" style={{ borderColor: border, background: bgSecondary }}>
-                <h4 className="text-sm font-medium mb-2" style={{ color: textColor }}>🔄 How it works</h4>
+              <div
+                className="rounded-xl border p-4"
+                style={{ borderColor: border, background: bgSecondary }}
+              >
+                <h4 className="mb-2 text-sm font-medium" style={{ color: textColor }}>
+                  🔄 How it works
+                </h4>
                 <div className="space-y-2 text-xs" style={{ color: mutedColor }}>
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>1</span>
+                    <span
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-xs"
+                      style={{ background: "#6366f115", color: "#6366f1" }}
+                    >
+                      1
+                    </span>
                     <span>Add/edit notes, commands, links, prompts</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>2</span>
+                    <span
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-xs"
+                      style={{ background: "#6366f115", color: "#6366f1" }}
+                    >
+                      2
+                    </span>
                     <span>Click "Save to GitHub" → ONE commit created</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: '#6366f115', color: '#6366f1' }}>3</span>
+                    <span
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-xs"
+                      style={{ background: "#6366f115", color: "#6366f1" }}
+                    >
+                      3
+                    </span>
                     <span>Site auto-rebuilds (~1 min) → refresh to see</span>
                   </div>
                 </div>
@@ -557,24 +775,39 @@ export function SettingsModal() {
             </>
           )}
 
-          {activeTab === 'appearance' && (
+          {activeTab === "appearance" && (
             <>
               <section>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: textColor }}>Theme</h3>
+                <h3 className="mb-3 text-sm font-semibold" style={{ color: textColor }}>
+                  Theme
+                </h3>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { value: 'light', label: 'Light', icon: <Sun size={18} /> },
-                    { value: 'dark', label: 'Dark', icon: <Moon size={18} /> },
-                    { value: 'system', label: 'System', icon: <div className="w-4.5 h-4.5 rounded-full border-2 border-current" style={{ background: 'linear-gradient(135deg, #fff 50%, #1e293b 50%)' }} /> },
+                    { value: "light", label: "Light", icon: <Sun size={18} /> },
+                    { value: "dark", label: "Dark", icon: <Moon size={18} /> },
+                    {
+                      value: "system",
+                      label: "System",
+                      icon: (
+                        <div
+                          className="h-4.5 w-4.5 rounded-full border-2 border-current"
+                          style={{ background: "linear-gradient(135deg, #fff 50%, #1e293b 50%)" }}
+                        />
+                      ),
+                    },
                   ].map(({ value, label, icon }) => (
                     <button
                       key={value}
-                      onClick={() => { setSettings({ theme: value as 'light' | 'dark' | 'system' }); if (value === 'dark' && !isDarkTheme) toggleTheme(); if (value === 'light' && isDarkTheme) toggleTheme(); }}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all"
+                      onClick={() => {
+                        setSettings({ theme: value as "light" | "dark" | "system" });
+                        if (value === "dark" && !isDarkTheme) toggleTheme();
+                        if (value === "light" && isDarkTheme) toggleTheme();
+                      }}
+                      className="flex flex-col items-center gap-2 rounded-xl border p-4 transition-all"
                       style={{
-                        borderColor: settings.theme === value ? '#6366f1' : border,
-                        background: settings.theme === value ? '#6366f120' : bgSecondary,
-                        color: settings.theme === value ? '#6366f1' : mutedColor,
+                        borderColor: settings.theme === value ? "#6366f1" : border,
+                        background: settings.theme === value ? "#6366f120" : bgSecondary,
+                        color: settings.theme === value ? "#6366f1" : mutedColor,
                       }}
                     >
                       {icon}
@@ -584,39 +817,60 @@ export function SettingsModal() {
                 </div>
               </section>
               <section>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: textColor }}>Font Size</h3>
+                <h3 className="mb-3 text-sm font-semibold" style={{ color: textColor }}>
+                  Font Size
+                </h3>
                 <div className="flex items-center gap-4">
                   <input
-                    type="range" min="12" max="20" value={settings.fontSize}
+                    type="range"
+                    min="12"
+                    max="20"
+                    value={settings.fontSize}
                     onChange={(e) => setSettings({ fontSize: parseInt(e.target.value) })}
                     className="flex-1 accent-indigo-500"
                   />
-                  <span className="text-sm font-mono w-10 text-center" style={{ color: textColor }}>{settings.fontSize}px</span>
+                  <span className="w-10 text-center font-mono text-sm" style={{ color: textColor }}>
+                    {settings.fontSize}px
+                  </span>
                 </div>
               </section>
             </>
           )}
 
-          {activeTab === 'editor' && (
+          {activeTab === "editor" && (
             <>
               {[
-                { key: 'autoSave', label: 'Auto-save', desc: 'Save automatically' },
-                { key: 'spellCheck', label: 'Spell Check', desc: 'Browser spell checking' },
-                { key: 'lineNumbers', label: 'Line Numbers', desc: 'Show line numbers' },
+                { key: "autoSave", label: "Auto-save", desc: "Save automatically" },
+                { key: "spellCheck", label: "Spell Check", desc: "Browser spell checking" },
+                { key: "lineNumbers", label: "Line Numbers", desc: "Show line numbers" },
               ].map(({ key, label, desc }) => (
-                <div key={key} className="flex items-center justify-between p-4 rounded-xl" style={{ background: bgSecondary }}>
+                <div
+                  key={key}
+                  className="flex items-center justify-between rounded-xl p-4"
+                  style={{ background: bgSecondary }}
+                >
                   <div>
-                    <p className="text-sm font-medium" style={{ color: textColor }}>{label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: mutedColor }}>{desc}</p>
+                    <p className="text-sm font-medium" style={{ color: textColor }}>
+                      {label}
+                    </p>
+                    <p className="mt-0.5 text-xs" style={{ color: mutedColor }}>
+                      {desc}
+                    </p>
                   </div>
                   <button
                     onClick={() => setSettings({ [key]: !settings[key as keyof typeof settings] })}
-                    className="relative w-11 h-6 rounded-full transition-colors"
-                    style={{ background: settings[key as keyof typeof settings] ? '#6366f1' : border }}
+                    className="relative h-6 w-11 rounded-full transition-colors"
+                    style={{
+                      background: settings[key as keyof typeof settings] ? "#6366f1" : border,
+                    }}
                   >
                     <div
-                      className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
-                      style={{ transform: settings[key as keyof typeof settings] ? 'translateX(20px)' : 'translateX(2px)' }}
+                      className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
+                      style={{
+                        transform: settings[key as keyof typeof settings]
+                          ? "translateX(20px)"
+                          : "translateX(2px)",
+                      }}
                     />
                   </button>
                 </div>
@@ -624,46 +878,67 @@ export function SettingsModal() {
             </>
           )}
 
-          {activeTab === 'data' && (
+          {activeTab === "data" && (
             <>
               <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={exportData}
-                  className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:border-blue-400 text-left"
+                  className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-blue-400"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: '#2196F315' }}>
-                    <Download size={20} style={{ color: '#2196F3' }} />
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg"
+                    style={{ background: "#2196F315" }}
+                  >
+                    <Download size={20} style={{ color: "#2196F3" }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: textColor }}>Export Data</p>
-                    <p className="text-xs" style={{ color: mutedColor }}>Download as JSON</p>
+                    <p className="text-sm font-semibold" style={{ color: textColor }}>
+                      Export Data
+                    </p>
+                    <p className="text-xs" style={{ color: mutedColor }}>
+                      Download as JSON
+                    </p>
                   </div>
                 </button>
                 <button
                   onClick={handleImport}
-                  className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:border-green-400 text-left"
+                  className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-green-400"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: '#4CAF5015' }}>
-                    <Upload size={20} style={{ color: '#4CAF50' }} />
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg"
+                    style={{ background: "#4CAF5015" }}
+                  >
+                    <Upload size={20} style={{ color: "#4CAF50" }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: textColor }}>Import Data</p>
-                    <p className="text-xs" style={{ color: mutedColor }}>Import from JSON file</p>
+                    <p className="text-sm font-semibold" style={{ color: textColor }}>
+                      Import Data
+                    </p>
+                    <p className="text-xs" style={{ color: mutedColor }}>
+                      Import from JSON file
+                    </p>
                   </div>
                 </button>
                 <button
-                  onClick={() => { if (confirm('Delete ALL data?')) clearAllData(); }}
-                  className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:border-red-400 text-left"
+                  onClick={() => {
+                    if (confirm("Delete ALL data?")) clearAllData();
+                  }}
+                  className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-red-400"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: '#ef444415' }}>
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg"
+                    style={{ background: "#ef444415" }}
+                  >
                     <Trash2 size={20} className="text-red-400" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-red-400">Clear All Data</p>
-                    <p className="text-xs" style={{ color: mutedColor }}>Cannot be undone</p>
+                    <p className="text-xs" style={{ color: mutedColor }}>
+                      Cannot be undone
+                    </p>
                   </div>
                 </button>
               </div>
@@ -671,13 +946,24 @@ export function SettingsModal() {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: border }}>
-          <button onClick={() => setShowSettings(false)} className="px-4 py-2 rounded-lg text-sm font-medium" style={{ background: bgSecondary, color: mutedColor }}>
+        <div className="flex justify-end gap-3 border-t px-6 py-4" style={{ borderColor: border }}>
+          <button
+            onClick={() => setShowSettings(false)}
+            className="rounded-lg px-4 py-2 text-sm font-medium"
+            style={{ background: bgSecondary, color: mutedColor }}
+          >
             Close
           </button>
-          <button onClick={handleSave} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{ background: saved ? '#4CAF5020' : '#6366f120', color: saved ? '#4CAF50' : '#6366f1' }}>
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+            style={{
+              background: saved ? "#4CAF5020" : "#6366f120",
+              color: saved ? "#4CAF50" : "#6366f1",
+            }}
+          >
             <Save size={14} />
-            {saved ? 'Saved!' : 'Save'}
+            {saved ? "Saved!" : "Save"}
           </button>
         </div>
       </div>

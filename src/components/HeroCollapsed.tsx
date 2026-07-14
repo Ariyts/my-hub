@@ -1,4 +1,4 @@
-import { ChevronDown, FolderPlus, Plus, ArrowUpDown } from 'lucide-react';
+import { ChevronDown, FolderPlus, Plus, ArrowUpDown } from "lucide-react";
 
 interface Props {
   title: string;
@@ -16,23 +16,27 @@ interface Props {
  * Uses Tailwind classes to match the new PlaybookView design.
  */
 export function HeroCollapsed({
-  title, totalCommands, sectionCount, favoriteCount,
-  onExpand, onAddSection, onAddCommand, onImportExport,
+  title,
+  totalCommands,
+  sectionCount,
+  favoriteCount,
+  onExpand,
+  onAddSection,
+  onAddCommand,
+  onImportExport,
 }: Props) {
   return (
-    <div className="flex items-center gap-3 h-10 px-6 border-b border-slate-800 bg-slate-900">
+    <div className="flex h-10 items-center gap-3 border-b border-slate-800 bg-slate-900 px-6">
       {/* Icon (small) */}
-      <div className="w-7 h-7 rounded-md bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-slate-700/60 flex items-center justify-center text-sm flex-shrink-0">
+      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-slate-700/60 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-sm">
         🎯
       </div>
 
       {/* Title */}
-      <h1 className="text-sm font-bold text-slate-100 truncate flex-shrink-0">
-        {title}
-      </h1>
+      <h1 className="flex-shrink-0 truncate text-sm font-bold text-slate-100">{title}</h1>
 
       {/* Stats inline */}
-      <div className="flex items-center gap-2 text-[11px] text-slate-500 flex-shrink-0">
+      <div className="flex flex-shrink-0 items-center gap-2 text-[11px] text-slate-500">
         <span>
           <span className="font-semibold text-slate-200">{totalCommands}</span> cmds
         </span>
@@ -57,7 +61,7 @@ export function HeroCollapsed({
       {onImportExport && (
         <button
           onClick={onImportExport}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 transition-colors flex-shrink-0"
+          className="flex flex-shrink-0 items-center gap-1 rounded-md border border-slate-700/60 bg-slate-800/80 px-2 py-1 text-[11px] font-medium text-slate-200 transition-colors hover:bg-slate-700"
           title="Import/Export playbook"
         >
           <ArrowUpDown size={11} className="text-cyan-400" />
@@ -68,7 +72,7 @@ export function HeroCollapsed({
       {/* Add Section button */}
       <button
         onClick={onAddSection}
-        className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 transition-colors flex-shrink-0"
+        className="flex flex-shrink-0 items-center gap-1 rounded-md border border-slate-700/60 bg-slate-800/80 px-2 py-1 text-[11px] font-medium text-slate-200 transition-colors hover:bg-slate-700"
         title="Add new section"
       >
         <FolderPlus size={11} className="text-cyan-400" />
@@ -78,7 +82,7 @@ export function HeroCollapsed({
       {/* Add Command button */}
       <button
         onClick={onAddCommand}
-        className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-colors shadow-lg shadow-cyan-500/20 flex-shrink-0"
+        className="flex flex-shrink-0 items-center gap-1 rounded-md bg-cyan-500 px-2 py-1 text-[11px] font-medium text-slate-950 shadow-lg shadow-cyan-500/20 transition-colors hover:bg-cyan-400"
         title="Add new command"
       >
         <Plus size={11} strokeWidth={2.5} />
@@ -88,7 +92,7 @@ export function HeroCollapsed({
       {/* Expand button */}
       <button
         onClick={onExpand}
-        className="p-1.5 rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors flex-shrink-0"
+        className="flex-shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
         title="Expand hero header"
       >
         <ChevronDown size={15} />

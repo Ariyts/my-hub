@@ -1,0 +1,55 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // F5. VS Code сам запускает Vite как Node-процесс, ждёт в его выводе строку
+      // "Local: http://localhost:5173" и открывает Edge с подключённым отладчиком.
+      // Ни задач (tasks.json), ни PowerShell — политика выполнения Windows ни при чём.
+      "name": "Отладка: Vite + Edge",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/vite/bin/vite.js",
+      // Адрес сервера (127.0.0.1) задан в vite.config.ts — там же, где и для npm run dev
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        // Без этого Vite подсвечивает порт жирным прямо внутри URL
+        // ("http://127.0.0.1:<ESC>[1m5173"), и адрес не распознаётся
+        "NO_COLOR": "1"
+      },
+      "serverReadyAction": {
+        "pattern": "Local:.*?(https?://(?:localhost|127\\.0\\.0\\.1):[0-9]+)",
+        "uriFormat": "%s/",
+        "action": "debugWithEdge",
+        "webRoot": "${workspaceFolder}"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Если dev-сервер уже поднят вручную (npm run dev в терминале) — только браузер.
+      // Без запущенного сервера страница не откроется: ERR_CONNECTION_REFUSED
+      "name": "Только Edge (dev-сервер уже запущен)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "/@fs/*": "${workspaceFolder}/*",
+        "/src/*": "${workspaceFolder}/src/*"
+      },
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    },
+    {
+      // Отладка скрипта конвертации data/*.md → src/data.json (Node, не браузер).
+      // Внимание: скрипт перезаписывает src/data.json
+      "name": "Отладка скрипта convert-md-to-json",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/convert-md-to-json.cjs",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

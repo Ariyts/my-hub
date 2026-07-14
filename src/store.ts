@@ -1,31 +1,42 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type {
-  AppState, Workspace, Category, Folder, NoteItem,
-  CommandContainer, LinkContainer, PromptContainer, PlaybookContainer,
-  CommandItem, LinkItem, PromptItem, PlaybookItem,
-  PromptSection, PlaybookSection, PlaybookVariable,
-  Settings, AnyItem, TrashItem
-} from './types';
-import {
-  initializeGitHubSync,
-  saveToGitHub,
-} from './utils/githubSync';
+  AppState,
+  Workspace,
+  Category,
+  Folder,
+  NoteItem,
+  CommandContainer,
+  LinkContainer,
+  PromptContainer,
+  PlaybookContainer,
+  CommandItem,
+  LinkItem,
+  PromptItem,
+  PlaybookItem,
+  PromptSection,
+  PlaybookSection,
+  PlaybookVariable,
+  Settings,
+  AnyItem,
+  TrashItem,
+} from "./types";
+import { initializeGitHubSync, saveToGitHub } from "./utils/githubSync";
 
 // Import embedded data - this will be bundled at build time
-import embeddedData from './data.json';
+import embeddedData from "./data.json";
 
 const defaultSettings: Settings = {
-  theme: 'system',
+  theme: "system",
   fontSize: 14,
-  editorWidth: 'full',
-  previewMode: 'split',
+  editorWidth: "full",
+  previewMode: "split",
   autoSave: true,
   spellCheck: false,
   lineNumbers: true,
-  codeFont: 'Fira Code',
+  codeFont: "Fira Code",
   github: {
-    token: '',
+    token: "",
   },
 };
 
@@ -35,20 +46,20 @@ const defaultSettings: Settings = {
 interface StoreActions {
   // Workspace actions
   setActiveWorkspaceId: (id: string) => void;
-  addWorkspace: (workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addWorkspace: (workspace: Omit<Workspace, "id" | "createdAt" | "updatedAt">) => void;
   updateWorkspace: (id: string, updates: Partial<Workspace>) => void;
   deleteWorkspace: (id: string) => void;
 
   // Category actions
   setActiveCategoryId: (id: string | null) => void;
-  addCategory: (category: Omit<Category, 'id' | 'order'>) => void;
+  addCategory: (category: Omit<Category, "id" | "order">) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
   reorderCategories: (workspaceId: string, categoryIds: string[]) => void;
 
   // Folder actions
   setActiveFolderId: (id: string | null) => void;
-  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'order'>) => void;
+  addFolder: (folder: Omit<Folder, "id" | "createdAt" | "order">) => void;
   updateFolder: (id: string, updates: Partial<Folder>) => void;
   deleteFolder: (id: string) => void;
   toggleFolderExpanded: (id: string) => void;
@@ -57,61 +68,93 @@ interface StoreActions {
   setActiveItemId: (id: string | null) => void;
 
   // Note actions
-  addNote: (note: Omit<NoteItem, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  addNote: (note: Omit<NoteItem, "id" | "createdAt" | "updatedAt" | "order">) => void;
   updateNote: (id: string, updates: Partial<NoteItem>) => void;
   deleteNote: (id: string) => void;
 
   // Command container actions
-  addCommandContainer: (container: Omit<CommandContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  addCommandContainer: (
+    container: Omit<CommandContainer, "id" | "createdAt" | "updatedAt" | "order">,
+  ) => void;
   updateCommandContainer: (id: string, updates: Partial<CommandContainer>) => void;
   deleteCommandContainer: (id: string) => void;
-  addCommandItem: (containerId: string, item: Omit<CommandItem, 'id'>) => void;
+  addCommandItem: (containerId: string, item: Omit<CommandItem, "id">) => void;
   updateCommandItem: (containerId: string, itemId: string, updates: Partial<CommandItem>) => void;
   deleteCommandItem: (containerId: string, itemId: string) => void;
 
   // Link container actions
-  addLinkContainer: (container: Omit<LinkContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  addLinkContainer: (
+    container: Omit<LinkContainer, "id" | "createdAt" | "updatedAt" | "order">,
+  ) => void;
   updateLinkContainer: (id: string, updates: Partial<LinkContainer>) => void;
   deleteLinkContainer: (id: string) => void;
-  addLinkItem: (containerId: string, item: Omit<LinkItem, 'id'>) => void;
+  addLinkItem: (containerId: string, item: Omit<LinkItem, "id">) => void;
   updateLinkItem: (containerId: string, itemId: string, updates: Partial<LinkItem>) => void;
   deleteLinkItem: (containerId: string, itemId: string) => void;
   // Link section actions
   addLinkSection: (containerId: string, title: string) => void;
-  updateLinkSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; icon: string; color: string}>) => void;
+  updateLinkSection: (
+    containerId: string,
+    sectionId: string,
+    updates: Partial<{ title: string; collapsed: boolean; icon: string; color: string }>,
+  ) => void;
   deleteLinkSection: (containerId: string, sectionId: string) => void;
   reorderLinkSections: (containerId: string, sectionIds: string[]) => void;
   moveLinkToSection: (containerId: string, linkId: string, targetSectionId: string | null) => void;
 
   // Prompt container actions
-  addPromptContainer: (container: Omit<PromptContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  addPromptContainer: (
+    container: Omit<PromptContainer, "id" | "createdAt" | "updatedAt" | "order">,
+  ) => void;
   updatePromptContainer: (id: string, updates: Partial<PromptContainer>) => void;
   deletePromptContainer: (id: string) => void;
-  addPromptItem: (containerId: string, item: Omit<PromptItem, 'id'>) => void;
+  addPromptItem: (containerId: string, item: Omit<PromptItem, "id">) => void;
   updatePromptItem: (containerId: string, itemId: string, updates: Partial<PromptItem>) => void;
   deletePromptItem: (containerId: string, itemId: string) => void;
   // Prompt section actions
   addPromptSection: (containerId: string, title: string) => void;
-  updatePromptSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; color: string}>) => void;
+  updatePromptSection: (
+    containerId: string,
+    sectionId: string,
+    updates: Partial<{ title: string; collapsed: boolean; color: string }>,
+  ) => void;
   deletePromptSection: (containerId: string, sectionId: string) => void;
   reorderPromptSections: (containerId: string, sectionIds: string[]) => void;
 
   // Playbook container actions
-  addPlaybookContainer: (container: Omit<PlaybookContainer, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  addPlaybookContainer: (
+    container: Omit<PlaybookContainer, "id" | "createdAt" | "updatedAt" | "order">,
+  ) => void;
   updatePlaybookContainer: (id: string, updates: Partial<PlaybookContainer>) => void;
   deletePlaybookContainer: (id: string) => void;
-  addPlaybookItem: (containerId: string, item: Omit<PlaybookItem, 'id' | 'order'> & { order?: number }) => void;
+  addPlaybookItem: (
+    containerId: string,
+    item: Omit<PlaybookItem, "id" | "order"> & { order?: number },
+  ) => void;
   updatePlaybookItem: (containerId: string, itemId: string, updates: Partial<PlaybookItem>) => void;
   deletePlaybookItem: (containerId: string, itemId: string) => void;
   // Playbook section actions
   addPlaybookSection: (containerId: string, title: string) => void;
-  updatePlaybookSection: (containerId: string, sectionId: string, updates: Partial<{title: string; collapsed: boolean; color: string}>) => void;
+  updatePlaybookSection: (
+    containerId: string,
+    sectionId: string,
+    updates: Partial<{ title: string; collapsed: boolean; color: string }>,
+  ) => void;
   deletePlaybookSection: (containerId: string, sectionId: string) => void;
   reorderPlaybookSections: (containerId: string, sectionIds: string[]) => void;
 
   // Playbook variable actions
-  addPlaybookVariable: (containerId: string, name: string, value: string, description?: string) => void;
-  updatePlaybookVariable: (containerId: string, variableId: string, updates: Partial<PlaybookVariable>) => void;
+  addPlaybookVariable: (
+    containerId: string,
+    name: string,
+    value: string,
+    description?: string,
+  ) => void;
+  updatePlaybookVariable: (
+    containerId: string,
+    variableId: string,
+    updates: Partial<PlaybookVariable>,
+  ) => void;
   deletePlaybookVariable: (containerId: string, variableId: string) => void;
 
   // Trash actions
@@ -135,7 +178,7 @@ interface StoreActions {
   getActiveItem: () => AnyItem | null;
 
   // GitHub sync
-  syncStatus: 'idle' | 'connecting' | 'syncing' | 'success' | 'error';
+  syncStatus: "idle" | "connecting" | "syncing" | "success" | "error";
   syncMessage: string;
   canSave: boolean;
   dataExportedAt: string;
@@ -157,26 +200,26 @@ export const useStore = create<AppState & StoreActions>()(
       // ============================================
       workspaces: initialData.workspaces || [],
       activeWorkspaceId: initialData.workspaces?.[0]?.id || null,
-      
+
       categories: initialData.categories || [],
       activeCategoryId: null,
-      
+
       folders: initialData.folders || [],
       activeFolderId: null,
-      
+
       notes: initialData.notes || [],
       commands: initialData.commands || [],
       links: initialData.links || [],
       prompts: initialData.prompts || [],
       playbooks: initialData.playbooks || [],
       activeItemId: null,
-      
+
       // Trash
       trash: [],
       showTrash: false,
-      
+
       settings: defaultSettings,
-      searchQuery: '',
+      searchQuery: "",
       showSettings: false,
       sidebarCollapsed: false,
       sidebarCompact: false,
@@ -185,13 +228,14 @@ export const useStore = create<AppState & StoreActions>()(
       // ============================================
       // WORKSPACE ACTIONS
       // ============================================
-      setActiveWorkspaceId: (id) => set({ 
-        activeWorkspaceId: id, 
-        activeCategoryId: null,
-        activeFolderId: null,
-        activeItemId: null 
-      }),
-      
+      setActiveWorkspaceId: (id) =>
+        set({
+          activeWorkspaceId: id,
+          activeCategoryId: null,
+          activeFolderId: null,
+          activeItemId: null,
+        }),
+
       addWorkspace: (workspace) => {
         const newWorkspace: Workspace = {
           ...workspace,
@@ -199,60 +243,120 @@ export const useStore = create<AppState & StoreActions>()(
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        
+
         // Create default categories for new workspace
         const defaultCategories: Category[] = [
-          { id: genId(), workspaceId: newWorkspace.id, name: 'Notes', icon: '📝', color: '#4CAF50', baseType: 'notes', order: 0, isDefault: true },
-          { id: genId(), workspaceId: newWorkspace.id, name: 'Commands', icon: '⌘', color: '#2196F3', baseType: 'commands', order: 1, isDefault: true },
-          { id: genId(), workspaceId: newWorkspace.id, name: 'Links', icon: '🔗', color: '#FF9800', baseType: 'links', order: 2, isDefault: true },
-          { id: genId(), workspaceId: newWorkspace.id, name: 'Prompts', icon: '💬', color: '#9C27B0', baseType: 'prompts', order: 3, isDefault: true },
-          { id: genId(), workspaceId: newWorkspace.id, name: 'Playbooks', icon: '📖', color: '#00BCD4', baseType: 'playbooks', order: 4, isDefault: true },
+          {
+            id: genId(),
+            workspaceId: newWorkspace.id,
+            name: "Notes",
+            icon: "📝",
+            color: "#4CAF50",
+            baseType: "notes",
+            order: 0,
+            isDefault: true,
+          },
+          {
+            id: genId(),
+            workspaceId: newWorkspace.id,
+            name: "Commands",
+            icon: "⌘",
+            color: "#2196F3",
+            baseType: "commands",
+            order: 1,
+            isDefault: true,
+          },
+          {
+            id: genId(),
+            workspaceId: newWorkspace.id,
+            name: "Links",
+            icon: "🔗",
+            color: "#FF9800",
+            baseType: "links",
+            order: 2,
+            isDefault: true,
+          },
+          {
+            id: genId(),
+            workspaceId: newWorkspace.id,
+            name: "Prompts",
+            icon: "💬",
+            color: "#9C27B0",
+            baseType: "prompts",
+            order: 3,
+            isDefault: true,
+          },
+          {
+            id: genId(),
+            workspaceId: newWorkspace.id,
+            name: "Playbooks",
+            icon: "📖",
+            color: "#00BCD4",
+            baseType: "playbooks",
+            order: 4,
+            isDefault: true,
+          },
         ];
-        
-        set((s) => ({ 
+
+        set((s) => ({
           workspaces: [...s.workspaces, newWorkspace],
           categories: [...s.categories, ...defaultCategories],
           activeWorkspaceId: newWorkspace.id,
           activeCategoryId: null,
           activeFolderId: null,
-          activeItemId: null
+          activeItemId: null,
         }));
       },
-      
-      updateWorkspace: (id, updates) => set((s) => ({
-        workspaces: s.workspaces.map(w => w.id === id ? { ...w, ...updates, updatedAt: new Date().toISOString() } : w)
-      })),
-      
-      deleteWorkspace: (id) => set((s) => {
-        // Get all categories for this workspace
-        const workspaceCategoryIds = s.categories.filter(c => c.workspaceId === id).map(c => c.id);
-        // Get all folders for these categories
-        const categoryFolderIds = s.folders.filter(f => workspaceCategoryIds.includes(f.categoryId)).map(f => f.id);
-        
-        return {
-          workspaces: s.workspaces.filter(w => w.id !== id),
-          categories: s.categories.filter(c => c.workspaceId !== id),
-          folders: s.folders.filter(f => !workspaceCategoryIds.includes(f.categoryId)),
-          notes: s.notes.filter(n => !categoryFolderIds.includes(n.folderId)),
-          commands: s.commands.filter(c => !categoryFolderIds.includes(c.folderId)),
-          links: s.links.filter(l => !categoryFolderIds.includes(l.folderId)),
-          prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
-          playbooks: s.playbooks.filter(pb => !categoryFolderIds.includes(pb.folderId)),
-          activeWorkspaceId: s.activeWorkspaceId === id ? (s.workspaces[0]?.id || null) : s.activeWorkspaceId,
-          activeCategoryId: null,
-          activeFolderId: null,
-          activeItemId: null,
-        };
-      }),
+
+      updateWorkspace: (id, updates) =>
+        set((s) => ({
+          workspaces: s.workspaces.map((w) =>
+            w.id === id ? { ...w, ...updates, updatedAt: new Date().toISOString() } : w,
+          ),
+        })),
+
+      deleteWorkspace: (id) =>
+        set((s) => {
+          // Get all categories for this workspace
+          const workspaceCategoryIds = s.categories
+            .filter((c) => c.workspaceId === id)
+            .map((c) => c.id);
+          // Get all folders for these categories
+          const categoryFolderIds = s.folders
+            .filter((f) => workspaceCategoryIds.includes(f.categoryId))
+            .map((f) => f.id);
+
+          return {
+            workspaces: s.workspaces.filter((w) => w.id !== id),
+            categories: s.categories.filter((c) => c.workspaceId !== id),
+            folders: s.folders.filter((f) => !workspaceCategoryIds.includes(f.categoryId)),
+            notes: s.notes.filter((n) => !categoryFolderIds.includes(n.folderId)),
+            commands: s.commands.filter((c) => !categoryFolderIds.includes(c.folderId)),
+            links: s.links.filter((l) => !categoryFolderIds.includes(l.folderId)),
+            prompts: s.prompts.filter((p) => !categoryFolderIds.includes(p.folderId)),
+            playbooks: s.playbooks.filter((pb) => !categoryFolderIds.includes(pb.folderId)),
+            activeWorkspaceId:
+              s.activeWorkspaceId === id ? s.workspaces[0]?.id || null : s.activeWorkspaceId,
+            activeCategoryId: null,
+            activeFolderId: null,
+            activeItemId: null,
+          };
+        }),
 
       // ============================================
       // CATEGORY ACTIONS
       // ============================================
-      setActiveCategoryId: (id) => set({ activeCategoryId: id, activeFolderId: null, activeItemId: null }),
-      
+      setActiveCategoryId: (id) =>
+        set({ activeCategoryId: id, activeFolderId: null, activeItemId: null }),
+
       addCategory: (category) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.categories.filter(c => c.workspaceId === state.activeWorkspaceId).map(c => c.order));
+        const maxOrder = Math.max(
+          0,
+          ...state.categories
+            .filter((c) => c.workspaceId === state.activeWorkspaceId)
+            .map((c) => c.order),
+        );
         const newCategory: Category = {
           ...category,
           id: genId(),
@@ -260,45 +364,53 @@ export const useStore = create<AppState & StoreActions>()(
         };
         set((s) => ({ categories: [...s.categories, newCategory] }));
       },
-      
-      updateCategory: (id, updates) => set((s) => ({
-        categories: s.categories.map(c => c.id === id ? { ...c, ...updates } : c)
-      })),
-      
-      deleteCategory: (id) => set((s) => {
-        const categoryFolderIds = s.folders.filter(f => f.categoryId === id).map(f => f.id);
-        return {
-          categories: s.categories.filter(c => c.id !== id),
-          folders: s.folders.filter(f => f.categoryId !== id),
-          notes: s.notes.filter(n => !categoryFolderIds.includes(n.folderId)),
-          commands: s.commands.filter(c => !categoryFolderIds.includes(c.folderId)),
-          links: s.links.filter(l => !categoryFolderIds.includes(l.folderId)),
-          prompts: s.prompts.filter(p => !categoryFolderIds.includes(p.folderId)),
-          playbooks: s.playbooks.filter(pb => !categoryFolderIds.includes(pb.folderId)),
-          activeCategoryId: s.activeCategoryId === id ? null : s.activeCategoryId,
-        };
-      }),
-      
-      reorderCategories: (workspaceId, categoryIds) => set((s) => {
-        // Update order for each category
-        const updatedCategories = s.categories.map(c => {
-          if (c.workspaceId === workspaceId) {
-            const newOrder = categoryIds.indexOf(c.id);
-            return newOrder >= 0 ? { ...c, order: newOrder } : c;
-          }
-          return c;
-        });
-        return { categories: updatedCategories };
-      }),
+
+      updateCategory: (id, updates) =>
+        set((s) => ({
+          categories: s.categories.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+        })),
+
+      deleteCategory: (id) =>
+        set((s) => {
+          const categoryFolderIds = s.folders.filter((f) => f.categoryId === id).map((f) => f.id);
+          return {
+            categories: s.categories.filter((c) => c.id !== id),
+            folders: s.folders.filter((f) => f.categoryId !== id),
+            notes: s.notes.filter((n) => !categoryFolderIds.includes(n.folderId)),
+            commands: s.commands.filter((c) => !categoryFolderIds.includes(c.folderId)),
+            links: s.links.filter((l) => !categoryFolderIds.includes(l.folderId)),
+            prompts: s.prompts.filter((p) => !categoryFolderIds.includes(p.folderId)),
+            playbooks: s.playbooks.filter((pb) => !categoryFolderIds.includes(pb.folderId)),
+            activeCategoryId: s.activeCategoryId === id ? null : s.activeCategoryId,
+          };
+        }),
+
+      reorderCategories: (workspaceId, categoryIds) =>
+        set((s) => {
+          // Update order for each category
+          const updatedCategories = s.categories.map((c) => {
+            if (c.workspaceId === workspaceId) {
+              const newOrder = categoryIds.indexOf(c.id);
+              return newOrder >= 0 ? { ...c, order: newOrder } : c;
+            }
+            return c;
+          });
+          return { categories: updatedCategories };
+        }),
 
       // ============================================
       // FOLDER ACTIONS
       // ============================================
       setActiveFolderId: (id) => set({ activeFolderId: id }),
-      
+
       addFolder: (folder) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.folders.filter(f => f.categoryId === folder.categoryId && f.parentId === folder.parentId).map(f => f.order));
+        const maxOrder = Math.max(
+          0,
+          ...state.folders
+            .filter((f) => f.categoryId === folder.categoryId && f.parentId === folder.parentId)
+            .map((f) => f.order),
+        );
         const newFolder: Folder = {
           ...folder,
           id: genId(),
@@ -307,33 +419,36 @@ export const useStore = create<AppState & StoreActions>()(
         };
         set((s) => ({ folders: [...s.folders, newFolder] }));
       },
-      
-      updateFolder: (id, updates) => set((s) => ({
-        folders: s.folders.map(f => f.id === id ? { ...f, ...updates } : f)
-      })),
-      
-      deleteFolder: (id) => set((s) => {
-        // Get all child folder IDs recursively
-        const getChildFolderIds = (parentId: string): string[] => {
-          const children = s.folders.filter(f => f.parentId === parentId);
-          return [parentId, ...children.flatMap(c => getChildFolderIds(c.id))];
-        };
-        const folderIds = getChildFolderIds(id);
-        
-        return {
-          folders: s.folders.filter(f => !folderIds.includes(f.id)),
-          notes: s.notes.filter(n => !folderIds.includes(n.folderId)),
-          commands: s.commands.filter(c => !folderIds.includes(c.folderId)),
-          links: s.links.filter(l => !folderIds.includes(l.folderId)),
-          prompts: s.prompts.filter(p => !folderIds.includes(p.folderId)),
-          playbooks: s.playbooks.filter(pb => !folderIds.includes(pb.folderId)),
-          activeFolderId: s.activeFolderId === id ? null : s.activeFolderId,
-        };
-      }),
-      
-      toggleFolderExpanded: (id) => set((s) => ({
-        folders: s.folders.map(f => f.id === id ? { ...f, isExpanded: !f.isExpanded } : f)
-      })),
+
+      updateFolder: (id, updates) =>
+        set((s) => ({
+          folders: s.folders.map((f) => (f.id === id ? { ...f, ...updates } : f)),
+        })),
+
+      deleteFolder: (id) =>
+        set((s) => {
+          // Get all child folder IDs recursively
+          const getChildFolderIds = (parentId: string): string[] => {
+            const children = s.folders.filter((f) => f.parentId === parentId);
+            return [parentId, ...children.flatMap((c) => getChildFolderIds(c.id))];
+          };
+          const folderIds = getChildFolderIds(id);
+
+          return {
+            folders: s.folders.filter((f) => !folderIds.includes(f.id)),
+            notes: s.notes.filter((n) => !folderIds.includes(n.folderId)),
+            commands: s.commands.filter((c) => !folderIds.includes(c.folderId)),
+            links: s.links.filter((l) => !folderIds.includes(l.folderId)),
+            prompts: s.prompts.filter((p) => !folderIds.includes(p.folderId)),
+            playbooks: s.playbooks.filter((pb) => !folderIds.includes(pb.folderId)),
+            activeFolderId: s.activeFolderId === id ? null : s.activeFolderId,
+          };
+        }),
+
+      toggleFolderExpanded: (id) =>
+        set((s) => ({
+          folders: s.folders.map((f) => (f.id === id ? { ...f, isExpanded: !f.isExpanded } : f)),
+        })),
 
       // ============================================
       // ITEM SELECTION
@@ -345,225 +460,284 @@ export const useStore = create<AppState & StoreActions>()(
       // ============================================
       addNote: (note) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.notes.filter(n => n.folderId === note.folderId).map(n => n.order || 0));
-        const newNote: NoteItem = { 
-          ...note, 
-          id: genId(), 
+        const maxOrder = Math.max(
+          0,
+          ...state.notes.filter((n) => n.folderId === note.folderId).map((n) => n.order || 0),
+        );
+        const newNote: NoteItem = {
+          ...note,
+          id: genId(),
           order: maxOrder + 1,
-          createdAt: new Date().toISOString(), 
-          updatedAt: new Date().toISOString() 
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         set((s) => ({ notes: [...s.notes, newNote], activeItemId: newNote.id }));
       },
-      
-      updateNote: (id, updates) => set((s) => ({
-        notes: s.notes.map(n => n.id === id ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n)
-      })),
-      
-      deleteNote: (id) => set((s) => {
-        const note = s.notes.find(n => n.id === id);
-        if (!note) return s;
-        
-        // Find folder, category and workspace info
-        const folder = s.folders.find(f => f.id === note.folderId);
-        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
-        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
-        
-        const trashItem: TrashItem = {
-          id: genId(),
-          originalId: note.id,
-          type: 'note',
-          item: note,
-          workspaceId: workspace?.id || '',
-          workspaceName: workspace?.name || 'Unknown',
-          categoryId: category?.id || '',
-          categoryName: category?.name || 'Unknown',
-          folderId: folder?.id || '',
-          folderName: folder?.name || 'Unknown',
-          deletedAt: new Date().toISOString(),
-        };
-        
-        return {
-          notes: s.notes.filter(n => n.id !== id),
-          trash: [...s.trash, trashItem],
-          activeItemId: s.activeItemId === id ? null : s.activeItemId,
-        };
-      }),
+
+      updateNote: (id, updates) =>
+        set((s) => ({
+          notes: s.notes.map((n) =>
+            n.id === id ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n,
+          ),
+        })),
+
+      deleteNote: (id) =>
+        set((s) => {
+          const note = s.notes.find((n) => n.id === id);
+          if (!note) return s;
+
+          // Find folder, category and workspace info
+          const folder = s.folders.find((f) => f.id === note.folderId);
+          const category = folder ? s.categories.find((c) => c.id === folder.categoryId) : null;
+          const workspace = category
+            ? s.workspaces.find((w) => w.id === category.workspaceId)
+            : null;
+
+          const trashItem: TrashItem = {
+            id: genId(),
+            originalId: note.id,
+            type: "note",
+            item: note,
+            workspaceId: workspace?.id || "",
+            workspaceName: workspace?.name || "Unknown",
+            categoryId: category?.id || "",
+            categoryName: category?.name || "Unknown",
+            folderId: folder?.id || "",
+            folderName: folder?.name || "Unknown",
+            deletedAt: new Date().toISOString(),
+          };
+
+          return {
+            notes: s.notes.filter((n) => n.id !== id),
+            trash: [...s.trash, trashItem],
+            activeItemId: s.activeItemId === id ? null : s.activeItemId,
+          };
+        }),
 
       // ============================================
       // COMMAND CONTAINER ACTIONS
       // ============================================
       addCommandContainer: (container) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.commands.filter(c => c.folderId === container.folderId).map(c => c.order || 0));
-        const newC: CommandContainer = { 
-          ...container, 
-          id: genId(), 
+        const maxOrder = Math.max(
+          0,
+          ...state.commands
+            .filter((c) => c.folderId === container.folderId)
+            .map((c) => c.order || 0),
+        );
+        const newC: CommandContainer = {
+          ...container,
+          id: genId(),
           order: maxOrder + 1,
-          createdAt: new Date().toISOString(), 
-          updatedAt: new Date().toISOString() 
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         set((s) => ({ commands: [...s.commands, newC], activeItemId: newC.id }));
       },
-      
-      updateCommandContainer: (id, updates) => set((s) => ({
-        commands: s.commands.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c)
-      })),
-      
-      deleteCommandContainer: (id) => set((s) => {
-        const command = s.commands.find(c => c.id === id);
-        if (!command) return s;
-        
-        const folder = s.folders.find(f => f.id === command.folderId);
-        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
-        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
-        
-        const trashItem: TrashItem = {
-          id: genId(),
-          originalId: command.id,
-          type: 'command',
-          item: command,
-          workspaceId: workspace?.id || '',
-          workspaceName: workspace?.name || 'Unknown',
-          categoryId: category?.id || '',
-          categoryName: category?.name || 'Unknown',
-          folderId: folder?.id || '',
-          folderName: folder?.name || 'Unknown',
-          deletedAt: new Date().toISOString(),
-        };
-        
-        return {
-          commands: s.commands.filter(c => c.id !== id),
-          trash: [...s.trash, trashItem],
-          activeItemId: s.activeItemId === id ? null : s.activeItemId,
-        };
-      }),
-      
+
+      updateCommandContainer: (id, updates) =>
+        set((s) => ({
+          commands: s.commands.map((c) =>
+            c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c,
+          ),
+        })),
+
+      deleteCommandContainer: (id) =>
+        set((s) => {
+          const command = s.commands.find((c) => c.id === id);
+          if (!command) return s;
+
+          const folder = s.folders.find((f) => f.id === command.folderId);
+          const category = folder ? s.categories.find((c) => c.id === folder.categoryId) : null;
+          const workspace = category
+            ? s.workspaces.find((w) => w.id === category.workspaceId)
+            : null;
+
+          const trashItem: TrashItem = {
+            id: genId(),
+            originalId: command.id,
+            type: "command",
+            item: command,
+            workspaceId: workspace?.id || "",
+            workspaceName: workspace?.name || "Unknown",
+            categoryId: category?.id || "",
+            categoryName: category?.name || "Unknown",
+            folderId: folder?.id || "",
+            folderName: folder?.name || "Unknown",
+            deletedAt: new Date().toISOString(),
+          };
+
+          return {
+            commands: s.commands.filter((c) => c.id !== id),
+            trash: [...s.trash, trashItem],
+            activeItemId: s.activeItemId === id ? null : s.activeItemId,
+          };
+        }),
+
       addCommandItem: (containerId, item) => {
         const newItem: CommandItem = { ...item, id: genId() };
         set((s) => ({
-          commands: s.commands.map(c => c.id === containerId ? { 
-            ...c, 
-            subItems: [...c.subItems, newItem], 
-            updatedAt: new Date().toISOString() 
-          } : c)
+          commands: s.commands.map((c) =>
+            c.id === containerId
+              ? {
+                  ...c,
+                  subItems: [...c.subItems, newItem],
+                  updatedAt: new Date().toISOString(),
+                }
+              : c,
+          ),
         }));
       },
-      
-      updateCommandItem: (containerId, itemId, updates) => set((s) => ({
-        commands: s.commands.map(c => c.id === containerId ? {
-          ...c, updatedAt: new Date().toISOString(),
-          subItems: c.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
-        } : c)
-      })),
-      
-      deleteCommandItem: (containerId, itemId) => set((s) => ({
-        commands: s.commands.map(c => c.id === containerId ? {
-          ...c, 
-          subItems: c.subItems.filter(i => i.id !== itemId)
-        } : c)
-      })),
+
+      updateCommandItem: (containerId, itemId, updates) =>
+        set((s) => ({
+          commands: s.commands.map((c) =>
+            c.id === containerId
+              ? {
+                  ...c,
+                  updatedAt: new Date().toISOString(),
+                  subItems: c.subItems.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+                }
+              : c,
+          ),
+        })),
+
+      deleteCommandItem: (containerId, itemId) =>
+        set((s) => ({
+          commands: s.commands.map((c) =>
+            c.id === containerId
+              ? {
+                  ...c,
+                  subItems: c.subItems.filter((i) => i.id !== itemId),
+                }
+              : c,
+          ),
+        })),
 
       // ============================================
       // LINK CONTAINER ACTIONS
       // ============================================
       addLinkContainer: (container) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.links.filter(l => l.folderId === container.folderId).map(l => l.order || 0));
-        const newC: LinkContainer = { 
-          ...container, 
-          id: genId(), 
+        const maxOrder = Math.max(
+          0,
+          ...state.links.filter((l) => l.folderId === container.folderId).map((l) => l.order || 0),
+        );
+        const newC: LinkContainer = {
+          ...container,
+          id: genId(),
           order: maxOrder + 1,
-          createdAt: new Date().toISOString(), 
-          updatedAt: new Date().toISOString() 
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         set((s) => ({ links: [...s.links, newC], activeItemId: newC.id }));
       },
-      
-      updateLinkContainer: (id, updates) => set((s) => ({
-        links: s.links.map(l => l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l)
-      })),
-      
-      deleteLinkContainer: (id) => set((s) => {
-        const link = s.links.find(l => l.id === id);
-        if (!link) return s;
-        
-        const folder = s.folders.find(f => f.id === link.folderId);
-        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
-        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
-        
-        const trashItem: TrashItem = {
-          id: genId(),
-          originalId: link.id,
-          type: 'link',
-          item: link,
-          workspaceId: workspace?.id || '',
-          workspaceName: workspace?.name || 'Unknown',
-          categoryId: category?.id || '',
-          categoryName: category?.name || 'Unknown',
-          folderId: folder?.id || '',
-          folderName: folder?.name || 'Unknown',
-          deletedAt: new Date().toISOString(),
-        };
-        
-        return {
-          links: s.links.filter(l => l.id !== id),
-          trash: [...s.trash, trashItem],
-          activeItemId: s.activeItemId === id ? null : s.activeItemId,
-        };
-      }),
-      
+
+      updateLinkContainer: (id, updates) =>
+        set((s) => ({
+          links: s.links.map((l) =>
+            l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l,
+          ),
+        })),
+
+      deleteLinkContainer: (id) =>
+        set((s) => {
+          const link = s.links.find((l) => l.id === id);
+          if (!link) return s;
+
+          const folder = s.folders.find((f) => f.id === link.folderId);
+          const category = folder ? s.categories.find((c) => c.id === folder.categoryId) : null;
+          const workspace = category
+            ? s.workspaces.find((w) => w.id === category.workspaceId)
+            : null;
+
+          const trashItem: TrashItem = {
+            id: genId(),
+            originalId: link.id,
+            type: "link",
+            item: link,
+            workspaceId: workspace?.id || "",
+            workspaceName: workspace?.name || "Unknown",
+            categoryId: category?.id || "",
+            categoryName: category?.name || "Unknown",
+            folderId: folder?.id || "",
+            folderName: folder?.name || "Unknown",
+            deletedAt: new Date().toISOString(),
+          };
+
+          return {
+            links: s.links.filter((l) => l.id !== id),
+            trash: [...s.trash, trashItem],
+            activeItemId: s.activeItemId === id ? null : s.activeItemId,
+          };
+        }),
+
       addLinkItem: (containerId, item) => {
         set((s) => {
-          const container = s.links.find(l => l.id === containerId);
+          const container = s.links.find((l) => l.id === containerId);
           if (!container) return s;
-          
+
           // Calculate max order for the target section (or all items if no section)
-          const targetItems = item.sectionId 
-            ? container.subItems.filter(i => i.sectionId === item.sectionId)
+          const targetItems = item.sectionId
+            ? container.subItems.filter((i) => i.sectionId === item.sectionId)
             : container.subItems;
-          const maxOrder = targetItems.length > 0 
-            ? Math.max(...targetItems.map(i => i.order ?? 0)) 
-            : -1;
-          
-          const newItem: LinkItem = { 
-            ...item, 
+          const maxOrder =
+            targetItems.length > 0 ? Math.max(...targetItems.map((i) => i.order ?? 0)) : -1;
+
+          const newItem: LinkItem = {
+            ...item,
             id: genId(),
             order: maxOrder + 1, // Add to end
           };
-          
+
           return {
-            links: s.links.map(l => l.id === containerId ? { 
-              ...l, 
-              subItems: [...l.subItems, newItem], 
-              updatedAt: new Date().toISOString() 
-            } : l)
+            links: s.links.map((l) =>
+              l.id === containerId
+                ? {
+                    ...l,
+                    subItems: [...l.subItems, newItem],
+                    updatedAt: new Date().toISOString(),
+                  }
+                : l,
+            ),
           };
         });
       },
-      
-      updateLinkItem: (containerId, itemId, updates) => set((s) => ({
-        links: s.links.map(l => l.id === containerId ? {
-          ...l, updatedAt: new Date().toISOString(),
-          subItems: l.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
-        } : l)
-      })),
-      
-      deleteLinkItem: (containerId, itemId) => set((s) => ({
-        links: s.links.map(l => l.id === containerId ? {
-          ...l, subItems: l.subItems.filter(i => i.id !== itemId)
-        } : l)
-      })),
-      
+
+      updateLinkItem: (containerId, itemId, updates) =>
+        set((s) => ({
+          links: s.links.map((l) =>
+            l.id === containerId
+              ? {
+                  ...l,
+                  updatedAt: new Date().toISOString(),
+                  subItems: l.subItems.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+                }
+              : l,
+          ),
+        })),
+
+      deleteLinkItem: (containerId, itemId) =>
+        set((s) => ({
+          links: s.links.map((l) =>
+            l.id === containerId
+              ? {
+                  ...l,
+                  subItems: l.subItems.filter((i) => i.id !== itemId),
+                }
+              : l,
+          ),
+        })),
+
       // ============================================
       // LINK SECTION ACTIONS
       // ============================================
       addLinkSection: (containerId, title) => {
         const sectionId = genId();
         set((s) => {
-          const linkIndex = s.links.findIndex(l => l.id === containerId);
+          const linkIndex = s.links.findIndex((l) => l.id === containerId);
           if (linkIndex === -1) return s;
-          
+
           const link = s.links[linkIndex];
           const sections = link.sections || [];
           const newSection = {
@@ -572,157 +746,189 @@ export const useStore = create<AppState & StoreActions>()(
             order: sections.length,
             collapsed: false,
           };
-          
+
           const newLinks = [...s.links];
           newLinks[linkIndex] = {
             ...link,
             sections: [...sections, newSection],
             updatedAt: new Date().toISOString(),
           };
-          
+
           return { links: newLinks };
         });
       },
-      
+
       updateLinkSection: (containerId, sectionId, updates) => {
-        console.log('[updateLinkSection] Called with:', { containerId, sectionId, updates });
+        console.log("[updateLinkSection] Called with:", { containerId, sectionId, updates });
         set((s) => {
-          const container = s.links.find(l => l.id === containerId);
-          console.log('[updateLinkSection] Container before update:', {
+          const container = s.links.find((l) => l.id === containerId);
+          console.log("[updateLinkSection] Container before update:", {
             containerFound: !!container,
-            sectionsBefore: container?.sections
+            sectionsBefore: container?.sections,
           });
           return {
-            links: s.links.map(l => {
+            links: s.links.map((l) => {
               if (l.id !== containerId) return l;
-              const updatedSections = (l.sections || []).map(sec => 
-                sec.id === sectionId ? { ...sec, ...updates } : sec
+              const updatedSections = (l.sections || []).map((sec) =>
+                sec.id === sectionId ? { ...sec, ...updates } : sec,
               );
-              console.log('[updateLinkSection] Updated sections:', updatedSections);
+              console.log("[updateLinkSection] Updated sections:", updatedSections);
               return {
                 ...l,
                 sections: updatedSections,
                 updatedAt: new Date().toISOString(),
               };
-            })
+            }),
           };
         });
       },
-      
-      deleteLinkSection: (containerId, sectionId) => set((s) => ({
-        links: s.links.map(l => {
-          if (l.id !== containerId) return l;
-          // Remove section and move its links to "no section" (null)
-          return {
-            ...l,
-            sections: (l.sections || []).filter(sec => sec.id !== sectionId),
-            subItems: l.subItems.map(item => 
-              item.sectionId === sectionId ? { ...item, sectionId: undefined } : item
-            ),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
-      
-      reorderLinkSections: (containerId, sectionIds) => set((s) => ({
-        links: s.links.map(l => {
-          if (l.id !== containerId) return l;
-          return {
-            ...l,
-            sections: (l.sections || []).map(sec => ({
-              ...sec,
-              order: sectionIds.indexOf(sec.id),
-            })).sort((a, b) => a.order - b.order),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
-      
-      moveLinkToSection: (containerId, linkId, targetSectionId) => set((s) => ({
-        links: s.links.map(l => {
-          if (l.id !== containerId) return l;
-          return {
-            ...l,
-            subItems: l.subItems.map(item =>
-              item.id === linkId ? { ...item, sectionId: targetSectionId || undefined } : item
-            ),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+
+      deleteLinkSection: (containerId, sectionId) =>
+        set((s) => ({
+          links: s.links.map((l) => {
+            if (l.id !== containerId) return l;
+            // Remove section and move its links to "no section" (null)
+            return {
+              ...l,
+              sections: (l.sections || []).filter((sec) => sec.id !== sectionId),
+              subItems: l.subItems.map((item) =>
+                item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
+
+      reorderLinkSections: (containerId, sectionIds) =>
+        set((s) => ({
+          links: s.links.map((l) => {
+            if (l.id !== containerId) return l;
+            return {
+              ...l,
+              sections: (l.sections || [])
+                .map((sec) => ({
+                  ...sec,
+                  order: sectionIds.indexOf(sec.id),
+                }))
+                .sort((a, b) => a.order - b.order),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
+
+      moveLinkToSection: (containerId, linkId, targetSectionId) =>
+        set((s) => ({
+          links: s.links.map((l) => {
+            if (l.id !== containerId) return l;
+            return {
+              ...l,
+              subItems: l.subItems.map((item) =>
+                item.id === linkId ? { ...item, sectionId: targetSectionId || undefined } : item,
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
       // ============================================
       // PROMPT CONTAINER ACTIONS
       // ============================================
       addPromptContainer: (container) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.prompts.filter(p => p.folderId === container.folderId).map(p => p.order || 0));
-        const newC: PromptContainer = { 
-          ...container, 
-          id: genId(), 
+        const maxOrder = Math.max(
+          0,
+          ...state.prompts
+            .filter((p) => p.folderId === container.folderId)
+            .map((p) => p.order || 0),
+        );
+        const newC: PromptContainer = {
+          ...container,
+          id: genId(),
           order: maxOrder + 1,
-          createdAt: new Date().toISOString(), 
-          updatedAt: new Date().toISOString() 
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         set((s) => ({ prompts: [...s.prompts, newC], activeItemId: newC.id }));
       },
-      
-      updatePromptContainer: (id, updates) => set((s) => ({
-        prompts: s.prompts.map(p => p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p)
-      })),
-      
-      deletePromptContainer: (id) => set((s) => {
-        const prompt = s.prompts.find(p => p.id === id);
-        if (!prompt) return s;
-        
-        const folder = s.folders.find(f => f.id === prompt.folderId);
-        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
-        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
-        
-        const trashItem: TrashItem = {
-          id: genId(),
-          originalId: prompt.id,
-          type: 'prompt',
-          item: prompt,
-          workspaceId: workspace?.id || '',
-          workspaceName: workspace?.name || 'Unknown',
-          categoryId: category?.id || '',
-          categoryName: category?.name || 'Unknown',
-          folderId: folder?.id || '',
-          folderName: folder?.name || 'Unknown',
-          deletedAt: new Date().toISOString(),
-        };
-        
-        return {
-          prompts: s.prompts.filter(p => p.id !== id),
-          trash: [...s.trash, trashItem],
-          activeItemId: s.activeItemId === id ? null : s.activeItemId,
-        };
-      }),
-      
+
+      updatePromptContainer: (id, updates) =>
+        set((s) => ({
+          prompts: s.prompts.map((p) =>
+            p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p,
+          ),
+        })),
+
+      deletePromptContainer: (id) =>
+        set((s) => {
+          const prompt = s.prompts.find((p) => p.id === id);
+          if (!prompt) return s;
+
+          const folder = s.folders.find((f) => f.id === prompt.folderId);
+          const category = folder ? s.categories.find((c) => c.id === folder.categoryId) : null;
+          const workspace = category
+            ? s.workspaces.find((w) => w.id === category.workspaceId)
+            : null;
+
+          const trashItem: TrashItem = {
+            id: genId(),
+            originalId: prompt.id,
+            type: "prompt",
+            item: prompt,
+            workspaceId: workspace?.id || "",
+            workspaceName: workspace?.name || "Unknown",
+            categoryId: category?.id || "",
+            categoryName: category?.name || "Unknown",
+            folderId: folder?.id || "",
+            folderName: folder?.name || "Unknown",
+            deletedAt: new Date().toISOString(),
+          };
+
+          return {
+            prompts: s.prompts.filter((p) => p.id !== id),
+            trash: [...s.trash, trashItem],
+            activeItemId: s.activeItemId === id ? null : s.activeItemId,
+          };
+        }),
+
       addPromptItem: (containerId, item) => {
         const newItem: PromptItem = { ...item, id: genId() };
         set((s) => ({
-          prompts: s.prompts.map(p => p.id === containerId ? { 
-            ...p, 
-            subItems: [...p.subItems, newItem], 
-            updatedAt: new Date().toISOString() 
-          } : p)
+          prompts: s.prompts.map((p) =>
+            p.id === containerId
+              ? {
+                  ...p,
+                  subItems: [...p.subItems, newItem],
+                  updatedAt: new Date().toISOString(),
+                }
+              : p,
+          ),
         }));
       },
-      
-      updatePromptItem: (containerId, itemId, updates) => set((s) => ({
-        prompts: s.prompts.map(p => p.id === containerId ? {
-          ...p, updatedAt: new Date().toISOString(),
-          subItems: p.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
-        } : p)
-      })),
-      
-      deletePromptItem: (containerId, itemId) => set((s) => ({
-        prompts: s.prompts.map(p => p.id === containerId ? {
-          ...p, subItems: p.subItems.filter(i => i.id !== itemId)
-        } : p)
-      })),
+
+      updatePromptItem: (containerId, itemId, updates) =>
+        set((s) => ({
+          prompts: s.prompts.map((p) =>
+            p.id === containerId
+              ? {
+                  ...p,
+                  updatedAt: new Date().toISOString(),
+                  subItems: p.subItems.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+                }
+              : p,
+          ),
+        })),
+
+      deletePromptItem: (containerId, itemId) =>
+        set((s) => ({
+          prompts: s.prompts.map((p) =>
+            p.id === containerId
+              ? {
+                  ...p,
+                  subItems: p.subItems.filter((i) => i.id !== itemId),
+                }
+              : p,
+          ),
+        })),
 
       // ============================================
       // PROMPT SECTION ACTIONS
@@ -730,7 +936,7 @@ export const useStore = create<AppState & StoreActions>()(
       addPromptSection: (containerId, title) => {
         const sectionId = genId();
         set((s) => {
-          const idx = s.prompts.findIndex(p => p.id === containerId);
+          const idx = s.prompts.findIndex((p) => p.id === containerId);
           if (idx === -1) return s;
 
           const prompt = s.prompts[idx];
@@ -755,125 +961,157 @@ export const useStore = create<AppState & StoreActions>()(
 
       updatePromptSection: (containerId, sectionId, updates) => {
         set((s) => ({
-          prompts: s.prompts.map(p => {
+          prompts: s.prompts.map((p) => {
             if (p.id !== containerId) return p;
-            const updatedSections = (p.sections || []).map(sec =>
-              sec.id === sectionId ? { ...sec, ...updates } : sec
+            const updatedSections = (p.sections || []).map((sec) =>
+              sec.id === sectionId ? { ...sec, ...updates } : sec,
             );
             return {
               ...p,
               sections: updatedSections,
               updatedAt: new Date().toISOString(),
             };
-          })
+          }),
         }));
       },
 
-      deletePromptSection: (containerId, sectionId) => set((s) => ({
-        prompts: s.prompts.map(p => {
-          if (p.id !== containerId) return p;
-          return {
-            ...p,
-            sections: (p.sections || []).filter(sec => sec.id !== sectionId),
-            subItems: p.subItems.map(item =>
-              item.sectionId === sectionId ? { ...item, sectionId: undefined } : item
-            ),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+      deletePromptSection: (containerId, sectionId) =>
+        set((s) => ({
+          prompts: s.prompts.map((p) => {
+            if (p.id !== containerId) return p;
+            return {
+              ...p,
+              sections: (p.sections || []).filter((sec) => sec.id !== sectionId),
+              subItems: p.subItems.map((item) =>
+                item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
-      reorderPromptSections: (containerId, sectionIds) => set((s) => ({
-        prompts: s.prompts.map(p => {
-          if (p.id !== containerId) return p;
-          return {
-            ...p,
-            sections: (p.sections || []).map(sec => ({
-              ...sec,
-              order: sectionIds.indexOf(sec.id),
-            })).sort((a, b) => a.order - b.order),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+      reorderPromptSections: (containerId, sectionIds) =>
+        set((s) => ({
+          prompts: s.prompts.map((p) => {
+            if (p.id !== containerId) return p;
+            return {
+              ...p,
+              sections: (p.sections || [])
+                .map((sec) => ({
+                  ...sec,
+                  order: sectionIds.indexOf(sec.id),
+                }))
+                .sort((a, b) => a.order - b.order),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
       // ============================================
       // PLAYBOOK CONTAINER ACTIONS
       // ============================================
       addPlaybookContainer: (container) => {
         const state = get();
-        const maxOrder = Math.max(0, ...state.playbooks.filter(pb => pb.folderId === container.folderId).map(pb => pb.order || 0));
-        const newC: PlaybookContainer = { 
-          ...container, 
-          id: genId(), 
+        const maxOrder = Math.max(
+          0,
+          ...state.playbooks
+            .filter((pb) => pb.folderId === container.folderId)
+            .map((pb) => pb.order || 0),
+        );
+        const newC: PlaybookContainer = {
+          ...container,
+          id: genId(),
           order: maxOrder + 1,
-          createdAt: new Date().toISOString(), 
-          updatedAt: new Date().toISOString() 
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
         set((s) => ({ playbooks: [...s.playbooks, newC], activeItemId: newC.id }));
       },
-      
-      updatePlaybookContainer: (id, updates) => set((s) => ({
-        playbooks: s.playbooks.map(pb => pb.id === id ? { ...pb, ...updates, updatedAt: new Date().toISOString() } : pb)
-      })),
-      
-      deletePlaybookContainer: (id) => set((s) => {
-        const playbook = s.playbooks.find(pb => pb.id === id);
-        if (!playbook) return s;
-        
-        const folder = s.folders.find(f => f.id === playbook.folderId);
-        const category = folder ? s.categories.find(c => c.id === folder.categoryId) : null;
-        const workspace = category ? s.workspaces.find(w => w.id === category.workspaceId) : null;
-        
-        const trashItem: TrashItem = {
-          id: genId(),
-          originalId: playbook.id,
-          type: 'playbook',
-          item: playbook,
-          workspaceId: workspace?.id || '',
-          workspaceName: workspace?.name || 'Unknown',
-          categoryId: category?.id || '',
-          categoryName: category?.name || 'Unknown',
-          folderId: folder?.id || '',
-          folderName: folder?.name || 'Unknown',
-          deletedAt: new Date().toISOString(),
-        };
-        
-        return {
-          playbooks: s.playbooks.filter(pb => pb.id !== id),
-          trash: [...s.trash, trashItem],
-          activeItemId: s.activeItemId === id ? null : s.activeItemId,
-        };
-      }),
-      
+
+      updatePlaybookContainer: (id, updates) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) =>
+            pb.id === id ? { ...pb, ...updates, updatedAt: new Date().toISOString() } : pb,
+          ),
+        })),
+
+      deletePlaybookContainer: (id) =>
+        set((s) => {
+          const playbook = s.playbooks.find((pb) => pb.id === id);
+          if (!playbook) return s;
+
+          const folder = s.folders.find((f) => f.id === playbook.folderId);
+          const category = folder ? s.categories.find((c) => c.id === folder.categoryId) : null;
+          const workspace = category
+            ? s.workspaces.find((w) => w.id === category.workspaceId)
+            : null;
+
+          const trashItem: TrashItem = {
+            id: genId(),
+            originalId: playbook.id,
+            type: "playbook",
+            item: playbook,
+            workspaceId: workspace?.id || "",
+            workspaceName: workspace?.name || "Unknown",
+            categoryId: category?.id || "",
+            categoryName: category?.name || "Unknown",
+            folderId: folder?.id || "",
+            folderName: folder?.name || "Unknown",
+            deletedAt: new Date().toISOString(),
+          };
+
+          return {
+            playbooks: s.playbooks.filter((pb) => pb.id !== id),
+            trash: [...s.trash, trashItem],
+            activeItemId: s.activeItemId === id ? null : s.activeItemId,
+          };
+        }),
+
       addPlaybookItem: (containerId, item) => {
         set((s) => {
-          const container = s.playbooks.find(pb => pb.id === containerId);
-          const maxOrder = container ? Math.max(0, ...container.subItems.map(i => i.order || 0)) : 0;
+          const container = s.playbooks.find((pb) => pb.id === containerId);
+          const maxOrder = container
+            ? Math.max(0, ...container.subItems.map((i) => i.order || 0))
+            : 0;
           const newItem: PlaybookItem = { ...item, id: genId(), order: item.order ?? maxOrder + 1 };
           return {
-            playbooks: s.playbooks.map(pb => pb.id === containerId ? { 
-              ...pb, 
-              subItems: [...pb.subItems, newItem], 
-              updatedAt: new Date().toISOString() 
-            } : pb)
+            playbooks: s.playbooks.map((pb) =>
+              pb.id === containerId
+                ? {
+                    ...pb,
+                    subItems: [...pb.subItems, newItem],
+                    updatedAt: new Date().toISOString(),
+                  }
+                : pb,
+            ),
           };
         });
       },
-      
-      updatePlaybookItem: (containerId, itemId, updates) => set((s) => ({
-        playbooks: s.playbooks.map(pb => pb.id === containerId ? {
-          ...pb, updatedAt: new Date().toISOString(),
-          subItems: pb.subItems.map(i => i.id === itemId ? { ...i, ...updates } : i)
-        } : pb)
-      })),
-      
-      deletePlaybookItem: (containerId, itemId) => set((s) => ({
-        playbooks: s.playbooks.map(pb => pb.id === containerId ? {
-          ...pb, 
-          subItems: pb.subItems.filter(i => i.id !== itemId)
-        } : pb)
-      })),
+
+      updatePlaybookItem: (containerId, itemId, updates) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) =>
+            pb.id === containerId
+              ? {
+                  ...pb,
+                  updatedAt: new Date().toISOString(),
+                  subItems: pb.subItems.map((i) => (i.id === itemId ? { ...i, ...updates } : i)),
+                }
+              : pb,
+          ),
+        })),
+
+      deletePlaybookItem: (containerId, itemId) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) =>
+            pb.id === containerId
+              ? {
+                  ...pb,
+                  subItems: pb.subItems.filter((i) => i.id !== itemId),
+                }
+              : pb,
+          ),
+        })),
 
       // ============================================
       // PLAYBOOK SECTION ACTIONS
@@ -881,7 +1119,7 @@ export const useStore = create<AppState & StoreActions>()(
       addPlaybookSection: (containerId, title) => {
         const sectionId = genId();
         set((s) => {
-          const idx = s.playbooks.findIndex(pb => pb.id === containerId);
+          const idx = s.playbooks.findIndex((pb) => pb.id === containerId);
           if (idx === -1) return s;
 
           const playbook = s.playbooks[idx];
@@ -906,47 +1144,51 @@ export const useStore = create<AppState & StoreActions>()(
 
       updatePlaybookSection: (containerId, sectionId, updates) => {
         set((s) => ({
-          playbooks: s.playbooks.map(pb => {
+          playbooks: s.playbooks.map((pb) => {
             if (pb.id !== containerId) return pb;
-            const updatedSections = (pb.sections || []).map(sec =>
-              sec.id === sectionId ? { ...sec, ...updates } : sec
+            const updatedSections = (pb.sections || []).map((sec) =>
+              sec.id === sectionId ? { ...sec, ...updates } : sec,
             );
             return {
               ...pb,
               sections: updatedSections,
               updatedAt: new Date().toISOString(),
             };
-          })
+          }),
         }));
       },
 
-      deletePlaybookSection: (containerId, sectionId) => set((s) => ({
-        playbooks: s.playbooks.map(pb => {
-          if (pb.id !== containerId) return pb;
-          return {
-            ...pb,
-            sections: (pb.sections || []).filter(sec => sec.id !== sectionId),
-            subItems: pb.subItems.map(item =>
-              item.sectionId === sectionId ? { ...item, sectionId: undefined } : item
-            ),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+      deletePlaybookSection: (containerId, sectionId) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) => {
+            if (pb.id !== containerId) return pb;
+            return {
+              ...pb,
+              sections: (pb.sections || []).filter((sec) => sec.id !== sectionId),
+              subItems: pb.subItems.map((item) =>
+                item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
-      reorderPlaybookSections: (containerId, sectionIds) => set((s) => ({
-        playbooks: s.playbooks.map(pb => {
-          if (pb.id !== containerId) return pb;
-          return {
-            ...pb,
-            sections: (pb.sections || []).map(sec => ({
-              ...sec,
-              order: sectionIds.indexOf(sec.id),
-            })).sort((a, b) => a.order - b.order),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+      reorderPlaybookSections: (containerId, sectionIds) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) => {
+            if (pb.id !== containerId) return pb;
+            return {
+              ...pb,
+              sections: (pb.sections || [])
+                .map((sec) => ({
+                  ...sec,
+                  order: sectionIds.indexOf(sec.id),
+                }))
+                .sort((a, b) => a.order - b.order),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
       // ============================================
       // PLAYBOOK VARIABLE ACTIONS
@@ -954,7 +1196,7 @@ export const useStore = create<AppState & StoreActions>()(
       addPlaybookVariable: (containerId, name, value, description) => {
         const varId = genId();
         set((s) => ({
-          playbooks: s.playbooks.map(pb => {
+          playbooks: s.playbooks.map((pb) => {
             if (pb.id !== containerId) return pb;
             const variables = pb.variables || [];
             return {
@@ -962,112 +1204,122 @@ export const useStore = create<AppState & StoreActions>()(
               variables: [...variables, { id: varId, name, value, description }],
               updatedAt: new Date().toISOString(),
             };
-          })
+          }),
         }));
       },
 
-      updatePlaybookVariable: (containerId, variableId, updates) => set((s) => ({
-        playbooks: s.playbooks.map(pb => {
-          if (pb.id !== containerId) return pb;
-          return {
-            ...pb,
-            variables: (pb.variables || []).map(v =>
-              v.id === variableId ? { ...v, ...updates } : v
-            ),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+      updatePlaybookVariable: (containerId, variableId, updates) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) => {
+            if (pb.id !== containerId) return pb;
+            return {
+              ...pb,
+              variables: (pb.variables || []).map((v) =>
+                v.id === variableId ? { ...v, ...updates } : v,
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
-      deletePlaybookVariable: (containerId, variableId) => set((s) => ({
-        playbooks: s.playbooks.map(pb => {
-          if (pb.id !== containerId) return pb;
-          return {
-            ...pb,
-            variables: (pb.variables || []).filter(v => v.id !== variableId),
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      })),
+      deletePlaybookVariable: (containerId, variableId) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) => {
+            if (pb.id !== containerId) return pb;
+            return {
+              ...pb,
+              variables: (pb.variables || []).filter((v) => v.id !== variableId),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
 
       // ============================================
       // TRASH ACTIONS
       // ============================================
       setShowTrash: (show) => set({ showTrash: show }),
-      
-      restoreFromTrash: (trashId) => set((s) => {
-        const trashItem = s.trash.find(t => t.id === trashId);
-        if (!trashItem) return s;
-        
-        // Check if the original folder still exists
-        const folderExists = s.folders.some(f => f.id === trashItem.folderId);
-        if (!folderExists) {
-          // Create the folder back if it doesn't exist
-          // First check if category exists
-          const categoryExists = s.categories.some(c => c.id === trashItem.categoryId);
-          if (!categoryExists) {
-            // Create category
-            const newCategory: Category = {
-              id: trashItem.categoryId,
-              workspaceId: trashItem.workspaceId,
-              name: trashItem.categoryName,
-              icon: '📁',
-              color: '#6366f1',
-              baseType: trashItem.type === 'note' ? 'notes' : 
-                        trashItem.type === 'command' ? 'commands' : 
-                        trashItem.type === 'link' ? 'links' : 
-                        trashItem.type === 'playbook' ? 'playbooks' : 'prompts',
+
+      restoreFromTrash: (trashId) =>
+        set((s) => {
+          const trashItem = s.trash.find((t) => t.id === trashId);
+          if (!trashItem) return s;
+
+          // Check if the original folder still exists
+          const folderExists = s.folders.some((f) => f.id === trashItem.folderId);
+          if (!folderExists) {
+            // Create the folder back if it doesn't exist
+            // First check if category exists
+            const categoryExists = s.categories.some((c) => c.id === trashItem.categoryId);
+            if (!categoryExists) {
+              // Create category
+              const newCategory: Category = {
+                id: trashItem.categoryId,
+                workspaceId: trashItem.workspaceId,
+                name: trashItem.categoryName,
+                icon: "📁",
+                color: "#6366f1",
+                baseType:
+                  trashItem.type === "note"
+                    ? "notes"
+                    : trashItem.type === "command"
+                      ? "commands"
+                      : trashItem.type === "link"
+                        ? "links"
+                        : trashItem.type === "playbook"
+                          ? "playbooks"
+                          : "prompts",
+                order: 999,
+                isDefault: false,
+              };
+              s.categories.push(newCategory);
+            }
+
+            // Create folder
+            const newFolder: Folder = {
+              id: trashItem.folderId,
+              categoryId: trashItem.categoryId,
+              parentId: null,
+              name: trashItem.folderName,
               order: 999,
-              isDefault: false,
+              isExpanded: true,
+              createdAt: new Date().toISOString(),
             };
-            s.categories.push(newCategory);
+            s.folders.push(newFolder);
           }
-          
-          // Create folder
-          const newFolder: Folder = {
-            id: trashItem.folderId,
-            categoryId: trashItem.categoryId,
-            parentId: null,
-            name: trashItem.folderName,
-            order: 999,
-            isExpanded: true,
-            createdAt: new Date().toISOString(),
+
+          // Restore the item
+          const restoredItem = { ...trashItem.item } as any;
+
+          const newState: any = {
+            trash: s.trash.filter((t) => t.id !== trashId),
           };
-          s.folders.push(newFolder);
-        }
-        
-        // Restore the item
-        const restoredItem = { ...trashItem.item } as any;
-        
-        const newState: any = {
-          trash: s.trash.filter(t => t.id !== trashId),
-        };
-        
-        switch (trashItem.type) {
-          case 'note':
-            newState.notes = [...s.notes, restoredItem as NoteItem];
-            break;
-          case 'command':
-            newState.commands = [...s.commands, restoredItem as CommandContainer];
-            break;
-          case 'link':
-            newState.links = [...s.links, restoredItem as LinkContainer];
-            break;
-          case 'prompt':
-            newState.prompts = [...s.prompts, restoredItem as PromptContainer];
-            break;
-          case 'playbook':
-            newState.playbooks = [...s.playbooks, restoredItem as PlaybookContainer];
-            break;
-        }
-        
-        return newState;
-      }),
-      
-      permanentlyDelete: (trashId) => set((s) => ({
-        trash: s.trash.filter(t => t.id !== trashId),
-      })),
-      
+
+          switch (trashItem.type) {
+            case "note":
+              newState.notes = [...s.notes, restoredItem as NoteItem];
+              break;
+            case "command":
+              newState.commands = [...s.commands, restoredItem as CommandContainer];
+              break;
+            case "link":
+              newState.links = [...s.links, restoredItem as LinkContainer];
+              break;
+            case "prompt":
+              newState.prompts = [...s.prompts, restoredItem as PromptContainer];
+              break;
+            case "playbook":
+              newState.playbooks = [...s.playbooks, restoredItem as PlaybookContainer];
+              break;
+          }
+
+          return newState;
+        }),
+
+      permanentlyDelete: (trashId) =>
+        set((s) => ({
+          trash: s.trash.filter((t) => t.id !== trashId),
+        })),
+
       clearTrash: () => set({ trash: [] }),
 
       // ============================================
@@ -1095,13 +1347,13 @@ export const useStore = create<AppState & StoreActions>()(
           prompts: state.prompts,
           playbooks: state.playbooks,
           exportedAt: new Date().toISOString(),
-          version: '2.0',
+          version: "2.0",
         };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `knowledge-hub-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `knowledge-hub-${new Date().toISOString().split("T")[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
       },
@@ -1124,60 +1376,67 @@ export const useStore = create<AppState & StoreActions>()(
             activeItemId: null,
           });
         } catch (e) {
-          console.error('Import failed', e);
+          console.error("Import failed", e);
         }
       },
 
-      clearAllData: () => set({
-        workspaces: [],
-        categories: [],
-        folders: [],
-        notes: [],
-        commands: [],
-        links: [],
-        prompts: [],
-        playbooks: [],
-        trash: [],
-        activeWorkspaceId: null,
-        activeCategoryId: null,
-        activeFolderId: null,
-        activeItemId: null,
-      }),
+      clearAllData: () =>
+        set({
+          workspaces: [],
+          categories: [],
+          folders: [],
+          notes: [],
+          commands: [],
+          links: [],
+          prompts: [],
+          playbooks: [],
+          trash: [],
+          activeWorkspaceId: null,
+          activeCategoryId: null,
+          activeFolderId: null,
+          activeItemId: null,
+        }),
 
       getActiveItem: () => {
         const state = get();
         const { activeItemId, activeCategoryId } = state;
         if (!activeItemId || !activeCategoryId) return null;
-        
-        const category = state.categories.find(c => c.id === activeCategoryId);
+
+        const category = state.categories.find((c) => c.id === activeCategoryId);
         if (!category) return null;
-        
+
         switch (category.baseType) {
-          case 'notes': return state.notes.find(n => n.id === activeItemId) || null;
-          case 'commands': return state.commands.find(c => c.id === activeItemId) || null;
-          case 'links': return state.links.find(l => l.id === activeItemId) || null;
-          case 'prompts': return state.prompts.find(p => p.id === activeItemId) || null;
-          case 'playbooks': return state.playbooks.find(pb => pb.id === activeItemId) || null;
-          default: return null;
+          case "notes":
+            return state.notes.find((n) => n.id === activeItemId) || null;
+          case "commands":
+            return state.commands.find((c) => c.id === activeItemId) || null;
+          case "links":
+            return state.links.find((l) => l.id === activeItemId) || null;
+          case "prompts":
+            return state.prompts.find((p) => p.id === activeItemId) || null;
+          case "playbooks":
+            return state.playbooks.find((pb) => pb.id === activeItemId) || null;
+          default:
+            return null;
         }
       },
 
       // ============================================
       // GITHUB SYNC
       // ============================================
-      syncStatus: 'idle',
-      syncMessage: '',
+      syncStatus: "idle",
+      syncMessage: "",
       canSave: false,
-      dataExportedAt: initialData.exportedAt || '',
+      dataExportedAt: initialData.exportedAt || "",
 
       connectGitHub: async (token: string) => {
-        set({ syncStatus: 'connecting', syncMessage: 'Connecting...' });
-        
+        set({ syncStatus: "connecting", syncMessage: "Connecting..." });
+
         const result = await initializeGitHubSync(token);
-        
+
         if (result.success) {
           set({
-            syncStatus: 'success',
+            syncStatus: "success",
             syncMessage: result.message,
             canSave: true,
             settings: {
@@ -1188,37 +1447,38 @@ export const useStore = create<AppState & StoreActions>()(
               },
             },
           });
-          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
+          setTimeout(() => set({ syncStatus: "idle", syncMessage: "" }), 3000);
           return true;
         } else {
-          set({ syncStatus: 'error', syncMessage: result.message });
-          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 5000);
+          set({ syncStatus: "error", syncMessage: result.message });
+          setTimeout(() => set({ syncStatus: "idle", syncMessage: "" }), 5000);
           return false;
         }
       },
 
       syncToCloud: async () => {
         const state = get();
-        
+
         if (!state.canSave || !state.settings.github.token) {
-          set({ syncStatus: 'error', syncMessage: 'Connect with token first' });
-          setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 3000);
+          set({ syncStatus: "error", syncMessage: "Connect with token first" });
+          setTimeout(() => set({ syncStatus: "idle", syncMessage: "" }), 3000);
           return;
         }
-        
-        set({ syncStatus: 'syncing', syncMessage: 'Saving...' });
-        
+
+        set({ syncStatus: "syncing", syncMessage: "Saving..." });
+
         // DEBUG: Log links data before sync
-        console.log('[syncToCloud] Links data being synced:', 
-          state.links.map(l => ({
+        console.log(
+          "[syncToCloud] Links data being synced:",
+          state.links.map((l) => ({
             id: l.id,
             title: l.title,
             sections: l.sections,
             subItemsCount: l.subItems.length,
-            updatedAt: l.updatedAt
-          }))
+            updatedAt: l.updatedAt,
+          })),
         );
-        
+
         const data = {
           workspaces: state.workspaces,
           categories: state.categories,
@@ -1229,25 +1489,25 @@ export const useStore = create<AppState & StoreActions>()(
           prompts: state.prompts,
           playbooks: state.playbooks,
           exportedAt: new Date().toISOString(),
-          version: '2.0',
+          version: "2.0",
         };
-        
+
         const result = await saveToGitHub(state.settings.github, data);
-        
+
         if (result.success) {
           set({
-            syncStatus: 'success',
-            syncMessage: 'Saved! Site will rebuild automatically.',
+            syncStatus: "success",
+            syncMessage: "Saved! Site will rebuild automatically.",
             settings: {
               ...state.settings,
               github: { ...state.settings.github, lastSync: new Date().toISOString() },
             },
           });
         } else {
-          set({ syncStatus: 'error', syncMessage: result.message });
+          set({ syncStatus: "error", syncMessage: result.message });
         }
-        
-        setTimeout(() => set({ syncStatus: 'idle', syncMessage: '' }), 4000);
+
+        setTimeout(() => set({ syncStatus: "idle", syncMessage: "" }), 4000);
       },
 
       disconnectGitHub: () => {
@@ -1255,13 +1515,13 @@ export const useStore = create<AppState & StoreActions>()(
           canSave: false,
           settings: {
             ...get().settings,
-            github: { token: '' },
+            github: { token: "" },
           },
         });
       },
     }),
     {
-      name: 'knowledge-hub-storage',
+      name: "knowledge-hub-storage",
       // Persist ALL data to localStorage for immediate persistence between sessions
       // Data is also synced to GitHub for long-term storage
       partialize: (state) => ({
@@ -1286,7 +1546,7 @@ export const useStore = create<AppState & StoreActions>()(
         if (state) {
           // If localStorage is empty or corrupted, fall back to embedded data
           if (!state.workspaces || state.workspaces.length === 0) {
-            console.log('[Store] No localStorage data, using embedded data.json');
+            console.log("[Store] No localStorage data, using embedded data.json");
             state.workspaces = initialData.workspaces || [];
             state.categories = initialData.categories || [];
             state.folders = initialData.folders || [];
@@ -1297,46 +1557,58 @@ export const useStore = create<AppState & StoreActions>()(
             state.playbooks = initialData.playbooks || [];
             state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
           } else {
-            console.log('[Store] Loaded data from localStorage, checking for new embedded data...');
-            
+            console.log("[Store] Loaded data from localStorage, checking for new embedded data...");
+
             // Check if embedded data has new sections that localStorage doesn't have
             // This handles the case where we added RestoredData section to data.json
             if (initialData.links && state.links) {
               let needsUpdate = false;
-              
-              const updatedLinks = state.links.map(localLink => {
+
+              const updatedLinks = state.links.map((localLink) => {
                 // Find matching container in embedded data
                 const embeddedLink = initialData.links?.find((el: any) => el.id === localLink.id);
-                
+
                 if (embeddedLink && embeddedLink.sections && embeddedLink.sections.length > 0) {
                   // Check if embedded has sections that local doesn't have
                   const localSectionIds = (localLink.sections || []).map((s: any) => s.id);
-                  const newSections = embeddedLink.sections.filter((s: any) => !localSectionIds.includes(s.id));
-                  
+                  const newSections = embeddedLink.sections.filter(
+                    (s: any) => !localSectionIds.includes(s.id),
+                  );
+
                   if (newSections.length > 0) {
-                    console.log(`[Store] Found ${newSections.length} new sections in embedded data for container ${localLink.id}`);
+                    console.log(
+                      `[Store] Found ${newSections.length} new sections in embedded data for container ${localLink.id}`,
+                    );
                     needsUpdate = true;
-                    
+
                     const newSectionIds = newSections.map((s: any) => s.id);
-                    
+
                     // Update existing links that should belong to new sections
                     // (links exist in localStorage but without sectionId, while embedded has sectionId)
-                    const updatedSubItems = localLink.subItems?.map((localItem: any) => {
-                      const embeddedItem = embeddedLink.subItems?.find((ei: any) => ei.id === localItem.id);
-                      // If embedded has sectionId for this link and it's one of the new sections
-                      if (embeddedItem && embeddedItem.sectionId && newSectionIds.includes(embeddedItem.sectionId)) {
-                        return { ...localItem, sectionId: embeddedItem.sectionId };
-                      }
-                      return localItem;
-                    }) || [];
-                    
+                    const updatedSubItems =
+                      localLink.subItems?.map((localItem: any) => {
+                        const embeddedItem = embeddedLink.subItems?.find(
+                          (ei: any) => ei.id === localItem.id,
+                        );
+                        // If embedded has sectionId for this link and it's one of the new sections
+                        if (
+                          embeddedItem &&
+                          embeddedItem.sectionId &&
+                          newSectionIds.includes(embeddedItem.sectionId)
+                        ) {
+                          return { ...localItem, sectionId: embeddedItem.sectionId };
+                        }
+                        return localItem;
+                      }) || [];
+
                     // Also add any new links from embedded that don't exist in local
                     const localLinkIds = localLink.subItems?.map((i: any) => i.id) || [];
-                    const additionalNewLinks = embeddedLink.subItems?.filter((ei: any) => 
-                      !localLinkIds.includes(ei.id) && 
-                      newSectionIds.includes(ei.sectionId)
-                    ) || [];
-                    
+                    const additionalNewLinks =
+                      embeddedLink.subItems?.filter(
+                        (ei: any) =>
+                          !localLinkIds.includes(ei.id) && newSectionIds.includes(ei.sectionId),
+                      ) || [];
+
                     return {
                       ...localLink,
                       sections: [...(localLink.sections || []), ...newSections],
@@ -1346,15 +1618,15 @@ export const useStore = create<AppState & StoreActions>()(
                 }
                 return localLink;
               });
-              
+
               if (needsUpdate) {
-                console.log('[Store] Merging new sections from embedded data into localStorage');
+                console.log("[Store] Merging new sections from embedded data into localStorage");
                 state.links = updatedLinks;
               }
             }
           }
         }
       },
-    }
-  )
+    },
+  ),
 );

@@ -55,15 +55,15 @@ const genId = () => Math.random().toString(36).substring(2, 11) + Date.now().toS
  * Парсит .md файл со ссылками в структурированный объект
  */
 export function parseLinkFile(content: string): ParsedLinkFile {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   let inFrontmatter = false;
-  let frontmatterLines: string[] = [];
+  const frontmatterLines: string[] = [];
   let frontmatterEndIndex = 0;
 
   // 1. Извлекаем frontmatter
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (line === '---') {
+    if (line === "---") {
       if (!inFrontmatter) {
         inFrontmatter = true;
         continue;
@@ -78,7 +78,7 @@ export function parseLinkFile(content: string): ParsedLinkFile {
   }
 
   // 2. Парсим frontmatter (простой YAML парсер)
-  const frontmatter = parseSimpleYaml(frontmatterLines.join('\n'));
+  const frontmatter = parseSimpleYaml(frontmatterLines.join("\n"));
 
   // 3. Парсим контент (секции и ссылки)
   const contentLines = lines.slice(frontmatterEndIndex + 1);
@@ -86,13 +86,14 @@ export function parseLinkFile(content: string): ParsedLinkFile {
 
   return {
     id: frontmatter.id || genId(),
-    title: frontmatter.title || 'Untitled',
+    title: frontmatter.title || "Untitled",
     tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
-    order: typeof frontmatter.order === 'number' ? frontmatter.order : parseInt(frontmatter.order) || 0,
+    order:
+      typeof frontmatter.order === "number" ? frontmatter.order : parseInt(frontmatter.order) || 0,
     createdAt: frontmatter.createdAt || new Date().toISOString(),
     updatedAt: frontmatter.updatedAt || new Date().toISOString(),
     sections,
-    rawFrontmatter: frontmatterLines.join('\n'),
+    rawFrontmatter: frontmatterLines.join("\n"),
   };
 }
 
@@ -101,37 +102,40 @@ export function parseLinkFile(content: string): ParsedLinkFile {
  */
 function parseSimpleYaml(yaml: string): Record<string, any> {
   const result: Record<string, any> = {};
-  const lines = yaml.split('\n');
+  const lines = yaml.split("\n");
 
   for (const line of lines) {
-    const colonIndex = line.indexOf(':');
+    const colonIndex = line.indexOf(":");
     if (colonIndex === -1) continue;
 
     const key = line.slice(0, colonIndex).trim();
     let value: any = line.slice(colonIndex + 1).trim();
 
     // Убираем кавычки
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
 
     // Массивы (простой случай: [a, b, c])
-    if (value.startsWith('[') && value.endsWith(']')) {
-      value = value.slice(1, -1)
-        .split(',')
-        .map((v: string) => v.trim().replace(/^["']|["']$/g, ''))
+    if (value.startsWith("[") && value.endsWith("]")) {
+      value = value
+        .slice(1, -1)
+        .split(",")
+        .map((v: string) => v.trim().replace(/^["']|["']$/g, ""))
         .filter((v: string) => v);
     }
 
     // Числа
-    if (!isNaN(Number(value)) && value !== '') {
+    if (!isNaN(Number(value)) && value !== "") {
       value = Number(value);
     }
 
     // Булевы значения
-    if (value === 'true') value = true;
-    if (value === 'false') value = false;
+    if (value === "true") value = true;
+    if (value === "false") value = false;
 
     result[key] = value;
   }
@@ -147,9 +151,9 @@ function parseSections(lines: string[]): ParsedLinkSection[] {
   let currentSection: ParsedLinkSection | null = null;
   let currentLinks: ParsedLinkItem[] = [];
   let linkOrder = 0;
-  
+
   // Секция "Uncategorized" для ссылок без секции
-  let uncategorizedLinks: ParsedLinkItem[] = [];
+  const uncategorizedLinks: ParsedLinkItem[] = [];
 
   const flushSection = () => {
     if (currentSection) {
@@ -168,7 +172,7 @@ function parseSections(lines: string[]): ParsedLinkSection[] {
     if (!trimmedLine) continue;
 
     // Заголовок секции (## Title)
-    if (trimmedLine.startsWith('## ')) {
+    if (trimmedLine.startsWith("## ")) {
       flushSection();
 
       // Извлекаем эмодзи из заголовка если есть
@@ -187,25 +191,26 @@ function parseSections(lines: string[]): ParsedLinkSection[] {
         collapsed: false,
         links: [],
       };
-      
+
       if (sectionIcon) {
         currentSection.icon = sectionIcon;
       }
 
       // Проверяем следующую строку на метаданные секции
       const nextLine = lines[i + 1]?.trim();
-      if (nextLine?.startsWith('<!-- section:')) {
+      if (nextLine?.startsWith("<!-- section:")) {
         const match = nextLine.match(/<!--\s*section:\s*(\{.*?\})\s*-->/);
         if (match) {
           try {
             const meta = JSON.parse(match[1]);
             currentSection.id = meta.id || currentSection.id;
-            currentSection.order = typeof meta.order === 'number' ? meta.order : currentSection.order;
+            currentSection.order =
+              typeof meta.order === "number" ? meta.order : currentSection.order;
             currentSection.collapsed = meta.collapsed ?? false;
             currentSection.color = meta.color;
             currentSection.icon = meta.icon || currentSection.icon;
-          } catch (e) {
-            console.warn('Failed to parse section metadata:', match[1]);
+          } catch {
+            console.warn("Failed to parse section metadata:", match[1]);
           }
         }
         i++; // Пропускаем строку с метаданными
@@ -215,7 +220,7 @@ function parseSections(lines: string[]): ParsedLinkSection[] {
     }
 
     // Ссылка (- [Title](URL) description)
-    if (trimmedLine.startsWith('- [') || trimmedLine.startsWith('-[')) {
+    if (trimmedLine.startsWith("- [") || trimmedLine.startsWith("-[")) {
       const link = parseLinkLine(trimmedLine, linkOrder++);
       if (link) {
         // Если есть currentSection, добавляем в неё, иначе в uncategorized
@@ -231,12 +236,12 @@ function parseSections(lines: string[]): ParsedLinkSection[] {
   }
 
   flushSection();
-  
+
   // Если есть uncategorized ссылки, создаём для них секцию
   if (uncategorizedLinks.length > 0) {
     sections.unshift({
-      id: 'uncategorized',
-      title: 'Uncategorized',
+      id: "uncategorized",
+      title: "Uncategorized",
       order: -1,
       collapsed: false,
       links: uncategorizedLinks,
@@ -258,13 +263,13 @@ function parseLinkLine(line: string, order: number): ParsedLinkItem | null {
   if (metaMatch) {
     try {
       linkMeta = JSON.parse(metaMatch[1]);
-    } catch (e) {
-      console.warn('Failed to parse link metadata:', metaMatch[1]);
+    } catch {
+      console.warn("Failed to parse link metadata:", metaMatch[1]);
     }
   }
 
   // Убираем комментарий для парсинга основной части
-  const cleanLine = line.replace(/<!--\s*link:.*?-->/, '').trim();
+  const cleanLine = line.replace(/<!--\s*link:.*?-->/, "").trim();
 
   // Парсим Markdown ссылку: - [Title](URL)
   const linkMatch = cleanLine.match(/^-\s*\[([^\]]*)\]\(([^)]+)\)(.*)$/);
@@ -298,28 +303,27 @@ export function serializeLinkFile(data: ParsedLinkFile): string {
   const lines: string[] = [];
 
   // Frontmatter
-  lines.push('---');
+  lines.push("---");
   lines.push(`id: "${data.id}"`);
   lines.push(`title: "${data.title}"`);
-  lines.push(`tags: [${data.tags.map(t => `"${t}"`).join(', ')}]`);
+  lines.push(`tags: [${data.tags.map((t) => `"${t}"`).join(", ")}]`);
   lines.push(`order: ${data.order}`);
   lines.push(`createdAt: "${data.createdAt}"`);
   lines.push(`updatedAt: "${data.updatedAt}"`);
-  lines.push('---');
-  lines.push('');
+  lines.push("---");
+  lines.push("");
 
   // Секции (сортируем по order)
   const sortedSections = [...data.sections]
-    .filter(s => s.id !== 'uncategorized') // Uncategorized не пишем как секцию
+    .filter((s) => s.id !== "uncategorized") // Uncategorized не пишем как секцию
     .sort((a, b) => a.order - b.order);
 
   // Сначала собираем все ссылки без секции (uncategorized)
-  const uncategorizedLinks = data.sections
-    .find(s => s.id === 'uncategorized')?.links || [];
+  const uncategorizedLinks = data.sections.find((s) => s.id === "uncategorized")?.links || [];
 
   for (const section of sortedSections) {
     // Заголовок секции
-    const iconPrefix = section.icon ? `${section.icon} ` : '';
+    const iconPrefix = section.icon ? `${section.icon} ` : "";
     lines.push(`## ${iconPrefix}${section.title}`);
 
     // Метаданные секции (сохраняем все важные поля)
@@ -330,17 +334,17 @@ export function serializeLinkFile(data: ParsedLinkFile): string {
     };
     if (section.color) sectionMeta.color = section.color;
     if (section.icon) sectionMeta.icon = section.icon;
-    
+
     lines.push(`<!-- section: ${JSON.stringify(sectionMeta)} -->`);
-    lines.push('');
+    lines.push("");
 
     // Ссылки (сортируем по order)
     const sortedLinks = [...section.links].sort((a, b) => a.order - b.order);
 
     for (const link of sortedLinks) {
-      const linkMeta: Record<string, any> = { 
-        id: link.id, 
-        order: link.order 
+      const linkMeta: Record<string, any> = {
+        id: link.id,
+        order: link.order,
       };
 
       if (link.favicon) linkMeta.favicon = link.favicon;
@@ -360,15 +364,15 @@ export function serializeLinkFile(data: ParsedLinkFile): string {
       lines.push(linkLine);
     }
 
-    lines.push('');
+    lines.push("");
   }
 
   // Uncategorized ссылки в конце без заголовка секции
   if (uncategorizedLinks.length > 0) {
     for (const link of uncategorizedLinks.sort((a, b) => a.order - b.order)) {
-      const linkMeta: Record<string, any> = { 
-        id: link.id, 
-        order: link.order 
+      const linkMeta: Record<string, any> = {
+        id: link.id,
+        order: link.order,
       };
 
       if (link.favicon) linkMeta.favicon = link.favicon;
@@ -385,18 +389,18 @@ export function serializeLinkFile(data: ParsedLinkFile): string {
 
       lines.push(linkLine);
     }
-    lines.push('');
+    lines.push("");
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 // ============================================
 // ХУК ДЛЯ РАБОТЫ С ФАЙЛОМ ССЫЛОК
 // ============================================
 
-import { useState, useCallback, useEffect } from 'react';
-import type { LinkContainer, LinkItem, LinkSection } from '../types';
+import { useState, useCallback, useEffect } from "react";
+import type { LinkContainer, LinkItem, LinkSection } from "../types";
 
 /**
  * Преобразует ParsedLinkFile в LinkContainer для совместимости с текущим Store
@@ -405,7 +409,7 @@ import type { LinkContainer, LinkItem, LinkSection } from '../types';
 export function parsedToContainer(parsed: ParsedLinkFile, folderId: string): LinkContainer {
   // Собираем все ссылки из всех секций
   const allLinks: LinkItem[] = [];
-  
+
   for (const section of parsed.sections) {
     for (const link of section.links) {
       allLinks.push({
@@ -417,7 +421,7 @@ export function parsedToContainer(parsed: ParsedLinkFile, folderId: string): Lin
         tags: link.tags,
         isFavorite: link.isFavorite,
         order: link.order,
-        sectionId: link.sectionId || (section.id !== 'uncategorized' ? section.id : undefined),
+        sectionId: link.sectionId || (section.id !== "uncategorized" ? section.id : undefined),
         color: link.color,
       });
     }
@@ -425,8 +429,8 @@ export function parsedToContainer(parsed: ParsedLinkFile, folderId: string): Lin
 
   // Создаём секции (кроме uncategorized)
   const sections: LinkSection[] = parsed.sections
-    .filter(s => s.id !== 'uncategorized')
-    .map(section => ({
+    .filter((s) => s.id !== "uncategorized")
+    .map((section) => ({
       id: section.id,
       title: section.title,
       order: section.order,
@@ -445,7 +449,7 @@ export function parsedToContainer(parsed: ParsedLinkFile, folderId: string): Lin
     order: parsed.order,
     createdAt: parsed.createdAt,
     updatedAt: parsed.updatedAt,
-    type: 'links',
+    type: "links",
     isExpanded: true,
   };
 }
@@ -456,7 +460,7 @@ export function parsedToContainer(parsed: ParsedLinkFile, folderId: string): Lin
 export function containerToParsed(container: LinkContainer): ParsedLinkFile {
   // Группируем ссылки по секциям
   const sectionMap = new Map<string | undefined, LinkItem[]>();
-  
+
   for (const link of container.subItems) {
     const sectionId = link.sectionId;
     if (!sectionMap.has(sectionId)) {
@@ -467,14 +471,14 @@ export function containerToParsed(container: LinkContainer): ParsedLinkFile {
 
   // Создаём секции
   const sections: ParsedLinkSection[] = [];
-  
+
   // Добавляем секции из container.sections в правильном порядке
   const sortedSections = [...(container.sections || [])].sort((a, b) => a.order - b.order);
-  
+
   for (const section of sortedSections) {
     const sectionLinks = sectionMap.get(section.id) || [];
     sectionMap.delete(section.id); // Удаляем из map, чтобы потом добавить uncategorized
-    
+
     sections.push({
       id: section.id,
       title: section.title,
@@ -503,8 +507,8 @@ export function containerToParsed(container: LinkContainer): ParsedLinkFile {
   const uncategorizedLinks = sectionMap.get(undefined) || [];
   if (uncategorizedLinks.length > 0) {
     sections.push({
-      id: 'uncategorized',
-      title: 'Uncategorized',
+      id: "uncategorized",
+      title: "Uncategorized",
       order: -1,
       collapsed: false,
       links: uncategorizedLinks
@@ -530,7 +534,7 @@ export function containerToParsed(container: LinkContainer): ParsedLinkFile {
     order: container.order,
     createdAt: container.createdAt,
     updatedAt: container.updatedAt,
-    rawFrontmatter: '',
+    rawFrontmatter: "",
     sections,
   };
 }
@@ -556,20 +560,22 @@ export function useLinkFile(initialContent: string, _fileId: string, folderId: s
 
   // Добавить секцию
   const addSection = useCallback((title: string, color?: string) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       updatedAt: new Date().toISOString(),
       sections: [
-        ...prev.sections.filter(s => s.id !== 'uncategorized'),
+        ...prev.sections.filter((s) => s.id !== "uncategorized"),
         {
           id: genId(),
           title,
-          order: prev.sections.filter(s => s.id !== 'uncategorized').length,
+          order: prev.sections.filter((s) => s.id !== "uncategorized").length,
           collapsed: false,
           color,
           links: [],
         },
-        ...(prev.sections.find(s => s.id === 'uncategorized') ? [prev.sections.find(s => s.id === 'uncategorized')!] : []),
+        ...(prev.sections.find((s) => s.id === "uncategorized")
+          ? [prev.sections.find((s) => s.id === "uncategorized")!]
+          : []),
       ],
     }));
     setIsDirty(true);
@@ -577,31 +583,35 @@ export function useLinkFile(initialContent: string, _fileId: string, folderId: s
 
   // Удалить секцию
   const removeSection = useCallback((sectionId: string) => {
-    setData(prev => {
-      const section = prev.sections.find(s => s.id === sectionId);
+    setData((prev) => {
+      const section = prev.sections.find((s) => s.id === sectionId);
       if (!section) return prev;
-      
+
       // Перемещаем ссылки в uncategorized
-      const uncategorizedSection = prev.sections.find(s => s.id === 'uncategorized');
+      const uncategorizedSection = prev.sections.find((s) => s.id === "uncategorized");
       const newUncategorizedLinks = [
         ...(uncategorizedSection?.links || []),
-        ...section.links.map(l => ({ ...l, sectionId: undefined })),
+        ...section.links.map((l) => ({ ...l, sectionId: undefined })),
       ];
-      
+
       return {
         ...prev,
         updatedAt: new Date().toISOString(),
         sections: [
           ...prev.sections
-            .filter(s => s.id !== sectionId && s.id !== 'uncategorized')
+            .filter((s) => s.id !== sectionId && s.id !== "uncategorized")
             .map((s, i) => ({ ...s, order: i })),
-          ...(newUncategorizedLinks.length > 0 ? [{
-            id: 'uncategorized',
-            title: 'Uncategorized',
-            order: -1,
-            collapsed: false,
-            links: newUncategorizedLinks,
-          }] : []),
+          ...(newUncategorizedLinks.length > 0
+            ? [
+                {
+                  id: "uncategorized",
+                  title: "Uncategorized",
+                  order: -1,
+                  collapsed: false,
+                  links: newUncategorizedLinks,
+                },
+              ]
+            : []),
         ],
       };
     });
@@ -610,93 +620,98 @@ export function useLinkFile(initialContent: string, _fileId: string, folderId: s
 
   // Переименовать секцию
   const renameSection = useCallback((sectionId: string, title: string) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       updatedAt: new Date().toISOString(),
-      sections: prev.sections.map(s =>
-        s.id === sectionId ? { ...s, title } : s
-      ),
+      sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, title } : s)),
     }));
     setIsDirty(true);
   }, []);
 
   // Обновить цвет секции
   const setSectionColor = useCallback((sectionId: string, color: string | undefined) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       updatedAt: new Date().toISOString(),
-      sections: prev.sections.map(s =>
-        s.id === sectionId ? { ...s, color } : s
-      ),
+      sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, color } : s)),
     }));
     setIsDirty(true);
   }, []);
 
   // Переместить секцию
   const reorderSections = useCallback((sectionIds: string[]) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       updatedAt: new Date().toISOString(),
-      sections: prev.sections.map(s => ({
+      sections: prev.sections.map((s) => ({
         ...s,
-        order: s.id === 'uncategorized' ? -1 : sectionIds.indexOf(s.id),
+        order: s.id === "uncategorized" ? -1 : sectionIds.indexOf(s.id),
       })),
     }));
     setIsDirty(true);
   }, []);
 
   // Добавить ссылку в секцию
-  const addLink = useCallback((sectionId: string | null, link: Omit<ParsedLinkItem, 'id' | 'order'>) => {
-    setData(prev => {
-      const targetSectionId = sectionId || 'uncategorized';
-      const targetSection = prev.sections.find(s => s.id === targetSectionId);
-      
-      if (!targetSection) {
-        // Если секция не найдена, добавляем в uncategorized
-        const uncategorized = prev.sections.find(s => s.id === 'uncategorized');
-        if (uncategorized) {
-          return {
-            ...prev,
-            updatedAt: new Date().toISOString(),
-            sections: prev.sections.map(s =>
-              s.id === 'uncategorized'
-                ? {
-                    ...s,
-                    links: [...s.links, { ...link, id: genId(), order: s.links.length }],
-                  }
-                : s
-            ),
-          };
+  const addLink = useCallback(
+    (sectionId: string | null, link: Omit<ParsedLinkItem, "id" | "order">) => {
+      setData((prev) => {
+        const targetSectionId = sectionId || "uncategorized";
+        const targetSection = prev.sections.find((s) => s.id === targetSectionId);
+
+        if (!targetSection) {
+          // Если секция не найдена, добавляем в uncategorized
+          const uncategorized = prev.sections.find((s) => s.id === "uncategorized");
+          if (uncategorized) {
+            return {
+              ...prev,
+              updatedAt: new Date().toISOString(),
+              sections: prev.sections.map((s) =>
+                s.id === "uncategorized"
+                  ? {
+                      ...s,
+                      links: [...s.links, { ...link, id: genId(), order: s.links.length }],
+                    }
+                  : s,
+              ),
+            };
+          }
+          return prev;
         }
-        return prev;
-      }
-      
-      return {
-        ...prev,
-        updatedAt: new Date().toISOString(),
-        sections: prev.sections.map(s =>
-          s.id === targetSectionId
-            ? {
-                ...s,
-                links: [...s.links, { ...link, id: genId(), order: s.links.length, sectionId: sectionId || undefined }],
-              }
-            : s
-        ),
-      };
-    });
-    setIsDirty(true);
-  }, []);
+
+        return {
+          ...prev,
+          updatedAt: new Date().toISOString(),
+          sections: prev.sections.map((s) =>
+            s.id === targetSectionId
+              ? {
+                  ...s,
+                  links: [
+                    ...s.links,
+                    {
+                      ...link,
+                      id: genId(),
+                      order: s.links.length,
+                      sectionId: sectionId || undefined,
+                    },
+                  ],
+                }
+              : s,
+          ),
+        };
+      });
+      setIsDirty(true);
+    },
+    [],
+  );
 
   // Обновить ссылку
   const updateLink = useCallback((linkId: string, updates: Partial<ParsedLinkItem>) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       updatedAt: new Date().toISOString(),
-      sections: prev.sections.map(s => ({
+      sections: prev.sections.map((s) => ({
         ...s,
-        links: s.links.map(l =>
-          l.id === linkId ? { ...l, ...updates } : l
-        ),
+        links: s.links.map((l) => (l.id === linkId ? { ...l, ...updates } : l)),
       })),
     }));
     setIsDirty(true);
@@ -704,82 +719,93 @@ export function useLinkFile(initialContent: string, _fileId: string, folderId: s
 
   // Удалить ссылку
   const removeLink = useCallback((linkId: string) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       updatedAt: new Date().toISOString(),
-      sections: prev.sections.map(s => ({
+      sections: prev.sections.map((s) => ({
         ...s,
-        links: s.links.filter(l => l.id !== linkId),
+        links: s.links.filter((l) => l.id !== linkId),
       })),
     }));
     setIsDirty(true);
   }, []);
 
   // Переместить ссылку (внутри или между секциями)
-  const moveLink = useCallback((
-    fromSectionId: string | null,
-    toSectionId: string | null,
-    linkId: string,
-    newOrder: number
-  ) => {
-    setData(prev => {
-      const fromSecId = fromSectionId || 'uncategorized';
-      const toSecId = toSectionId || 'uncategorized';
-      
-      // Находим ссылку
-      let linkToMove: ParsedLinkItem | undefined;
-      for (const section of prev.sections) {
-        const found = section.links.find(l => l.id === linkId);
-        if (found) {
-          linkToMove = found;
-          break;
-        }
-      }
-      
-      if (!linkToMove) return prev;
+  const moveLink = useCallback(
+    (
+      fromSectionId: string | null,
+      toSectionId: string | null,
+      linkId: string,
+      newOrder: number,
+    ) => {
+      setData((prev) => {
+        const fromSecId = fromSectionId || "uncategorized";
+        const toSecId = toSectionId || "uncategorized";
 
-      let newSections = prev.sections.map(s => {
-        // Удаляем из исходной секции
-        if (s.id === fromSecId && fromSecId !== toSecId) {
-          return {
-            ...s,
-            links: s.links.filter(l => l.id !== linkId),
-          };
-        }
-        return s;
-      });
-
-      newSections = newSections.map(s => {
-        if (s.id === toSecId) {
-          const newLinks = [...s.links];
-          if (fromSecId === toSecId) {
-            // Перемещение внутри той же секции
-            const filteredLinks = newLinks.filter(l => l.id !== linkId);
-            filteredLinks.splice(newOrder, 0, { ...linkToMove!, order: newOrder, sectionId: toSectionId || undefined });
-            return {
-              ...s,
-              links: filteredLinks.map((l, i) => ({ ...l, order: i })),
-            };
-          } else {
-            // Перемещение в другую секцию
-            newLinks.splice(newOrder, 0, { ...linkToMove!, order: newOrder, sectionId: toSectionId || undefined });
-            return {
-              ...s,
-              links: newLinks.map((l, i) => ({ ...l, order: i })),
-            };
+        // Находим ссылку
+        let linkToMove: ParsedLinkItem | undefined;
+        for (const section of prev.sections) {
+          const found = section.links.find((l) => l.id === linkId);
+          if (found) {
+            linkToMove = found;
+            break;
           }
         }
-        return s;
-      });
 
-      return {
-        ...prev,
-        updatedAt: new Date().toISOString(),
-        sections: newSections,
-      };
-    });
-    setIsDirty(true);
-  }, []);
+        if (!linkToMove) return prev;
+
+        let newSections = prev.sections.map((s) => {
+          // Удаляем из исходной секции
+          if (s.id === fromSecId && fromSecId !== toSecId) {
+            return {
+              ...s,
+              links: s.links.filter((l) => l.id !== linkId),
+            };
+          }
+          return s;
+        });
+
+        newSections = newSections.map((s) => {
+          if (s.id === toSecId) {
+            const newLinks = [...s.links];
+            if (fromSecId === toSecId) {
+              // Перемещение внутри той же секции
+              const filteredLinks = newLinks.filter((l) => l.id !== linkId);
+              filteredLinks.splice(newOrder, 0, {
+                ...linkToMove!,
+                order: newOrder,
+                sectionId: toSectionId || undefined,
+              });
+              return {
+                ...s,
+                links: filteredLinks.map((l, i) => ({ ...l, order: i })),
+              };
+            } else {
+              // Перемещение в другую секцию
+              newLinks.splice(newOrder, 0, {
+                ...linkToMove!,
+                order: newOrder,
+                sectionId: toSectionId || undefined,
+              });
+              return {
+                ...s,
+                links: newLinks.map((l, i) => ({ ...l, order: i })),
+              };
+            }
+          }
+          return s;
+        });
+
+        return {
+          ...prev,
+          updatedAt: new Date().toISOString(),
+          sections: newSections,
+        };
+      });
+      setIsDirty(true);
+    },
+    [],
+  );
 
   // Сериализовать обратно в .md
   const serialize = useCallback(() => {
@@ -816,7 +842,7 @@ export function containersToParsed(
   tags: string[],
   order: number,
   createdAt: string,
-  updatedAt: string
+  updatedAt: string,
 ): ParsedLinkFile {
   // Берем первый контейнер (должен быть только один)
   const container = containers[0];
@@ -828,11 +854,11 @@ export function containersToParsed(
       order,
       createdAt,
       updatedAt,
-      rawFrontmatter: '',
+      rawFrontmatter: "",
       sections: [],
     };
   }
-  
+
   return containerToParsed({
     ...container,
     title: title || container.title,

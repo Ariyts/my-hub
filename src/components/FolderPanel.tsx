@@ -1,13 +1,28 @@
-import { useState, useRef } from 'react';
-import { useStore } from '../store';
-import type { Folder, BaseDataType } from '../types';
+import { useState, useRef } from "react";
+import { useStore } from "../store";
+import type { Folder, BaseDataType } from "../types";
 import {
-  FolderOpen, Plus, Search, ChevronRight,
-  ChevronDown, MoreVertical, FileText, Terminal, Link2, MessageSquare, BookOpen, Star,
-  Edit2, Trash2, GripVertical
-} from 'lucide-react';
+  FolderOpen,
+  Plus,
+  Search,
+  ChevronRight,
+  ChevronDown,
+  MoreVertical,
+  FileText,
+  Terminal,
+  Link2,
+  MessageSquare,
+  BookOpen,
+  Star,
+  Edit2,
+  Trash2,
+  GripVertical,
+} from "lucide-react";
 
-const BASE_TYPE_ICONS: Record<BaseDataType, React.ComponentType<{ size?: number; style?: React.CSSProperties; className?: string }>> = {
+const BASE_TYPE_ICONS: Record<
+  BaseDataType,
+  React.ComponentType<{ size?: number; style?: React.CSSProperties; className?: string }>
+> = {
   notes: FileText,
   commands: Terminal,
   links: Link2,
@@ -24,58 +39,83 @@ interface FolderItemProps {
   onAddSubfolder: (parentId: string) => void;
 }
 
-function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFolder, onAddSubfolder }: FolderItemProps) {
-  const { 
-    activeCategoryId, 
+function FolderItem({
+  folder,
+  depth,
+  activeItemId,
+  onSelectFile,
+  onAddFileToFolder,
+  onAddSubfolder,
+}: FolderItemProps) {
+  const {
+    activeCategoryId,
     categories,
     folders,
-    notes, commands, links, prompts, playbooks,
-    toggleFolderExpanded, 
-    updateFolder, 
-    deleteFolder, 
-    isDarkTheme, 
-    updateNote, 
-    deleteNote, 
-    updateCommandContainer, 
-    deleteCommandContainer, 
-    updateLinkContainer, 
+    notes,
+    commands,
+    links,
+    prompts,
+    playbooks,
+    toggleFolderExpanded,
+    updateFolder,
+    deleteFolder,
+    isDarkTheme,
+    updateNote,
+    deleteNote,
+    updateCommandContainer,
+    deleteCommandContainer,
+    updateLinkContainer,
     deleteLinkContainer,
-    updatePromptContainer, 
+    updatePromptContainer,
     deletePromptContainer,
     updatePlaybookContainer,
-    deletePlaybookContainer
+    deletePlaybookContainer,
   } = useStore();
-  
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: 'folder' | 'file'; itemId?: string } | null>(null);
-  const [renaming, setRenaming] = useState<{ type: 'folder' | 'file'; itemId?: string } | null>(null);
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    type: "folder" | "file";
+    itemId?: string;
+  } | null>(null);
+  const [renaming, setRenaming] = useState<{ type: "folder" | "file"; itemId?: string } | null>(
+    null,
+  );
   const [newName, setNewName] = useState(folder.name);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  const activeCategory = categories.find(c => c.id === activeCategoryId);
-  const baseType = activeCategory?.baseType || 'notes';
-  const typeColor = activeCategory?.color || '#4CAF50';
+  const activeCategory = categories.find((c) => c.id === activeCategoryId);
+  const baseType = activeCategory?.baseType || "notes";
+  const typeColor = activeCategory?.color || "#4CAF50";
   const TypeIcon = BASE_TYPE_ICONS[baseType];
 
   // Get child folders
-  const childFolders = folders.filter(f => f.parentId === folder.id).sort((a, b) => a.order - b.order);
+  const childFolders = folders
+    .filter((f) => f.parentId === folder.id)
+    .sort((a, b) => a.order - b.order);
 
   // Get files in this folder (sorted by order)
   const getFiles = () => {
-    const sortByOrder = (items: any[]) => 
+    const sortByOrder = (items: any[]) =>
       [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    
+
     switch (baseType) {
-      case 'notes': return sortByOrder(notes.filter(n => n.folderId === folder.id));
-      case 'commands': return sortByOrder(commands.filter(c => c.folderId === folder.id));
-      case 'links': return sortByOrder(links.filter(l => l.folderId === folder.id));
-      case 'prompts': return sortByOrder(prompts.filter(p => p.folderId === folder.id));
-      case 'playbooks': return sortByOrder(playbooks.filter(pb => pb.folderId === folder.id));
+      case "notes":
+        return sortByOrder(notes.filter((n) => n.folderId === folder.id));
+      case "commands":
+        return sortByOrder(commands.filter((c) => c.folderId === folder.id));
+      case "links":
+        return sortByOrder(links.filter((l) => l.folderId === folder.id));
+      case "prompts":
+        return sortByOrder(prompts.filter((p) => p.folderId === folder.id));
+      case "playbooks":
+        return sortByOrder(playbooks.filter((pb) => pb.folderId === folder.id));
     }
   };
 
   const files = getFiles();
 
-  const handleContextMenu = (e: React.MouseEvent, type: 'folder' | 'file', itemId?: string) => {
+  const handleContextMenu = (e: React.MouseEvent, type: "folder" | "file", itemId?: string) => {
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({ x: e.clientX, y: e.clientY, type, itemId });
@@ -90,11 +130,21 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
   const handleRenameFile = (itemId: string) => {
     if (newName.trim()) {
       switch (baseType) {
-        case 'notes': updateNote(itemId, { title: newName.trim() }); break;
-        case 'commands': updateCommandContainer(itemId, { title: newName.trim() }); break;
-        case 'links': updateLinkContainer(itemId, { title: newName.trim() }); break;
-        case 'prompts': updatePromptContainer(itemId, { title: newName.trim() }); break;
-        case 'playbooks': updatePlaybookContainer(itemId, { title: newName.trim() }); break;
+        case "notes":
+          updateNote(itemId, { title: newName.trim() });
+          break;
+        case "commands":
+          updateCommandContainer(itemId, { title: newName.trim() });
+          break;
+        case "links":
+          updateLinkContainer(itemId, { title: newName.trim() });
+          break;
+        case "prompts":
+          updatePromptContainer(itemId, { title: newName.trim() });
+          break;
+        case "playbooks":
+          updatePlaybookContainer(itemId, { title: newName.trim() });
+          break;
       }
     }
     setRenaming(null);
@@ -103,28 +153,41 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
 
   const handleDeleteFile = (itemId: string) => {
     switch (baseType) {
-      case 'notes': deleteNote(itemId); break;
-      case 'commands': deleteCommandContainer(itemId); break;
-      case 'links': deleteLinkContainer(itemId); break;
-      case 'prompts': deletePromptContainer(itemId); break;
-      case 'playbooks': deletePlaybookContainer(itemId); break;
+      case "notes":
+        deleteNote(itemId);
+        break;
+      case "commands":
+        deleteCommandContainer(itemId);
+        break;
+      case "links":
+        deleteLinkContainer(itemId);
+        break;
+      case "prompts":
+        deletePromptContainer(itemId);
+        break;
+      case "playbooks":
+        deletePlaybookContainer(itemId);
+        break;
     }
     setContextMenu(null);
   };
 
   // Drag & Drop handlers
   const handleDragStart = (e: React.DragEvent, file: any) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      id: file.id,
-      folderId: file.folderId,
-      title: file.title
-    }));
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({
+        id: file.id,
+        folderId: file.folderId,
+        title: file.title,
+      }),
+    );
   };
 
   const handleDragOver = (e: React.DragEvent, targetFolderId: string) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
     setDropTarget(targetFolderId);
   };
 
@@ -135,25 +198,35 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
   const handleDrop = (e: React.DragEvent, targetFolderId: string) => {
     e.preventDefault();
     try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      const data = JSON.parse(e.dataTransfer.getData("application/json"));
       if (data && data.folderId !== targetFolderId) {
         switch (baseType) {
-          case 'notes': updateNote(data.id, { folderId: targetFolderId }); break;
-          case 'commands': updateCommandContainer(data.id, { folderId: targetFolderId }); break;
-          case 'links': updateLinkContainer(data.id, { folderId: targetFolderId }); break;
-          case 'prompts': updatePromptContainer(data.id, { folderId: targetFolderId }); break;
-          case 'playbooks': updatePlaybookContainer(data.id, { folderId: targetFolderId }); break;
+          case "notes":
+            updateNote(data.id, { folderId: targetFolderId });
+            break;
+          case "commands":
+            updateCommandContainer(data.id, { folderId: targetFolderId });
+            break;
+          case "links":
+            updateLinkContainer(data.id, { folderId: targetFolderId });
+            break;
+          case "prompts":
+            updatePromptContainer(data.id, { folderId: targetFolderId });
+            break;
+          case "playbooks":
+            updatePlaybookContainer(data.id, { folderId: targetFolderId });
+            break;
         }
       }
     } catch (err) {
-      console.error('Drop failed:', err);
+      console.error("Drop failed:", err);
     }
     setDropTarget(null);
   };
 
   const startRenameFile = (itemId: string, currentTitle: string) => {
     setNewName(currentTitle);
-    setRenaming({ type: 'file', itemId });
+    setRenaming({ type: "file", itemId });
     setContextMenu(null);
   };
 
@@ -162,41 +235,51 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
       onDragOver={(e) => handleDragOver(e, folder.id)}
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, folder.id)}
-      className={dropTarget === folder.id ? 'bg-indigo-500/10 rounded-lg mx-1' : ''}
+      className={dropTarget === folder.id ? "mx-1 rounded-lg bg-indigo-500/10" : ""}
     >
       {/* Context Menu */}
       {contextMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setContextMenu(null)} />
           <div
-            className="fixed z-50 rounded-lg shadow-xl border py-1 min-w-[140px]"
+            className="fixed z-50 min-w-[140px] rounded-lg border py-1 shadow-xl"
             style={{
               left: contextMenu.x,
               top: contextMenu.y,
-              background: isDarkTheme ? '#1e293b' : '#fff',
-              borderColor: isDarkTheme ? '#334155' : '#e2e8f0',
+              background: isDarkTheme ? "#1e293b" : "#fff",
+              borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
             }}
           >
-            {contextMenu.type === 'folder' ? (
+            {contextMenu.type === "folder" ? (
               <>
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
-                  onClick={() => { setNewName(folder.name); setRenaming({ type: 'folder' }); setContextMenu(null); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                  onClick={() => {
+                    setNewName(folder.name);
+                    setRenaming({ type: "folder" });
+                    setContextMenu(null);
+                  }}
                 >
                   <Edit2 size={12} /> Rename
                 </button>
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
-                  onClick={() => { onAddSubfolder(folder.id); setContextMenu(null); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                  onClick={() => {
+                    onAddSubfolder(folder.id);
+                    setContextMenu(null);
+                  }}
                 >
                   <Plus size={12} /> Add Subfolder
                 </button>
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
-                  style={{ color: '#ef4444' }}
-                  onClick={() => { deleteFolder(folder.id); setContextMenu(null); }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
+                  style={{ color: "#ef4444" }}
+                  onClick={() => {
+                    deleteFolder(folder.id);
+                    setContextMenu(null);
+                  }}
                 >
                   <Trash2 size={12} /> Delete
                 </button>
@@ -204,18 +287,18 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
             ) : (
               <>
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? '#e2e8f0' : '#1e293b' }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
                   onClick={() => {
-                    const file = files.find(f => f.id === contextMenu.itemId);
+                    const file = files.find((f) => f.id === contextMenu.itemId);
                     if (file) startRenameFile(file.id, file.title);
                   }}
                 >
                   <Edit2 size={12} /> Rename
                 </button>
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
-                  style={{ color: '#ef4444' }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
+                  style={{ color: "#ef4444" }}
                   onClick={() => contextMenu.itemId && handleDeleteFile(contextMenu.itemId)}
                 >
                   <Trash2 size={12} /> Delete
@@ -228,139 +311,177 @@ function FolderItem({ folder, depth, activeItemId, onSelectFile, onAddFileToFold
 
       {/* Folder row - КЛИК ТОЛЬКО РАСКРЫВАЕТ/СВОРАЧИВАЕТ */}
       <div
-        className="group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-lg mx-1 transition-all duration-150"
+        className="group mx-1 flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 transition-all duration-150"
         style={{
           paddingLeft: `${10 + depth * 14}px`,
-          background: 'transparent',
-          border: '1px solid transparent',
+          background: "transparent",
+          border: "1px solid transparent",
         }}
         onClick={() => toggleFolderExpanded(folder.id)} // ИЗМЕНЕНО: только toggle
-        onContextMenu={(e) => handleContextMenu(e, 'folder')}
+        onContextMenu={(e) => handleContextMenu(e, "folder")}
       >
         <button
-          onClick={(e) => { e.stopPropagation(); toggleFolderExpanded(folder.id); }}
-          className="flex-shrink-0 p-0.5 hover:bg-slate-700 rounded"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFolderExpanded(folder.id);
+          }}
+          className="flex-shrink-0 rounded p-0.5 hover:bg-slate-700"
         >
-          {folder.isExpanded ? <ChevronDown size={12} className="text-slate-400" /> : <ChevronRight size={12} className="text-slate-400" />}
+          {folder.isExpanded ? (
+            <ChevronDown size={12} className="text-slate-400" />
+          ) : (
+            <ChevronRight size={12} className="text-slate-400" />
+          )}
         </button>
-        <span className="text-sm">{folder.icon || (folder.isExpanded ? '📂' : '📁')}</span>
-        
-        {renaming?.type === 'folder' ? (
+        <span className="text-sm">{folder.icon || (folder.isExpanded ? "📂" : "📁")}</span>
+
+        {renaming?.type === "folder" ? (
           <input
-            className="flex-1 text-sm bg-transparent border-b outline-none"
+            className="flex-1 border-b bg-transparent text-sm outline-none"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onBlur={handleRenameFolder}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFolder(); if (e.key === 'Escape') setRenaming(null); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleRenameFolder();
+              if (e.key === "Escape") setRenaming(null);
+            }}
             autoFocus
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="flex-1 text-sm font-medium truncate" style={{ color: isDarkTheme ? '#cbd5e1' : '#374151' }}>
+          <span
+            className="flex-1 truncate text-sm font-medium"
+            style={{ color: isDarkTheme ? "#cbd5e1" : "#374151" }}
+          >
             {folder.name}
           </span>
         )}
-        
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: isDarkTheme ? '#334155' : '#f1f5f9', color: '#64748b' }}>
+
+        <span
+          className="rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+          style={{ background: isDarkTheme ? "#334155" : "#f1f5f9", color: "#64748b" }}
+        >
           {files.length}
         </span>
-        
+
         {/* Add file button */}
         <button
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded"
-          onClick={(e) => { e.stopPropagation(); onAddFileToFolder(folder.id); }}
+          className="rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddFileToFolder(folder.id);
+          }}
           title="Add file"
         >
           <Plus size={12} style={{ color: typeColor }} />
         </button>
-        
+
         {/* More options */}
         <button
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded"
-          onClick={(e) => { e.stopPropagation(); handleContextMenu(e, 'folder'); }}
+          className="rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleContextMenu(e, "folder");
+          }}
         >
           <MoreVertical size={12} className="text-slate-400" />
         </button>
       </div>
 
       {/* Child folders */}
-      {folder.isExpanded && childFolders.map((childFolder) => (
-        <FolderItem
-          key={childFolder.id}
-          folder={childFolder}
-          depth={depth + 1}
-          activeItemId={activeItemId}
-          onSelectFile={onSelectFile}
-          onAddFileToFolder={onAddFileToFolder}
-          onAddSubfolder={onAddSubfolder}
-        />
-      ))}
+      {folder.isExpanded &&
+        childFolders.map((childFolder) => (
+          <FolderItem
+            key={childFolder.id}
+            folder={childFolder}
+            depth={depth + 1}
+            activeItemId={activeItemId}
+            onSelectFile={onSelectFile}
+            onAddFileToFolder={onAddFileToFolder}
+            onAddSubfolder={onAddSubfolder}
+          />
+        ))}
 
       {/* Files inside folder - КЛИК ОТКРЫВАЕТ ФАЙЛ */}
-      {folder.isExpanded && files.map((file) => {
-        const isFileActive = activeItemId === file.id;
-        const isRenamingThis = renaming?.type === 'file' && renaming.itemId === file.id;
-        
-        return (
-          <div
-            key={file.id}
-            draggable
-            onDragStart={(e) => handleDragStart(e, file)}
-            className="group/file flex items-center gap-1.5 cursor-pointer rounded-lg mx-1 transition-all duration-150"
-            style={{
-              paddingLeft: `${26 + depth * 14}px`,
-              paddingRight: '6px',
-              paddingTop: '4px',
-              paddingBottom: '4px',
-              background: isFileActive ? `${typeColor}22` : 'transparent',
-              border: isFileActive ? `1px solid ${typeColor}50` : '1px solid transparent',
-            }}
-            onClick={() => onSelectFile(file.id)} // ИЗМЕНЕНО: открывает файл
-            onContextMenu={(e) => handleContextMenu(e, 'file', file.id)}
-          >
-            {/* Drag handle */}
-            <div className="opacity-0 group-hover/file:opacity-30 cursor-grab">
-              <GripVertical size={10} className="text-slate-400" />
+      {folder.isExpanded &&
+        files.map((file) => {
+          const isFileActive = activeItemId === file.id;
+          const isRenamingThis = renaming?.type === "file" && renaming.itemId === file.id;
+
+          return (
+            <div
+              key={file.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, file)}
+              className="group/file mx-1 flex cursor-pointer items-center gap-1.5 rounded-lg transition-all duration-150"
+              style={{
+                paddingLeft: `${26 + depth * 14}px`,
+                paddingRight: "6px",
+                paddingTop: "4px",
+                paddingBottom: "4px",
+                background: isFileActive ? `${typeColor}22` : "transparent",
+                border: isFileActive ? `1px solid ${typeColor}50` : "1px solid transparent",
+              }}
+              onClick={() => onSelectFile(file.id)} // ИЗМЕНЕНО: открывает файл
+              onContextMenu={(e) => handleContextMenu(e, "file", file.id)}
+            >
+              {/* Drag handle */}
+              <div className="cursor-grab opacity-0 group-hover/file:opacity-30">
+                <GripVertical size={10} className="text-slate-400" />
+              </div>
+
+              <TypeIcon size={11} style={{ color: typeColor, flexShrink: 0 }} />
+
+              {isRenamingThis ? (
+                <input
+                  className="flex-1 border-b bg-transparent text-xs outline-none"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onBlur={() => handleRenameFile(file.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleRenameFile(file.id);
+                    if (e.key === "Escape") setRenaming(null);
+                  }}
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span
+                  className="flex-1 truncate text-xs"
+                  style={{ color: isFileActive ? typeColor : isDarkTheme ? "#94a3b8" : "#6b7280" }}
+                >
+                  {file.title}
+                </span>
+              )}
+
+              {"isFavorite" in file && file.isFavorite && (
+                <Star size={9} className="fill-amber-400 text-amber-400" />
+              )}
+
+              {/* Edit/Delete buttons */}
+              <button
+                className="rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-slate-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startRenameFile(file.id, file.title);
+                }}
+                title="Rename"
+              >
+                <Edit2 size={10} className="text-slate-400 hover:text-slate-200" />
+              </button>
+              <button
+                className="rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-red-900/30"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteFile(file.id);
+                }}
+                title="Delete"
+              >
+                <Trash2 size={10} className="text-slate-400 hover:text-red-400" />
+              </button>
             </div>
-            
-            <TypeIcon size={11} style={{ color: typeColor, flexShrink: 0 }} />
-            
-            {isRenamingThis ? (
-              <input
-                className="flex-1 text-xs bg-transparent border-b outline-none"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onBlur={() => handleRenameFile(file.id)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleRenameFile(file.id); if (e.key === 'Escape') setRenaming(null); }}
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <span className="flex-1 text-xs truncate" style={{ color: isFileActive ? typeColor : isDarkTheme ? '#94a3b8' : '#6b7280' }}>
-                {file.title}
-              </span>
-            )}
-            
-            {'isFavorite' in file && file.isFavorite && <Star size={9} className="text-amber-400 fill-amber-400" />}
-            
-            {/* Edit/Delete buttons */}
-            <button
-              className="opacity-0 group-hover/file:opacity-100 transition-opacity p-0.5 hover:bg-slate-700 rounded"
-              onClick={(e) => { e.stopPropagation(); startRenameFile(file.id, file.title); }}
-              title="Rename"
-            >
-              <Edit2 size={10} className="text-slate-400 hover:text-slate-200" />
-            </button>
-            <button
-              className="opacity-0 group-hover/file:opacity-100 transition-opacity p-0.5 hover:bg-red-900/30 rounded"
-              onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id); }}
-              title="Delete"
-            >
-              <Trash2 size={10} className="text-slate-400 hover:text-red-400" />
-            </button>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 }
@@ -370,66 +491,105 @@ export function FolderPanel() {
     activeCategoryId,
     categories,
     folders,
-    searchQuery, 
-    setSearchQuery, 
+    searchQuery,
+    setSearchQuery,
     activeItemId,
-    setActiveItemId, 
-    addFolder, 
-    addNote, 
-    addCommandContainer, 
+    setActiveItemId,
+    addFolder,
+    addNote,
+    addCommandContainer,
     addLinkContainer,
-    addPromptContainer, 
+    addPromptContainer,
     addPlaybookContainer,
     isDarkTheme,
   } = useStore();
 
   const [showNewFolder, setShowNewFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderName, setNewFolderName] = useState("");
   const isAddingFolderRef = useRef(false);
 
-  const activeCategory = categories.find(c => c.id === activeCategoryId);
-  const baseType = activeCategory?.baseType || 'notes';
-  const typeColor = activeCategory?.color || '#4CAF50';
-  const categoryName = activeCategory?.name || 'Select Category';
+  const activeCategory = categories.find((c) => c.id === activeCategoryId);
+  const baseType = activeCategory?.baseType || "notes";
+  const typeColor = activeCategory?.color || "#4CAF50";
+  const categoryName = activeCategory?.name || "Select Category";
 
   // Get root folders for current category
   const categoryFolders = folders
-    .filter(f => f.categoryId === activeCategoryId && f.parentId === null)
+    .filter((f) => f.categoryId === activeCategoryId && f.parentId === null)
     .sort((a, b) => a.order - b.order);
 
   const handleAddFolder = (parentId: string | null = null) => {
     if (isAddingFolderRef.current) return;
     if (newFolderName.trim()) {
       isAddingFolderRef.current = true;
-      addFolder({ 
-        name: newFolderName.trim(), 
-        categoryId: activeCategoryId!, 
-        parentId, 
-        isExpanded: true 
+      addFolder({
+        name: newFolderName.trim(),
+        categoryId: activeCategoryId!,
+        parentId,
+        isExpanded: true,
       });
-      setNewFolderName('');
+      setNewFolderName("");
       setShowNewFolder(false);
       // Reset guard after event loop completes
-      setTimeout(() => { isAddingFolderRef.current = false; }, 0);
+      setTimeout(() => {
+        isAddingFolderRef.current = false;
+      }, 0);
     }
   };
 
   const handleAddFile = (folderId: string) => {
     switch (baseType) {
-      case 'notes':
-        addNote({ folderId, title: 'New Note', content: '# New Note\n\nStart writing...', tags: [], isFavorite: false, type: 'notes' });
+      case "notes":
+        addNote({
+          folderId,
+          title: "New Note",
+          content: "# New Note\n\nStart writing...",
+          tags: [],
+          isFavorite: false,
+          type: "notes",
+        });
         break;
-      case 'commands':
-        addCommandContainer({ folderId, title: 'New Commands', subItems: [], tags: [], type: 'commands', isExpanded: true });
+      case "commands":
+        addCommandContainer({
+          folderId,
+          title: "New Commands",
+          subItems: [],
+          tags: [],
+          type: "commands",
+          isExpanded: true,
+        });
         break;
-      case 'links':
-        addLinkContainer({ folderId, title: 'New Links', subItems: [], tags: [], type: 'links', isExpanded: true });
+      case "links":
+        addLinkContainer({
+          folderId,
+          title: "New Links",
+          subItems: [],
+          tags: [],
+          type: "links",
+          isExpanded: true,
+        });
         break;
-      case 'prompts':
-        addPromptContainer({ folderId, title: 'New Prompts', subItems: [], tags: [], category: 'General', type: 'prompts', isExpanded: true });
+      case "prompts":
+        addPromptContainer({
+          folderId,
+          title: "New Prompts",
+          subItems: [],
+          tags: [],
+          category: "General",
+          type: "prompts",
+          isExpanded: true,
+        });
         break;
-      case 'playbooks':
-        addPlaybookContainer({ folderId, title: 'New Service', description: '', subItems: [], tags: [], type: 'playbooks', isExpanded: true });
+      case "playbooks":
+        addPlaybookContainer({
+          folderId,
+          title: "New Service",
+          description: "",
+          subItems: [],
+          tags: [],
+          type: "playbooks",
+          isExpanded: true,
+        });
         break;
     }
   };
@@ -440,23 +600,23 @@ export function FolderPanel() {
     setActiveItemId(itemId);
   };
 
-  const filteredFolders = categoryFolders.filter(f =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFolders = categoryFolders.filter((f) =>
+    f.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // No category selected
   if (!activeCategoryId) {
     return (
       <div
-        className="flex flex-col h-full items-center justify-center border-r"
+        className="flex h-full flex-col items-center justify-center border-r"
         style={{
-          width: '260px',
-          minWidth: '260px',
-          background: isDarkTheme ? '#111827' : '#f8fafc',
-          borderColor: isDarkTheme ? '#1e293b' : '#e2e8f0',
+          width: "260px",
+          minWidth: "260px",
+          background: isDarkTheme ? "#111827" : "#f8fafc",
+          borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
         }}
       >
-        <div className="text-4xl mb-3">👈</div>
+        <div className="mb-3 text-4xl">👈</div>
         <p className="text-sm text-slate-400">Select a category</p>
       </div>
     );
@@ -464,18 +624,21 @@ export function FolderPanel() {
 
   return (
     <div
-      className="flex flex-col h-full border-r"
+      className="flex h-full flex-col border-r"
       style={{
-        width: '260px',
-        minWidth: '260px',
-        background: isDarkTheme ? '#111827' : '#f8fafc',
-        borderColor: isDarkTheme ? '#1e293b' : '#e2e8f0',
+        width: "260px",
+        minWidth: "260px",
+        background: isDarkTheme ? "#111827" : "#f8fafc",
+        borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
       }}
     >
       {/* Header */}
-      <div className="px-4 pt-4 pb-2 border-b" style={{ borderColor: isDarkTheme ? '#1e293b' : '#e2e8f0' }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-sm uppercase tracking-wider" style={{ color: typeColor }}>
+      <div
+        className="border-b px-4 pt-4 pb-2"
+        style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-bold tracking-wider uppercase" style={{ color: typeColor }}>
             {categoryName}
           </h2>
           <button
@@ -485,38 +648,44 @@ export function FolderPanel() {
               }
             }}
             title="New File"
-            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="rounded-lg p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
             style={{ background: `${typeColor}15` }}
           >
             <Plus size={16} style={{ color: typeColor }} />
           </button>
         </div>
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg border outline-none transition-all"
+            className="w-full rounded-lg border py-1.5 pr-3 pl-8 text-sm transition-all outline-none"
             style={{
-              background: isDarkTheme ? '#1e293b' : '#fff',
-              borderColor: isDarkTheme ? '#334155' : '#e2e8f0',
-              color: isDarkTheme ? '#e2e8f0' : '#1e293b',
+              background: isDarkTheme ? "#1e293b" : "#fff",
+              borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
+              color: isDarkTheme ? "#e2e8f0" : "#1e293b",
             }}
           />
         </div>
       </div>
 
       {/* Folder tree */}
-      <div className="flex-1 overflow-y-auto py-2 space-y-0.5">
+      <div className="flex-1 space-y-0.5 overflow-y-auto py-2">
         {filteredFolders.length === 0 && (
           <div className="px-4 py-6 text-center text-sm text-slate-400">
-            No folders yet.<br />
-            <button onClick={() => setShowNewFolder(true)} className="text-blue-400 hover:underline mt-1">Create one</button>
+            No folders yet.
+            <br />
+            <button
+              onClick={() => setShowNewFolder(true)}
+              className="mt-1 text-blue-400 hover:underline"
+            >
+              Create one
+            </button>
           </div>
         )}
-        {filteredFolders.map(folder => (
+        {filteredFolders.map((folder) => (
           <FolderItem
             key={folder.id}
             folder={folder}
@@ -525,12 +694,12 @@ export function FolderPanel() {
             onSelectFile={handleSelectFile}
             onAddFileToFolder={handleAddFile}
             onAddSubfolder={(parentId) => {
-              setNewFolderName('');
-              addFolder({ 
-                name: 'New Subfolder', 
-                categoryId: activeCategoryId!, 
-                parentId, 
-                isExpanded: true 
+              setNewFolderName("");
+              addFolder({
+                name: "New Subfolder",
+                categoryId: activeCategoryId!,
+                parentId,
+                isExpanded: true,
               });
             }}
           />
@@ -542,27 +711,36 @@ export function FolderPanel() {
         <div className="px-3 pb-2">
           <input
             autoFocus
-            className="w-full px-3 py-1.5 text-sm rounded-lg border outline-none"
+            className="w-full rounded-lg border px-3 py-1.5 text-sm outline-none"
             style={{
-              background: isDarkTheme ? '#1e293b' : '#fff',
+              background: isDarkTheme ? "#1e293b" : "#fff",
               borderColor: typeColor,
-              color: isDarkTheme ? '#e2e8f0' : '#1e293b',
+              color: isDarkTheme ? "#e2e8f0" : "#1e293b",
             }}
             placeholder="Folder name..."
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAddFolder(null); if (e.key === 'Escape') setShowNewFolder(false); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAddFolder(null);
+              if (e.key === "Escape") setShowNewFolder(false);
+            }}
             onBlur={() => handleAddFolder(null)}
           />
         </div>
       )}
 
       {/* Footer */}
-      <div className="p-2 border-t flex gap-2" style={{ borderColor: isDarkTheme ? '#1e293b' : '#e2e8f0' }}>
+      <div
+        className="flex gap-2 border-t p-2"
+        style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
+      >
         <button
           onClick={() => setShowNewFolder(true)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
-          style={{ background: isDarkTheme ? '#1e293b' : '#f1f5f9', color: isDarkTheme ? '#94a3b8' : '#6b7280' }}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+          style={{
+            background: isDarkTheme ? "#1e293b" : "#f1f5f9",
+            color: isDarkTheme ? "#94a3b8" : "#6b7280",
+          }}
         >
           <FolderOpen size={13} />
           New Folder
@@ -573,7 +751,7 @@ export function FolderPanel() {
               handleAddFile(categoryFolders[0].id);
             }
           }}
-          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
           style={{ background: `${typeColor}20`, color: typeColor }}
         >
           <Plus size={13} />

@@ -1,0 +1,30 @@
+{
+  // Форматирование — только вручную (Shift+Alt+F или npm run format)
+  "editor.formatOnSave": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[html]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // Prettier берёт настройки только из .prettierrc.json проекта
+  "prettier.requireConfig": true,
+
+  // ESLint 9: flat config (eslint.config.js). Ошибки показываются, но не правятся сами
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+
+  // Tailwind v4: стили объявлены в CSS, а не в tailwind.config
+  "tailwindCSS.experimental.configFile": "src/index.css",
+  "tailwindCSS.classFunctions": ["clsx", "cn", "twMerge", "cva"],
+
+  // endOfLine: "lf" в .prettierrc.json — держим редактор в согласии с ним
+  "files.eol": "\n",
+
+  // TypeScript из devDependencies проекта, а не встроенный в VS Code
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
