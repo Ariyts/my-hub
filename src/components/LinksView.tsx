@@ -4,7 +4,6 @@ import type { LinkItem, LinkSection } from "../types";
 import { useAutoSync } from "../hooks/useAutoSync";
 import {
   Plus,
-  Search,
   ExternalLink,
   Trash2,
   Edit3,
@@ -21,10 +20,20 @@ import {
   Palette,
   LayoutGrid,
   LayoutList,
+  LayoutDashboard,
+  Table,
+  Columns3,
   FolderPlus,
   ArrowUpDown,
+  TrendingUp,
+  ArrowDownAZ,
 } from "lucide-react";
 import { LinksImportExportModal } from "./LinksImportExportModal";
+import { ViewHeader } from "./shell/ViewHeader";
+import { ViewToolbar } from "./shell/ViewToolbar";
+import { ResourceCard } from "./shell/ResourceCard";
+import { ResourceList } from "./shell/ResourceList";
+import { ResourceBoard } from "./shell/ResourceBoard";
 
 // Fetch link metadata
 async function fetchLinkMetadata(
@@ -917,12 +926,14 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
 // ============================================
 // SECTION COMPONENT
 // ============================================
+type LinksViewMode = "grid" | "compact" | "tiles" | "list" | "board";
+
 interface SectionProps {
   section: LinkSection; // Always a real section now
   links: LinkItem[];
   containerId: string;
   isDark: boolean;
-  viewMode: "grid" | "compact";
+  viewMode: LinksViewMode;
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
   onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -1120,7 +1131,9 @@ function Section({
           className={`min-h-[80px] p-3 ${
             viewMode === "compact"
               ? "compact-grid"
-              : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              : viewMode === "tiles"
+                ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           }`}
           style={{
             background: bg,
@@ -1162,6 +1175,37 @@ function Section({
               ))}
 
               {/* Inline Add Link - только при клике на + */}
+              {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
+                <InlineAddLink
+                  isDark={isDark}
+                  onCreateLink={async (url, title) => {
+                    await onCreateLink(sectionId, url, title);
+                  }}
+                  onClose={onCloseAddLink}
+                />
+              )}
+            </>
+          ) : viewMode === "tiles" ? (
+            // Tiles view (Задача 0.C) — browse-карточки. Инлайн-редактирование
+            // остаётся в Grid/Compact; здесь быстрые действия.
+            <>
+              {links.map((item) => (
+                <ResourceCard
+                  key={item.id}
+                  title={item.title}
+                  url={item.url}
+                  description={item.description}
+                  favicon={item.favicon}
+                  accent={section.color || "#FF9800"}
+                  tags={item.tags}
+                  starred={item.isFavorite}
+                  onToggleStar={() => onUpdateItem(item.id, { isFavorite: !item.isFavorite })}
+                  onOpen={() => window.open(item.url, "_blank", "noopener,noreferrer")}
+                  onCopy={() => navigator.clipboard.writeText(item.url)}
+                  onDelete={() => onDeleteItem(item.id)}
+                />
+              ))}
+
               {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
                 <InlineAddLink
                   isDark={isDark}
@@ -1257,16 +1301,27 @@ export function LinksView({ containerId }: Props) {
   const [search, setSearch] = useState("");
 
   // View mode - persists in localStorage
-  const [viewMode, setViewMode] = useState<"grid" | "compact">(() => {
+  const [viewMode, setViewMode] = useState<LinksViewMode>(() => {
     const saved = localStorage.getItem("links-viewMode");
-    return saved === "compact" || saved === "grid" ? saved : "grid";
+    return saved === "compact" ||
+      saved === "grid" ||
+      saved === "tiles" ||
+      saved === "list" ||
+      saved === "board"
+      ? saved
+      : "grid";
   });
 
   // Save viewMode to localStorage
-  const handleSetViewMode = (mode: "grid" | "compact") => {
+  const handleSetViewMode = (mode: LinksViewMode) => {
     setViewMode(mode);
     localStorage.setItem("links-viewMode", mode);
   };
+
+  // Сортировка (rank = ручной порядок) и фильтр «только избранное».
+  // «Recent» появится, когда у LinkItem будут таймстампы (Задача 2).
+  const [sortMode, setSortMode] = useState<"rank" | "az">("rank");
+  const [starredOnly, setStarredOnly] = useState(false);
 
   // Drag & Drop state
   const [dragState, setDragState] = useState<{
@@ -1298,10 +1353,6 @@ export function LinksView({ containerId }: Props) {
 
   // Get sections (only real sections, no null/uncategorized)
   const sections: LinkSection[] = useMemo(() => {
-    console.log("[LinksView] Computing sections from container:", {
-      containerId: container?.id,
-      sections: container?.sections,
-    });
     const existingSections = container?.sections || [];
     return [...existingSections].sort((a, b) => a.order - b.order);
   }, [container?.sections]);
@@ -1317,10 +1368,28 @@ export function LinksView({ containerId }: Props) {
             link.title.toLowerCase().includes(search.toLowerCase()) ||
             link.url.toLowerCase().includes(search.toLowerCase()),
         )
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        .filter((link) => !starredOnly || link.isFavorite)
+        .sort((a, b) =>
+          sortMode === "az" ? a.title.localeCompare(b.title) : (a.order ?? 0) - (b.order ?? 0),
+        );
     },
-    [container, search],
+    [container, search, starredOnly, sortMode],
   );
+
+  // Плоский список ссылок с их секцией — для раскладки List (глобальная сортировка)
+  const flatLinks = useMemo(() => {
+    if (!container) return [];
+    const secById = new Map(sections.map((s) => [s.id, s]));
+    const q = search.toLowerCase();
+    return container.subItems
+      .filter((l) => l.sectionId && secById.has(l.sectionId))
+      .filter((l) => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
+      .filter((l) => !starredOnly || l.isFavorite)
+      .sort((a, b) =>
+        sortMode === "az" ? a.title.localeCompare(b.title) : (a.order ?? 0) - (b.order ?? 0),
+      )
+      .map((l) => ({ link: l, section: secById.get(l.sectionId!)! }));
+  }, [container, sections, search, starredOnly, sortMode]);
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string) => {
@@ -1537,14 +1606,6 @@ export function LinksView({ containerId }: Props) {
     const nextIndex = (currentIndex + 1) % SECTION_COLORS.length;
     const newColor = SECTION_COLORS[nextIndex];
 
-    console.log("[handleColorSection] Updating section:", {
-      containerId: container.id,
-      sectionId,
-      newColor,
-      currentSection: section,
-      allSections: container.sections,
-    });
-
     updateLinkSection(container.id, sectionId, { color: newColor });
   };
 
@@ -1688,95 +1749,71 @@ export function LinksView({ containerId }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header. На узком экране переносится по строкам: в один ряд заголовок,
-          переключатель вида, поиск и две кнопки на 360px не помещаются */}
-      <div
-        className="flex flex-wrap items-center gap-2 border-b px-3 py-2 sm:gap-3 sm:px-4 sm:py-3"
-        style={{ borderColor: isDark ? "#1e293b" : "#e2e8f0" }}
-      >
-        <Link2 size={18} className="shrink-0" style={{ color: "#FF9800" }} />
-        <h2
-          className="min-w-0 flex-1 truncate font-semibold"
-          style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
-        >
-          {container.title}
-        </h2>
+      {/* Панель управления (Задача 0.C) */}
+      <ViewToolbar
+        search={search}
+        onSearch={setSearch}
+        searchPlaceholder="Search links, tags, urls..."
+        accent="#FF9800"
+        filters={[
+          {
+            key: "starred",
+            label: "Starred",
+            icon: <Star size={14} />,
+            active: starredOnly,
+            onToggle: () => setStarredOnly((v) => !v),
+          },
+        ]}
+        sortOptions={[
+          { value: "rank", label: "Rank", icon: <TrendingUp size={14} /> },
+          { value: "az", label: "A–Z", icon: <ArrowDownAZ size={14} /> },
+        ]}
+        sortValue={sortMode}
+        onSort={(v) => setSortMode(v as "rank" | "az")}
+        layoutOptions={[
+          { value: "tiles", label: "Tiles", icon: <LayoutDashboard size={16} /> },
+          { value: "grid", label: "Grid", icon: <LayoutGrid size={16} /> },
+          { value: "list", label: "List", icon: <Table size={16} /> },
+          { value: "board", label: "Board", icon: <Columns3 size={16} /> },
+          { value: "compact", label: "Compact", icon: <LayoutList size={16} /> },
+        ]}
+        layout={viewMode}
+        onLayout={(v) => handleSetViewMode(v as LinksViewMode)}
+        rightSlot={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAddingSection(true)}
+              className="hover:bg-sunken flex items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-sm font-medium text-foreground transition-colors"
+            >
+              <FolderPlus size={14} className="text-links" />
+              <span className="hidden sm:inline">Section</span>
+            </button>
+            <button
+              onClick={() => setShowImportExport(true)}
+              className="hover:bg-sunken flex items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-sm font-medium text-foreground transition-colors"
+              title="Import / Export"
+            >
+              <ArrowUpDown size={14} className="text-links" />
+              <span className="hidden sm:inline">I/O</span>
+            </button>
+          </div>
+        }
+      />
 
-        {/* View mode toggle */}
-        <div
-          className="flex items-center gap-1 rounded-lg p-1"
-          style={{ background: isDark ? "#1e293b" : "#f1f5f9" }}
-        >
-          <button
-            onClick={() => handleSetViewMode("grid")}
-            className={`rounded-md p-1.5 transition-colors ${viewMode === "grid" ? "bg-orange-500/20" : ""}`}
-            title="Grid View"
-          >
-            <LayoutGrid
-              size={14}
-              style={{ color: viewMode === "grid" ? "#FF9800" : isDark ? "#64748b" : "#94a3b8" }}
-            />
-          </button>
-          <button
-            onClick={() => handleSetViewMode("compact")}
-            className={`rounded-md p-1.5 transition-colors ${viewMode === "compact" ? "bg-orange-500/20" : ""}`}
-            title="Compact View"
-          >
-            <LayoutList
-              size={14}
-              style={{ color: viewMode === "compact" ? "#FF9800" : isDark ? "#64748b" : "#94a3b8" }}
-            />
-          </button>
-        </div>
-
-        {/* Search. На мобильном уезжает на всю ширину отдельной строкой */}
-        <div className="relative order-last w-full sm:order-0 sm:w-auto">
-          <Search
-            size={14}
-            className="absolute top-1/2 left-3 -translate-y-1/2"
-            style={{ color: "#64748b" }}
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search links..."
-            className="w-full rounded-lg border py-1.5 pr-4 pl-9 text-sm outline-none sm:w-48"
-            style={{
-              background: isDark ? "#1e293b" : "#ffffff",
-              borderColor: isDark ? "#334155" : "#e2e8f0",
-              color: isDark ? "#e2e8f0" : "#1e293b",
-            }}
-          />
-        </div>
-
-        {/* Add Section button */}
-        <button
-          onClick={() => setAddingSection(true)}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
-          style={{
-            background: isDark ? "#1e293b" : "#f1f5f9",
-            color: isDark ? "#e2e8f0" : "#1e293b",
-          }}
-        >
-          <FolderPlus size={14} style={{ color: "#FF9800" }} />
-          <span className="hidden sm:inline">Section</span>
-        </button>
-
-        {/* Import/Export button */}
-        <button
-          onClick={() => setShowImportExport(true)}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
-          style={{
-            background: isDark ? "#1e293b" : "#f1f5f9",
-            color: isDark ? "#e2e8f0" : "#1e293b",
-          }}
-          title="Import / Export"
-        >
-          <ArrowUpDown size={14} style={{ color: "#FF9800" }} />
-          <span className="hidden sm:inline">I/O</span>
-        </button>
-      </div>
+      {/* Collection header (Задача 0.C) */}
+      <ViewHeader
+        eyebrow="~/ Links"
+        title={container.title}
+        subtitle={
+          sections.length
+            ? `${sections.length} ${sections.length === 1 ? "section" : "sections"}`
+            : undefined
+        }
+        icon={<Link2 size={22} />}
+        accent="#FF9800"
+        count={container.subItems.length}
+        countLabel="links"
+      />
 
       {/* Content */}
       <div className="flex-1 space-y-4 overflow-auto p-2 sm:p-4">
@@ -1812,10 +1849,64 @@ export function LinksView({ containerId }: Props) {
           </div>
         )}
 
-        {/* Sections */}
-        {sections.map((section, sectionIndex) => {
+        {/* List layout (Задача 0.C) — плоская таблица со столбцом Category */}
+        {viewMode === "list" &&
+          (flatLinks.length > 0 ? (
+            <ResourceList
+              items={flatLinks.map(({ link, section }) => ({
+                id: link.id,
+                title: link.title,
+                url: link.url,
+                favicon: link.favicon,
+                accent: section.color || "#FF9800",
+                tags: link.tags,
+                starred: link.isFavorite,
+                categoryLabel: section.title,
+                categoryColor: section.color || "#FF9800",
+                onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
+                onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
+                onCopy: () => navigator.clipboard.writeText(link.url),
+                onDelete: () => handleDeleteItem(link.id),
+              }))}
+            />
+          ) : sections.length > 0 ? (
+            <div className="py-12 text-center text-sm text-muted">No links match.</div>
+          ) : null)}
+
+        {/* Board layout (Задача 0.C) — канбан: колонка на секцию */}
+        {viewMode === "board" && (
+          <ResourceBoard
+            columns={sections
+              .map((section) => ({ section, links: getLinksForSection(section.id) }))
+              .filter(({ links }) => links.length > 0 || !(search || starredOnly))
+              .map(({ section, links }) => ({
+                id: section.id,
+                title: section.title,
+                accent: section.color || "#FF9800",
+                items: links.map((link) => ({
+                  id: link.id,
+                  title: link.title,
+                  url: link.url,
+                  description: link.description,
+                  favicon: link.favicon,
+                  accent: section.color || "#FF9800",
+                  tags: link.tags,
+                  starred: link.isFavorite,
+                  onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
+                  onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
+                  onCopy: () => navigator.clipboard.writeText(link.url),
+                  onDelete: () => handleDeleteItem(link.id),
+                })),
+              }))}
+          />
+        )}
+
+        {/* Sections (grid / tiles / compact) */}
+        {viewMode !== "list" &&
+          viewMode !== "board" &&
+          sections.map((section, sectionIndex) => {
           const sectionLinks = getLinksForSection(section.id);
-          if (sectionLinks.length === 0 && search) return null;
+          if (sectionLinks.length === 0 && (search || starredOnly)) return null;
 
           return (
             <Section

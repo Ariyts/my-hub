@@ -22,6 +22,7 @@ import type {
   TrashItem,
 } from "./types";
 import { initializeGitHubSync, saveToGitHub } from "./utils/githubSync";
+import { debug } from "./utils/debug";
 
 // Import embedded data - this will be bundled at build time
 import embeddedData from "./data.json";
@@ -768,20 +769,13 @@ export const useStore = create<AppState & StoreActions>()(
       },
 
       updateLinkSection: (containerId, sectionId, updates) => {
-        console.log("[updateLinkSection] Called with:", { containerId, sectionId, updates });
         set((s) => {
-          const container = s.links.find((l) => l.id === containerId);
-          console.log("[updateLinkSection] Container before update:", {
-            containerFound: !!container,
-            sectionsBefore: container?.sections,
-          });
           return {
             links: s.links.map((l) => {
               if (l.id !== containerId) return l;
               const updatedSections = (l.sections || []).map((sec) =>
                 sec.id === sectionId ? { ...sec, ...updates } : sec,
               );
-              console.log("[updateLinkSection] Updated sections:", updatedSections);
               return {
                 ...l,
                 sections: updatedSections,
@@ -1482,18 +1476,6 @@ export const useStore = create<AppState & StoreActions>()(
 
         set({ syncStatus: "syncing", syncMessage: "Saving..." });
 
-        // DEBUG: Log links data before sync
-        console.log(
-          "[syncToCloud] Links data being synced:",
-          state.links.map((l) => ({
-            id: l.id,
-            title: l.title,
-            sections: l.sections,
-            subItemsCount: l.subItems.length,
-            updatedAt: l.updatedAt,
-          })),
-        );
-
         const data = {
           workspaces: state.workspaces,
           categories: state.categories,
@@ -1561,7 +1543,7 @@ export const useStore = create<AppState & StoreActions>()(
         if (state) {
           // If localStorage is empty or corrupted, fall back to embedded data
           if (!state.workspaces || state.workspaces.length === 0) {
-            console.log("[Store] No localStorage data, using embedded data.json");
+            debug("[Store] No localStorage data, using embedded data.json");
             state.workspaces = initialData.workspaces || [];
             state.categories = initialData.categories || [];
             state.folders = initialData.folders || [];
@@ -1572,7 +1554,7 @@ export const useStore = create<AppState & StoreActions>()(
             state.playbooks = initialData.playbooks || [];
             state.activeWorkspaceId = initialData.workspaces?.[0]?.id || null;
           } else {
-            console.log("[Store] Loaded data from localStorage, checking for new embedded data...");
+            debug("[Store] Loaded data from localStorage, checking for new embedded data...");
 
             // Check if embedded data has new sections that localStorage doesn't have
             // This handles the case where we added RestoredData section to data.json
@@ -1591,7 +1573,7 @@ export const useStore = create<AppState & StoreActions>()(
                   );
 
                   if (newSections.length > 0) {
-                    console.log(
+                    debug(
                       `[Store] Found ${newSections.length} new sections in embedded data for container ${localLink.id}`,
                     );
                     needsUpdate = true;
@@ -1635,7 +1617,7 @@ export const useStore = create<AppState & StoreActions>()(
               });
 
               if (needsUpdate) {
-                console.log("[Store] Merging new sections from embedded data into localStorage");
+                debug("[Store] Merging new sections from embedded data into localStorage");
                 state.links = updatedLinks;
               }
             }

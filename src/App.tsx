@@ -14,20 +14,8 @@ import type { NoteItem, CommandContainer, PromptContainer, PlaybookContainer } f
 import { FileText, Plus, Menu, FolderOpen } from "lucide-react";
 
 function MainArea() {
-  const {
-    activeItemId,
-    notes,
-    commands,
-    links,
-    prompts,
-    playbooks,
-    activeCategoryId,
-    categories,
-    isDarkTheme,
-  } = useStore();
-
-  const bg = isDarkTheme ? "#0f172a" : "#ffffff";
-  const mutedColor = isDarkTheme ? "#94a3b8" : "#64748b";
+  const { activeItemId, notes, commands, links, prompts, playbooks, activeCategoryId, categories } =
+    useStore();
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId);
   const baseType = activeCategory?.baseType || "notes";
@@ -72,24 +60,15 @@ function MainArea() {
     }
     // Показываем плейсхолдер когда нет выбранного файла
     return (
-      <div
-        className="flex h-full flex-col items-center justify-center gap-4"
-        style={{ background: bg }}
-      >
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-2xl"
-          style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9" }}
-        >
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
           <FileText size={36} style={{ color: typeColor, opacity: 0.6 }} />
         </div>
         <div className="text-center">
-          <p
-            className="mb-1 text-lg font-semibold"
-            style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-          >
+          <p className="mb-1 text-lg font-semibold text-foreground">
             No file selected
           </p>
-          <p className="text-sm" style={{ color: mutedColor }}>
+          <p className="text-sm text-muted">
             Select a file from the list or create a new one
           </p>
         </div>
@@ -102,24 +81,15 @@ function MainArea() {
       return <CommandsView container={activeFile.data as CommandContainer} />;
     }
     return (
-      <div
-        className="flex h-full flex-col items-center justify-center gap-4"
-        style={{ background: bg }}
-      >
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-2xl"
-          style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9" }}
-        >
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
           <FileText size={36} style={{ color: typeColor, opacity: 0.6 }} />
         </div>
         <div className="text-center">
-          <p
-            className="mb-1 text-lg font-semibold"
-            style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-          >
+          <p className="mb-1 text-lg font-semibold text-foreground">
             No command file selected
           </p>
-          <p className="text-sm" style={{ color: mutedColor }}>
+          <p className="text-sm text-muted">
             Select a file from the list or create a new one
           </p>
         </div>
@@ -133,24 +103,15 @@ function MainArea() {
       return <LinksView containerId={activeFile.data.id} />;
     }
     return (
-      <div
-        className="flex h-full flex-col items-center justify-center gap-4"
-        style={{ background: bg }}
-      >
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-2xl"
-          style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9" }}
-        >
-          <FileText size={36} style={{ color: "#FF9800", opacity: 0.6 }} />
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+          <FileText size={36} className="text-links opacity-60" />
         </div>
         <div className="text-center">
-          <p
-            className="mb-1 text-lg font-semibold"
-            style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-          >
+          <p className="mb-1 text-lg font-semibold text-foreground">
             No link file selected
           </p>
-          <p className="text-sm" style={{ color: mutedColor }}>
+          <p className="text-sm text-muted">
             Select a file from the sidebar to view its links
           </p>
         </div>
@@ -163,24 +124,15 @@ function MainArea() {
       return <PromptsView container={activeFile.data as PromptContainer} />;
     }
     return (
-      <div
-        className="flex h-full flex-col items-center justify-center gap-4"
-        style={{ background: bg }}
-      >
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-2xl"
-          style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9" }}
-        >
-          <FileText size={36} style={{ color: "#9C27B0", opacity: 0.6 }} />
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+          <FileText size={36} className="text-prompts opacity-60" />
         </div>
         <div className="text-center">
-          <p
-            className="mb-1 text-lg font-semibold"
-            style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-          >
+          <p className="mb-1 text-lg font-semibold text-foreground">
             No prompt file selected
           </p>
-          <p className="text-sm" style={{ color: mutedColor }}>
+          <p className="text-sm text-muted">
             Select a file from the list or create a new one
           </p>
         </div>
@@ -193,24 +145,15 @@ function MainArea() {
       return <PlaybookView container={activeFile.data as PlaybookContainer} />;
     }
     return (
-      <div
-        className="flex h-full flex-col items-center justify-center gap-4"
-        style={{ background: bg }}
-      >
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-2xl"
-          style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9" }}
-        >
-          <FileText size={36} style={{ color: "#00BCD4", opacity: 0.6 }} />
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+          <FileText size={36} className="text-playbooks opacity-60" />
         </div>
         <div className="text-center">
-          <p
-            className="mb-1 text-lg font-semibold"
-            style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-          >
+          <p className="mb-1 text-lg font-semibold text-foreground">
             No playbook selected
           </p>
-          <p className="text-sm" style={{ color: mutedColor }}>
+          <p className="text-sm text-muted">
             Select a service from the list or create a new one
           </p>
         </div>
@@ -227,7 +170,6 @@ function MainArea() {
  */
 function MobileTopBar() {
   const {
-    isDarkTheme,
     categories,
     activeCategoryId,
     isFolderPanelOpen,
@@ -253,7 +195,6 @@ function MobileTopBar() {
   }, [isFolderPanelOpen]);
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId);
-  const iconColor = isDarkTheme ? "#e2e8f0" : "#1e293b";
 
   // 44×44 — минимальный размер тач-цели по рекомендациям Apple и Material Design
   const buttonClass =
@@ -261,12 +202,8 @@ function MobileTopBar() {
 
   return (
     <div
-      className="flex items-center gap-1 border-b px-2 py-2"
-      style={{
-        paddingTop: "calc(var(--safe-top) + 0.5rem)",
-        background: isDarkTheme ? "#0f172a" : "#ffffff",
-        borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
-      }}
+      className="flex items-center gap-1 border-b border-border bg-background px-2 py-2"
+      style={{ paddingTop: "calc(var(--safe-top) + 0.5rem)" }}
     >
       <button
         ref={sidebarButtonRef}
@@ -276,7 +213,7 @@ function MobileTopBar() {
         title="Categories"
         className={buttonClass}
       >
-        <Menu size={22} style={{ color: iconColor }} />
+        <Menu size={22} className="text-foreground" />
       </button>
 
       <button
@@ -290,12 +227,12 @@ function MobileTopBar() {
         disabled={!activeCategoryId}
         style={{ opacity: activeCategoryId ? 1 : 0.4 }}
       >
-        <FolderOpen size={20} style={{ color: iconColor }} />
+        <FolderOpen size={20} className="text-foreground" />
       </button>
 
       <span
         className="truncate text-sm font-bold tracking-wider uppercase"
-        style={{ color: activeCategory?.color || (isDarkTheme ? "#94a3b8" : "#64748b") }}
+        style={{ color: activeCategory?.color || "var(--text-muted)" }}
       >
         {activeCategory?.name || "Knowledge Hub"}
       </span>
@@ -304,7 +241,7 @@ function MobileTopBar() {
 }
 
 export function App() {
-  const { isDarkTheme, showSettings, workspaces, activeWorkspaceId } = useStore();
+  const { isDarkTheme, showSettings, workspaces, activeWorkspaceId, settings } = useStore();
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -317,6 +254,18 @@ export function App() {
     }
   }, [isDarkTheme]);
 
+  // Пробрасываем настройки шрифта в CSS-токены (--app-font-size / --font-code),
+  // чтобы settings.fontSize и settings.codeFont стали рабочими. Компоненты
+  // читают токены по мере перевода на дизайн-систему (шаг 0.B.4+).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--app-font-size", `${settings.fontSize}px`);
+    root.style.setProperty(
+      "--font-code",
+      `"${settings.codeFont}", "Cascadia Code", "JetBrains Mono", monospace`,
+    );
+  }, [settings.fontSize, settings.codeFont]);
+
   // Show workspace selector if no workspace is active
   if (!activeWorkspaceId || workspaces.length === 0) {
     return (
@@ -326,15 +275,8 @@ export function App() {
       >
         <div className="text-center">
           <div className="mb-6 text-6xl">📚</div>
-          <h1
-            className="mb-2 text-2xl font-bold"
-            style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-          >
-            Knowledge Hub
-          </h1>
-          <p className="mb-6 text-sm" style={{ color: isDarkTheme ? "#94a3b8" : "#64748b" }}>
-            Create your first workspace to get started
-          </p>
+          <h1 className="mb-2 text-2xl font-bold text-foreground">Knowledge Hub</h1>
+          <p className="mb-6 text-sm text-muted">Create your first workspace to get started</p>
           <button
             onClick={() =>
               useStore
@@ -354,13 +296,7 @@ export function App() {
   }
 
   return (
-    <div
-      className="flex h-dvh overflow-hidden"
-      style={{
-        background: isDarkTheme ? "#0f172a" : "#ffffff",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
-      }}
-    >
+    <div className="font-ui flex h-dvh overflow-hidden bg-background">
       {/* Sidebar - Categories */}
       <Sidebar />
 

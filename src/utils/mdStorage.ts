@@ -66,21 +66,6 @@ function createFrontmatter(data: Record<string, unknown>): string {
  * - [Title](URL) description <!-- link: {id, order, favicon, tags, isFavorite, color, sectionId} -->
  */
 export function createLinkFileWithSections(container: LinkContainer): string {
-  // DEBUG: Log container data to see what we're saving
-  console.log("[createLinkFileWithSections] Container:", {
-    id: container.id,
-    title: container.title,
-    sections: container.sections,
-    subItemsCount: container.subItems.length,
-    subItems: container.subItems.map((item) => ({
-      id: item.id,
-      title: item.title,
-      sectionId: item.sectionId,
-      color: item.color,
-      order: item.order,
-    })),
-  });
-
   const frontmatter = createFrontmatter({
     id: container.id,
     title: container.title,

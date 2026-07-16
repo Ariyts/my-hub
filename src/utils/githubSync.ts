@@ -6,6 +6,7 @@
  */
 
 import { dataToFiles } from "./mdStorage";
+import { debug } from "./debug";
 import type { DataFile } from "../types";
 
 export interface GitHubConfig {
@@ -339,7 +340,7 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       return { success: false, message: "No data to save" };
     }
 
-    console.log(`Preparing ${newFiles.length} files...`);
+    debug(`Preparing ${newFiles.length} files...`);
 
     const headSha = await getHeadSha(config.token);
     const baseTreeSha = await getCommitTreeSha(config.token, headSha);
@@ -353,17 +354,17 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       }
     }
 
-    console.log("Creating blobs...");
+    debug("Creating blobs...");
     const blobs: { path: string; sha: string }[] = [];
     for (const file of newFiles) {
       const blobSha = await createBlob(config.token, file.content);
       blobs.push({ path: file.path, sha: blobSha });
     }
 
-    console.log("Creating tree...");
+    debug("Creating tree...");
     const treeSha = await createTree(config.token, baseTreeSha, blobs, pathsToDelete);
 
-    console.log("Creating commit...");
+    debug("Creating commit...");
     const timestamp = new Date().toLocaleString();
     const commitSha = await createCommit(
       config.token,
@@ -372,7 +373,7 @@ export async function saveToGitHub(config: GitHubConfig, data: DataFile): Promis
       headSha,
     );
 
-    console.log("Updating HEAD...");
+    debug("Updating HEAD...");
     const success = await updateHead(config.token, commitSha);
 
     if (!success) {

@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useStore } from "../store";
+import { debug } from "../utils/debug";
 
 // Debounce time in milliseconds
 const DEBOUNCE_TIME = 3000; // 3 seconds
@@ -27,7 +28,7 @@ export function useAutoSync(_dataId: string | undefined, updatedAt: string | und
   // Debounced sync function
   const triggerSync = useCallback(() => {
     if (!canSave) {
-      console.log("[AutoSync] Cannot sync: canSave is false");
+      debug("[AutoSync] Cannot sync: canSave is false");
       return;
     }
 
@@ -40,7 +41,7 @@ export function useAutoSync(_dataId: string | undefined, updatedAt: string | und
     timerRef.current = setTimeout(() => {
       // Only sync if we have new changes and not already syncing
       if (syncStatus !== "syncing") {
-        console.log("[AutoSync] Triggering sync...");
+        debug("[AutoSync] Triggering sync...");
         lastTriggeredRef.current = updatedAt || "";
         syncToCloud();
       }
@@ -53,7 +54,7 @@ export function useAutoSync(_dataId: string | undefined, updatedAt: string | und
 
     // If this is a new update, trigger debounced sync
     if (updatedAt !== lastTriggeredRef.current) {
-      console.log("[AutoSync] Detected change, scheduling sync...");
+      debug("[AutoSync] Detected change, scheduling sync...");
       triggerSync();
     }
 

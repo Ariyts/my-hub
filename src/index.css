@@ -1,6 +1,49 @@
 @import "tailwindcss";
 
 /* ============================================
+   ИНТЕГРАЦИЯ ДИЗАЙН-ТОКЕНОВ С TAILWIND 4 (шаг 0.B.3)
+   ============================================
+
+   1) Вариант dark: приложение переключает тему атрибутом data-theme="dark"
+      (App.tsx), а не системной prefers-color-scheme. Переопределяем вариант,
+      чтобы утилиты `dark:*` следовали реальной теме приложения. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* 2) Семантические цвета → утилиты Tailwind (bg-surface, text-foreground,
+      text-links, border-border и т.п.). inline — значение подставляется
+      напрямую, поэтому смена --bg при data-theme="dark" работает каскадом.
+      Источник значений — раздел «ДИЗАЙН-ТОКЕНЫ ЦВЕТА» ниже. */
+@theme inline {
+  --color-background: var(--bg);
+  --color-surface: var(--bg-elevated);
+  --color-sunken: var(--bg-sunken);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-foreground: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-notes: var(--accent-notes);
+  --color-commands: var(--accent-commands);
+  --color-links: var(--accent-links);
+  --color-prompts: var(--accent-prompts);
+  --color-playbooks: var(--accent-playbooks);
+  --color-primary: var(--primary);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+/* 3) Шрифты — тема-независимы, поэтому обычный @theme: генерирует утилиты
+      font-ui / font-code и переменные --font-ui / --font-code. Значение
+      --font-code переопределяется из App.tsx под settings.codeFont.
+      Радиусы, тени, кегль и интерлиньяж НЕ дублируем — используем встроенную
+      шкалу Tailwind (rounded-*, shadow-*, text-*, leading-*). */
+@theme {
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-code: "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+}
+
+/* ============================================
    MOBILE BASICS
    ============================================ */
 
@@ -26,6 +69,85 @@ body {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* ============================================
+   ДИЗАЙН-ТОКЕНЫ ЦВЕТА (Задача 0, шаг 0.B.1)
+   ============================================
+
+   Единый источник цвета вместо ~750 захардкоженных hex и тернарников
+   `isDarkTheme ? "#0f172a" : "#fff"` по компонентам. Значения 1-в-1 повторяют
+   текущую палитру — визуально ничего не меняется. Компоненты будут переводиться
+   на эти переменные постепенно (пилот — шаг 0.B.4), поэтому на этом шаге токены
+   лишь объявлены и работают параллельно со старым кодом.
+
+   Тема переключается атрибутом data-theme="dark" на <html> (см. App.tsx):
+   :root — светлая тема (атрибут снят), :root[data-theme="dark"] — тёмная. */
+:root {
+  /* Поверхности */
+  --bg: #ffffff; /* базовый холст страницы */
+  --bg-elevated: #f1f5f9; /* приподнятые блоки, чипы, иконочные контейнеры */
+  --bg-sunken: #e2e8f0; /* утопленные зоны, hover */
+  --border: #e2e8f0; /* основная граница */
+  --border-subtle: #f1f5f9; /* мягкая граница/разделитель */
+
+  /* Текст */
+  --text: #1e293b; /* основной */
+  --text-muted: #64748b; /* вторичный */
+  --text-subtle: #94a3b8; /* третичный, подписи */
+
+  /* Акценты по типам контента (дефолтные цвета категорий) */
+  --accent-notes: #4caf50;
+  --accent-commands: #2196f3;
+  --accent-links: #ff9800;
+  --accent-prompts: #9c27b0;
+  --accent-playbooks: #00bcd4;
+
+  /* Брендовый акцент (градиенты, дефолтный воркспейс) */
+  --primary: #6366f1;
+
+  /* Состояния */
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #ff9800;
+  --focus-ring: #6366f1;
+}
+
+:root[data-theme="dark"] {
+  /* Поверхности */
+  --bg: #0f172a; /* slate-900 */
+  --bg-elevated: #1e293b; /* slate-800 — чипы, панели */
+  --bg-sunken: #334155; /* slate-700 — hover, утопленное */
+  --border: #1e293b; /* slate-800 — доминирующая граница в тёмной теме */
+  --border-subtle: #334155; /* slate-700 */
+
+  /* Текст */
+  --text: #e2e8f0; /* slate-200 */
+  --text-muted: #94a3b8; /* slate-400 */
+  --text-subtle: #64748b; /* slate-500 */
+
+  /* Акценты и состояния при тёмной теме совпадают со светлой (те же hex),
+     поэтому переопределяются только поверхности и текст. */
+}
+
+/* ============================================
+   ТОКЕНЫ ШРИФТА И ТАЙМИНГА (шаг 0.B.2/0.B.3)
+   ============================================
+
+   Кастомные тема-независимые токены, которых нет в Tailwind. Радиусы, тени,
+   кегль и интерлиньяж здесь НЕ задаём — для них есть встроенная шкала Tailwind
+   (rounded-*, shadow-*, text-*, leading-*); переопределять её в :root нельзя,
+   т.к. это меняет все существующие утилиты во всём приложении.
+
+   --app-font-size переопределяется из App.tsx под settings.fontSize.
+   --font-code (объявлен в @theme выше) — под settings.codeFont. */
+:root {
+  /* Базовый кегль интерфейса (переопределяется settings.fontSize) */
+  --app-font-size: 14px;
+
+  /* Тайминги для ручного CSS (совпадает с .animate-in / hover 0.15s ease) */
+  --duration: 0.15s;
+  --ease: ease-out;
 }
 
 /* ============================================
