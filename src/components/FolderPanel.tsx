@@ -110,7 +110,15 @@ function FolderItem({
 
     switch (baseType) {
       case "notes":
-        return sortByOrder(notes.filter((n) => n.folderId === folder.id));
+        // Подстраницы (с существующим родителем) в список папки не выводим —
+        // к ним попадают через родительскую заметку
+        return sortByOrder(
+          notes.filter(
+            (n) =>
+              n.folderId === folder.id &&
+              !(n.parentNoteId && notes.some((p) => p.id === n.parentNoteId)),
+          ),
+        );
       case "commands":
         return sortByOrder(commands.filter((c) => c.folderId === folder.id));
       case "links":

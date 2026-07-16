@@ -518,7 +518,13 @@ export const useStore = create<AppState & StoreActions>()(
           };
 
           return {
-            notes: s.notes.filter((n) => n.id !== id),
+            // Удаляем заметку; её подстраницы «поднимаем» на уровень её родителя,
+            // чтобы они не потерялись (иначе висели бы с несуществующим parentNoteId)
+            notes: s.notes
+              .filter((n) => n.id !== id)
+              .map((n) =>
+                n.parentNoteId === id ? { ...n, parentNoteId: note.parentNoteId ?? null } : n,
+              ),
             trash: [...s.trash, trashItem],
             activeItemId: s.activeItemId === id ? null : s.activeItemId,
           };

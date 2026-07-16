@@ -64,6 +64,8 @@ export interface NoteItem {
   createdAt: string;
   updatedAt: string;
   type: "notes";
+  /** Родительская заметка для вложенных подстраниц (undefined = верхний уровень) */
+  parentNoteId?: string | null;
 }
 
 export interface CommandItem {

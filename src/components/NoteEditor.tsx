@@ -76,6 +76,7 @@ export function NoteEditor({ note }: Props) {
   const {
     updateNote,
     deleteNote,
+    addNote,
     isDarkTheme,
     notes,
     folders,
@@ -253,6 +254,22 @@ export function NoteEditor({ note }: Props) {
     if (target) navigateToNote(target);
   };
 
+  // Вложенные заметки (подстраницы)
+  const parentNote = note.parentNoteId ? notes.find((n) => n.id === note.parentNoteId) : undefined;
+  const subpages = notes.filter((n) => n.parentNoteId === note.id);
+
+  const addSubpage = () => {
+    addNote({
+      folderId: note.folderId,
+      title: "Untitled subpage",
+      content: "",
+      tags: [],
+      isFavorite: false,
+      type: "notes",
+      parentNoteId: note.id,
+    });
+  };
+
   // [[Title]] → ссылка со схемой #wiki: (её ловит кастомный рендер <a>)
   const processedContent = content.replace(
     /\[\[([^\][]+)\]\]/g,
@@ -279,6 +296,17 @@ export function NoteEditor({ note }: Props) {
     >
       {/* Title bar */}
       <div className="border-b px-3 pt-3 pb-3 sm:px-6 sm:pt-5" style={{ borderColor: border }}>
+        {/* Хлебная крошка к родительской заметке */}
+        {parentNote && (
+          <button
+            onClick={() => navigateToNote(parentNote)}
+            className="mb-2 flex items-center gap-1 text-xs hover:underline"
+            style={{ color: mutedColor }}
+            title="Go to parent note"
+          >
+            ← {parentNote.title || "(untitled)"}
+          </button>
+        )}
         <div className="mb-3 flex flex-wrap items-start gap-2 sm:gap-3">
           <input
             type="text"
@@ -377,6 +405,31 @@ export function NoteEditor({ note }: Props) {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Подстраницы (вложенные заметки) */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs" style={{ color: mutedColor }}>
+            Subpages:
+          </span>
+          {subpages.map((sp) => (
+            <button
+              key={sp.id}
+              onClick={() => navigateToNote(sp)}
+              className="rounded-full px-2 py-0.5 text-xs hover:underline"
+              style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9", color: "#4CAF50" }}
+              title={sp.title || "(untitled)"}
+            >
+              {sp.title || "(untitled)"}
+            </button>
+          ))}
+          <button
+            onClick={addSubpage}
+            className="rounded-full border border-dashed px-2 py-0.5 text-xs transition-colors hover:border-green-400"
+            style={{ borderColor: mutedColor, color: mutedColor }}
+          >
+            + subpage
+          </button>
         </div>
       </div>
 
