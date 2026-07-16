@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Search } from "lucide-react";
 
 // ============================================
@@ -57,20 +57,6 @@ export function ViewToolbar({
   rightSlot,
   accent = "var(--primary)",
 }: ViewToolbarProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // ⌘K / Ctrl+K — фокус в поиск. Полноценная командная палитра — отдельно (0.D).
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-
   // Активный чип/сегмент: акцентная подложка + акцентный текст
   const activeStyle = {
     background: `color-mix(in srgb, ${accent} 18%, transparent)`,
@@ -80,19 +66,18 @@ export function ViewToolbar({
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2 sm:px-4 sm:py-3">
       {/* Поиск с хинтом ⌘K */}
-      <div className="relative order-last w-full sm:order-none sm:w-64">
+      <div className="relative order-last w-full sm:order-0 sm:w-64">
         <Search
           size={15}
           className="absolute top-1/2 left-3 -translate-y-1/2 text-subtle"
           aria-hidden
         />
         <input
-          ref={inputRef}
           type="text"
           value={search}
           onChange={(e) => onSearch(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full rounded-lg border border-border bg-surface py-1.5 pr-12 pl-9 text-sm text-foreground outline-none focus:border-[var(--focus-ring)]"
+          className="focus:border-(--focus-ring) w-full rounded-lg border border-border bg-surface py-1.5 pr-12 pl-9 text-sm text-foreground outline-none"
         />
         <kbd className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-subtle">
           ⌘K

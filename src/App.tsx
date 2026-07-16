@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./components/Sidebar";
@@ -10,6 +10,7 @@ import { PromptsView } from "./components/PromptsView";
 import { PlaybookView } from "./components/PlaybookView";
 import { SettingsModal } from "./components/SettingsModal";
 import { TrashModal } from "./components/TrashModal";
+import { CommandPalette } from "./components/CommandPalette";
 import type { NoteItem, CommandContainer, PromptContainer, PlaybookContainer } from "./types";
 import { FileText, Plus, Menu, FolderOpen } from "lucide-react";
 
@@ -243,6 +244,19 @@ function MobileTopBar() {
 export function App() {
   const { isDarkTheme, showSettings, workspaces, activeWorkspaceId, settings } = useStore();
   const isMobile = useIsMobile();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Глобальная ⌘K / Ctrl+K — командная палитра (Задача 0.D)
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
 
   useEffect(() => {
     if (isDarkTheme) {
@@ -316,6 +330,9 @@ export function App() {
 
       {/* Trash Modal */}
       <TrashModal />
+
+      {/* Command Palette (⌘K) */}
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }
