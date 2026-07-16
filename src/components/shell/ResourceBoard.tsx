@@ -16,7 +16,15 @@ export interface BoardColumn {
   items: ResourceRowData[];
 }
 
-export function ResourceBoard({ columns }: { columns: BoardColumn[] }) {
+export function ResourceBoard({
+  columns,
+  activeTags,
+  onTagClick,
+}: {
+  columns: BoardColumn[];
+  activeTags?: string[];
+  onTagClick?: (tag: string) => void;
+}) {
   return (
     // На узком экране (<768px) колонки стекаются вертикально на всю ширину —
     // без горизонтальной прокрутки; на десктопе — привычный канбан со скроллом вбок.
@@ -62,9 +70,10 @@ export function ResourceBoard({ columns }: { columns: BoardColumn[] }) {
                     tags={item.tags}
                     starred={item.starred}
                     level={item.level}
+                    activeTags={activeTags}
+                    onTagClick={onTagClick}
                     onToggleStar={item.onToggleStar}
                     onOpen={item.onOpen}
-                    onCopy={item.onCopy}
                     onDelete={item.onDelete}
                   />
                 ))

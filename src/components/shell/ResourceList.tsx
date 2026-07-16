@@ -3,6 +3,7 @@ import { Copy, Check, ExternalLink, Trash2, Globe } from "lucide-react";
 import { Chip, Badge, LevelBadge } from "./Badge";
 import { StarToggle } from "./StarToggle";
 import { domainOf } from "./util";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
 // ============================================
 // ResourceList — табличная раскладка (Задача 0.C / референсы)
@@ -24,20 +25,21 @@ export interface ResourceRowData {
   categoryIcon?: React.ReactNode;
   level?: string;
   onOpen?: () => void;
-  onCopy?: () => void;
   onToggleStar?: () => void;
   onDelete?: () => void;
 }
 
-function Row({ row }: { row: ResourceRowData }) {
-  const [copied, setCopied] = useState(false);
+function Row({
+  row,
+  activeTags,
+  onTagClick,
+}: {
+  row: ResourceRowData;
+  activeTags?: string[];
+  onTagClick?: (tag: string) => void;
+}) {
   const [faviconOk, setFaviconOk] = useState(true);
-
-  const handleCopy = () => {
-    row.onCopy?.();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  const { copied, copy } = useCopyToClipboard();
 
   const accent = row.accent || "var(--primary)";
 
@@ -89,7 +91,12 @@ function Row({ row }: { row: ResourceRowData }) {
         {row.tags && row.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {row.tags.slice(0, 3).map((t) => (
-              <Chip key={t} label={t} />
+              <Chip
+                key={t}
+                label={t}
+                active={activeTags?.includes(t)}
+                onClick={onTagClick ? () => onTagClick(t) : undefined}
+              />
             ))}
           </div>
         )}
@@ -101,9 +108,9 @@ function Row({ row }: { row: ResourceRowData }) {
           {!row.starred && row.onToggleStar && (
             <StarToggle active={false} onToggle={row.onToggleStar} size={14} />
           )}
-          {row.onCopy && (
+          {row.url && (
             <button
-              onClick={handleCopy}
+              onClick={() => copy(row.url!)}
               className="rounded p-1 text-subtle transition-colors hover:bg-sunken"
               title="Copy URL"
             >
@@ -134,7 +141,15 @@ function Row({ row }: { row: ResourceRowData }) {
   );
 }
 
-export function ResourceList({ items }: { items: ResourceRowData[] }) {
+export function ResourceList({
+  items,
+  activeTags,
+  onTagClick,
+}: {
+  items: ResourceRowData[];
+  activeTags?: string[];
+  onTagClick?: (tag: string) => void;
+}) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <table className="table-cards w-full border-collapse">
@@ -148,7 +163,7 @@ export function ResourceList({ items }: { items: ResourceRowData[] }) {
         </thead>
         <tbody>
           {items.map((row) => (
-            <Row key={row.id} row={row} />
+            <Row key={row.id} row={row} activeTags={activeTags} onTagClick={onTagClick} />
           ))}
         </tbody>
       </table>

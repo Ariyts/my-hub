@@ -3,6 +3,7 @@ import { Copy, Check, ExternalLink, Trash2, Globe } from "lucide-react";
 import { Chip, Badge, LevelBadge } from "./Badge";
 import { StarToggle } from "./StarToggle";
 import { domainOf } from "./util";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
 // ============================================
 // ResourceCard — карточка ресурса (Задача 0.C / референсы)
@@ -22,7 +23,6 @@ interface ResourceCardProps {
   starred?: boolean;
   onToggleStar?: () => void;
   onOpen?: () => void;
-  onCopy?: () => void;
   onDelete?: () => void;
   /** Опциональный бейдж категории */
   categoryLabel?: string;
@@ -30,6 +30,9 @@ interface ResourceCardProps {
   level?: string;
   /** Доп. иконка категории для бейджа */
   categoryIcon?: ReactNode;
+  /** Фасеты тегов: активные теги и клик по тегу */
+  activeTags?: string[];
+  onTagClick?: (tag: string) => void;
 }
 
 export function ResourceCard({
@@ -42,20 +45,15 @@ export function ResourceCard({
   starred,
   onToggleStar,
   onOpen,
-  onCopy,
   onDelete,
   categoryLabel,
   level,
   categoryIcon,
+  activeTags,
+  onTagClick,
 }: ResourceCardProps) {
-  const [copied, setCopied] = useState(false);
   const [faviconOk, setFaviconOk] = useState(true);
-
-  const handleCopy = () => {
-    onCopy?.();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  const { copied, copy } = useCopyToClipboard();
 
   return (
     <div className="group flex flex-col gap-2 rounded-xl border border-border bg-surface p-3 transition-all hover:border-border-subtle hover:shadow-lg">
@@ -100,7 +98,12 @@ export function ResourceCard({
       {tags && tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {tags.slice(0, 3).map((t) => (
-            <Chip key={t} label={t} />
+            <Chip
+              key={t}
+              label={t}
+              active={activeTags?.includes(t)}
+              onClick={onTagClick ? () => onTagClick(t) : undefined}
+            />
           ))}
         </div>
       )}
@@ -112,9 +115,9 @@ export function ResourceCard({
           {level && <LevelBadge level={level} />}
         </div>
         <div className="flex items-center gap-0.5">
-          {onCopy && (
+          {url && (
             <button
-              onClick={handleCopy}
+              onClick={() => copy(url)}
               className="rounded p-1 text-subtle transition-colors hover:bg-sunken"
               title="Copy URL"
             >

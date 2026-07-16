@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useStore } from "../store";
 import { useIsMobile } from "../hooks/useIsMobile";
 import type { NoteItem } from "../types";
@@ -15,15 +15,23 @@ import {
   Bold,
   Italic,
   Code,
+  Code2,
   Link,
   List,
   Quote,
   Heading1,
   Heading2,
+  Strikethrough,
+  CheckSquare,
+  Table,
+  Minus,
+  ListTree,
+  X,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import hljs from "highlight.js/lib/common";
 
 interface Props {
   note: NoteItem;
@@ -43,6 +51,8 @@ export function NoteEditor({ note }: Props) {
   const [newTag, setNewTag] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showToc, setShowToc] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -106,12 +116,21 @@ export function NoteEditor({ note }: Props) {
   const toolbarButtons = [
     { icon: <Heading1 size={14} />, action: () => insertText("# "), title: "Heading 1" },
     { icon: <Heading2 size={14} />, action: () => insertText("## "), title: "Heading 2" },
-    { icon: <Bold size={14} />, action: () => insertText("**", "**"), title: "Bold" },
-    { icon: <Italic size={14} />, action: () => insertText("*", "*"), title: "Italic" },
+    { icon: <Bold size={14} />, action: () => insertText("**", "**"), title: "Bold (Ctrl+B)" },
+    { icon: <Italic size={14} />, action: () => insertText("*", "*"), title: "Italic (Ctrl+I)" },
+    { icon: <Strikethrough size={14} />, action: () => insertText("~~", "~~"), title: "Strikethrough" },
     { icon: <Code size={14} />, action: () => insertText("`", "`"), title: "Inline Code" },
+    { icon: <Code2 size={14} />, action: () => insertText("```\n", "\n```"), title: "Code block" },
     { icon: <Link size={14} />, action: () => insertText("[", "](url)"), title: "Link" },
     { icon: <List size={14} />, action: () => insertText("- "), title: "List" },
+    { icon: <CheckSquare size={14} />, action: () => insertText("- [ ] "), title: "Checklist item" },
     { icon: <Quote size={14} />, action: () => insertText("> "), title: "Quote" },
+    {
+      icon: <Table size={14} />,
+      action: () => insertText("| Column 1 | Column 2 |\n| --- | --- |\n| Cell | Cell |\n"),
+      title: "Table",
+    },
+    { icon: <Minus size={14} />, action: () => insertText("\n---\n"), title: "Divider" },
   ];
 
   const bg = isDarkTheme ? "#0f172a" : "#ffffff";
@@ -119,6 +138,42 @@ export function NoteEditor({ note }: Props) {
   const textColor = isDarkTheme ? "#e2e8f0" : "#1e293b";
   const mutedColor = isDarkTheme ? "#64748b" : "#94a3b8";
   const toolbarBg = isDarkTheme ? "#1e293b" : "#f8fafc";
+
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+
+  // Оглавление (TOC): заголовки #/##/### вне блоков кода
+  const headings = useMemo(() => {
+    const out: { level: number; text: string; line: number }[] = [];
+    let inCode = false;
+    content.split("\n").forEach((line, i) => {
+      if (line.trim().startsWith("```")) {
+        inCode = !inCode;
+        return;
+      }
+      if (inCode) return;
+      const m = /^(#{1,3})\s+(.+)$/.exec(line);
+      if (m) out.push({ level: m[1].length, text: m[2].trim(), line: i });
+    });
+    return out;
+  }, [content]);
+
+  const goToHeading = (line: number, index: number) => {
+    // В режимах с превью — листаем превью к N-му заголовку (порядок совпадает с TOC)
+    if (viewMode !== "edit" && previewRef.current) {
+      const els = previewRef.current.querySelectorAll("h1, h2, h3");
+      els[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    // Иначе — прокрутка textarea к строке
+    const ta = textareaRef.current;
+    if (ta) {
+      const lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 20;
+      ta.scrollTop = Math.max(0, (line - 1) * lineHeight);
+      const pos = content.split("\n").slice(0, line).join("\n").length + 1;
+      ta.focus();
+      ta.setSelectionRange(pos, pos);
+    }
+  };
 
   return (
     <div
@@ -250,6 +305,18 @@ export function NoteEditor({ note }: Props) {
           </button>
         ))}
         <div className="flex-1" />
+        <button
+          onClick={() => setShowToc((v) => !v)}
+          title="Table of contents"
+          disabled={headings.length === 0}
+          className="mr-1 rounded p-1.5 transition-colors hover:bg-slate-200 disabled:opacity-40 dark:hover:bg-slate-700"
+          style={{ color: showToc && headings.length ? "#4CAF50" : mutedColor }}
+        >
+          <ListTree size={14} />
+        </button>
+        <span className="mr-2 hidden text-xs whitespace-nowrap sm:inline" style={{ color: mutedColor }}>
+          {wordCount} words · {content.length} chars
+        </span>
         <div
           className="flex items-center overflow-hidden rounded-lg border"
           style={{ borderColor: border }}
@@ -289,12 +356,62 @@ export function NoteEditor({ note }: Props) {
       </div>
 
       {/* Editor / Preview */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative flex flex-1 overflow-hidden">
+        {/* Оглавление (TOC) — панель слева; на мобильном поверх контента */}
+        {showToc && headings.length > 0 && (
+          <div
+            className="absolute inset-y-0 left-0 z-20 w-56 shrink-0 overflow-y-auto border-r p-2 sm:relative sm:z-auto"
+            style={{ borderColor: border, background: toolbarBg }}
+          >
+            <div className="mb-2 flex items-center justify-between px-1">
+              <span className="text-xs font-semibold uppercase" style={{ color: mutedColor }}>
+                Contents
+              </span>
+              <button
+                onClick={() => setShowToc(false)}
+                className="rounded p-0.5 hover:bg-slate-500/20"
+                title="Close"
+              >
+                <X size={12} style={{ color: mutedColor }} />
+              </button>
+            </div>
+            <ul className="space-y-0.5">
+              {headings.map((h, i) => (
+                <li key={i}>
+                  <button
+                    onClick={() => goToHeading(h.line, i)}
+                    className="block w-full truncate rounded px-2 py-1 text-left text-xs transition-colors hover:bg-slate-500/10"
+                    style={{
+                      paddingLeft: `${(h.level - 1) * 12 + 8}px`,
+                      color: h.level === 1 ? textColor : mutedColor,
+                    }}
+                    title={h.text}
+                  >
+                    {h.text}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {(viewMode === "edit" || viewMode === "split") && (
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+                const k = e.key.toLowerCase();
+                if (k === "b") {
+                  e.preventDefault();
+                  insertText("**", "**");
+                } else if (k === "i") {
+                  e.preventDefault();
+                  insertText("*", "*");
+                }
+              }
+            }}
             className="flex-1 resize-none p-3 font-mono text-sm leading-relaxed outline-none sm:p-6"
             style={{
               background: bg,
@@ -308,6 +425,7 @@ export function NoteEditor({ note }: Props) {
         )}
         {(viewMode === "preview" || viewMode === "split") && (
           <div
+            ref={previewRef}
             className="flex-1 overflow-y-auto px-3 py-4 sm:px-8 sm:py-6"
             style={{ background: bg }}
           >
@@ -344,18 +462,26 @@ export function NoteEditor({ note }: Props) {
                   ),
                   code: ({ children, className }) => {
                     const isBlock = className?.includes("language-");
-                    return isBlock ? (
-                      <code
-                        className="block overflow-x-auto rounded-lg p-4 font-mono text-sm"
-                        style={{
-                          background: isDarkTheme ? "#1e293b" : "#f8fafc",
-                          color: "#4CAF50",
-                          border: `1px solid ${border}`,
-                        }}
-                      >
-                        {children}
-                      </code>
-                    ) : (
+                    if (isBlock) {
+                      const lang = (className || "").replace(/language-/, "").trim();
+                      const raw = String(children).replace(/\n$/, "");
+                      let html: string;
+                      try {
+                        html = hljs.getLanguage(lang)
+                          ? hljs.highlight(raw, { language: lang }).value
+                          : hljs.highlightAuto(raw).value;
+                      } catch {
+                        html = hljs.highlightAuto(raw).value;
+                      }
+                      return (
+                        <code
+                          className="hljs block overflow-x-auto rounded-lg border p-4 font-mono text-sm"
+                          style={{ background: "var(--bg-elevated)", borderColor: border }}
+                          dangerouslySetInnerHTML={{ __html: html }}
+                        />
+                      );
+                    }
+                    return (
                       <code
                         className="rounded px-1.5 py-0.5 font-mono text-sm"
                         style={{

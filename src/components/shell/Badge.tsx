@@ -48,11 +48,41 @@ export function LevelBadge({ level }: { level: string }) {
   );
 }
 
-// --- Chip: тег (#name) ---
-export function Chip({ label }: { label: string }) {
+// --- Chip: тег (#name). С onClick — кликабельный фасет фильтра ---
+export function Chip({
+  label,
+  onClick,
+  active,
+}: {
+  label: string;
+  onClick?: () => void;
+  active?: boolean;
+}) {
+  const text = label.startsWith("#") ? label : `#${label}`;
+
+  if (!onClick) {
+    return <span className="rounded bg-sunken px-1.5 py-0.5 text-[11px] text-muted">{text}</span>;
+  }
+
   return (
-    <span className="rounded bg-sunken px-1.5 py-0.5 text-[11px] text-muted">
-      {label.startsWith("#") ? label : `#${label}`}
-    </span>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`rounded px-1.5 py-0.5 text-[11px] transition-colors ${
+        active ? "" : "bg-sunken text-muted hover:text-foreground"
+      }`}
+      style={
+        active
+          ? {
+              background: "color-mix(in srgb, var(--primary) 22%, transparent)",
+              color: "var(--primary)",
+            }
+          : undefined
+      }
+    >
+      {text}
+    </button>
   );
 }

@@ -390,3 +390,90 @@ textarea:focus {
 .color-indicator:hover {
   width: 4px;
 }
+
+/* ============================================
+   ПОДСВЕТКА СИНТАКСИСА (highlight.js), тема-зависимая — Задача 1.3
+   ============================================
+
+   highlight.js расставляет классы hljs-*; цвета берём из токенов, свои для
+   светлой и тёмной темы (палитра в духе GitHub). */
+:root {
+  --hl-keyword: #d73a49;
+  --hl-string: #032f62;
+  --hl-comment: #6a737d;
+  --hl-number: #005cc5;
+  --hl-title: #6f42c1;
+  --hl-built: #e36209;
+  --hl-attr: #005cc5;
+}
+
+:root[data-theme="dark"] {
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-comment: #8b949e;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-built: #ffa657;
+  --hl-attr: #79c0ff;
+}
+
+.hljs {
+  color: var(--text);
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link,
+.hljs-meta .hljs-keyword {
+  color: var(--hl-keyword);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: var(--hl-string);
+}
+.hljs-number,
+.hljs-bullet,
+.hljs-symbol {
+  color: var(--hl-number);
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--hl-title);
+}
+.hljs-built_in,
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-params,
+.hljs-tag {
+  color: var(--hl-built);
+}
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: var(--hl-attr);
+}
+.hljs-meta,
+.hljs-deletion {
+  color: var(--hl-comment);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: bold;
+}

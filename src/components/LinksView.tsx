@@ -950,6 +950,9 @@ interface SectionProps {
   // Item actions for compact mode
   onUpdateItem: (itemId: string, updates: Partial<LinkItem>) => void;
   onDeleteItem: (itemId: string) => void;
+  // Теги-фасеты (для Tiles)
+  activeTags: string[];
+  onTagClick: (tag: string) => void;
   // Inline add link state
   addingLinkToSection: string | undefined;
   onStartAddLink: (sectionId: string) => void;
@@ -993,6 +996,8 @@ function Section({
   onColorSection,
   onUpdateItem,
   onDeleteItem,
+  activeTags,
+  onTagClick,
   addingLinkToSection,
   onStartAddLink,
   onCloseAddLink,
@@ -1199,9 +1204,10 @@ function Section({
                   accent={section.color || "#FF9800"}
                   tags={item.tags}
                   starred={item.isFavorite}
+                  activeTags={activeTags}
+                  onTagClick={onTagClick}
                   onToggleStar={() => onUpdateItem(item.id, { isFavorite: !item.isFavorite })}
                   onOpen={() => window.open(item.url, "_blank", "noopener,noreferrer")}
-                  onCopy={() => navigator.clipboard.writeText(item.url)}
                   onDelete={() => onDeleteItem(item.id)}
                 />
               ))}
@@ -1323,6 +1329,11 @@ export function LinksView({ containerId }: Props) {
   const [sortMode, setSortMode] = useState<"rank" | "az">("rank");
   const [starredOnly, setStarredOnly] = useState(false);
 
+  // Теги-фасеты: ссылка проходит, если содержит ВСЕ выбранные теги (AND)
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const toggleTag = (tag: string) =>
+    setActiveTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+
   // Drag & Drop state
   const [dragState, setDragState] = useState<{
     draggingItemId: string | null;
@@ -1369,11 +1380,12 @@ export function LinksView({ containerId }: Props) {
             link.url.toLowerCase().includes(search.toLowerCase()),
         )
         .filter((link) => !starredOnly || link.isFavorite)
+        .filter((link) => activeTags.every((t) => link.tags?.includes(t)))
         .sort((a, b) =>
           sortMode === "az" ? a.title.localeCompare(b.title) : (a.order ?? 0) - (b.order ?? 0),
         );
     },
-    [container, search, starredOnly, sortMode],
+    [container, search, starredOnly, sortMode, activeTags],
   );
 
   // Плоский список ссылок с их секцией — для раскладки List (глобальная сортировка)
@@ -1385,11 +1397,12 @@ export function LinksView({ containerId }: Props) {
       .filter((l) => l.sectionId && secById.has(l.sectionId))
       .filter((l) => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
       .filter((l) => !starredOnly || l.isFavorite)
+      .filter((l) => activeTags.every((t) => l.tags?.includes(t)))
       .sort((a, b) =>
         sortMode === "az" ? a.title.localeCompare(b.title) : (a.order ?? 0) - (b.order ?? 0),
       )
       .map((l) => ({ link: l, section: secById.get(l.sectionId!)! }));
-  }, [container, sections, search, starredOnly, sortMode]);
+  }, [container, sections, search, starredOnly, sortMode, activeTags]);
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string) => {
@@ -1815,6 +1828,33 @@ export function LinksView({ containerId }: Props) {
         countLabel="links"
       />
 
+      {/* Активные теги-фасеты (Задача 0.D) */}
+      {activeTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 px-3 pb-2 sm:px-5">
+          <span className="text-xs text-subtle">Tags:</span>
+          {activeTags.map((t) => (
+            <button
+              key={t}
+              onClick={() => toggleTag(t)}
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px]"
+              style={{
+                background: "color-mix(in srgb, var(--primary) 22%, transparent)",
+                color: "var(--primary)",
+              }}
+            >
+              #{t}
+              <X size={11} />
+            </button>
+          ))}
+          <button
+            onClick={() => setActiveTags([])}
+            className="text-[11px] text-muted hover:text-foreground"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 space-y-4 overflow-auto p-2 sm:p-4">
         {/* Inline Add Section */}
@@ -1853,6 +1893,8 @@ export function LinksView({ containerId }: Props) {
         {viewMode === "list" &&
           (flatLinks.length > 0 ? (
             <ResourceList
+              activeTags={activeTags}
+              onTagClick={toggleTag}
               items={flatLinks.map(({ link, section }) => ({
                 id: link.id,
                 title: link.title,
@@ -1865,7 +1907,6 @@ export function LinksView({ containerId }: Props) {
                 categoryColor: section.color || "#FF9800",
                 onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
                 onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
-                onCopy: () => navigator.clipboard.writeText(link.url),
                 onDelete: () => handleDeleteItem(link.id),
               }))}
             />
@@ -1876,9 +1917,13 @@ export function LinksView({ containerId }: Props) {
         {/* Board layout (Задача 0.C) — канбан: колонка на секцию */}
         {viewMode === "board" && (
           <ResourceBoard
+            activeTags={activeTags}
+            onTagClick={toggleTag}
             columns={sections
               .map((section) => ({ section, links: getLinksForSection(section.id) }))
-              .filter(({ links }) => links.length > 0 || !(search || starredOnly))
+              .filter(
+                ({ links }) => links.length > 0 || !(search || starredOnly || activeTags.length > 0),
+              )
               .map(({ section, links }) => ({
                 id: section.id,
                 title: section.title,
@@ -1894,7 +1939,6 @@ export function LinksView({ containerId }: Props) {
                   starred: link.isFavorite,
                   onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
                   onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
-                  onCopy: () => navigator.clipboard.writeText(link.url),
                   onDelete: () => handleDeleteItem(link.id),
                 })),
               }))}
@@ -1906,7 +1950,8 @@ export function LinksView({ containerId }: Props) {
           viewMode !== "board" &&
           sections.map((section, sectionIndex) => {
           const sectionLinks = getLinksForSection(section.id);
-          if (sectionLinks.length === 0 && (search || starredOnly)) return null;
+          if (sectionLinks.length === 0 && (search || starredOnly || activeTags.length > 0))
+            return null;
 
           return (
             <Section
@@ -1926,6 +1971,8 @@ export function LinksView({ containerId }: Props) {
               onColorSection={handleColorSection}
               onUpdateItem={handleUpdateItem}
               onDeleteItem={handleDeleteItem}
+              activeTags={activeTags}
+              onTagClick={toggleTag}
               addingLinkToSection={addingLinkToSection}
               onStartAddLink={handleStartAddLink}
               onCloseAddLink={handleCloseAddLink}
