@@ -27,6 +27,7 @@ import {
   Minus,
   ListTree,
   X,
+  Image as ImageIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -37,8 +38,54 @@ interface Props {
   note: NoteItem;
 }
 
+// Сжимает изображение (уменьшает до maxDim, JPEG) и возвращает data-URL.
+// base64 хранится прямо в markdown — сжатие держит размер в разумных пределах.
+function fileToCompressedDataUrl(file: File, maxDim = 1600, quality = 0.82): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => resolve(dataUrl); // не удалось обработать — вставим как есть
+      img.src = dataUrl;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function NoteEditor({ note }: Props) {
-  const { updateNote, deleteNote, isDarkTheme } = useStore();
+  const {
+    updateNote,
+    deleteNote,
+    isDarkTheme,
+    notes,
+    folders,
+    categories,
+    workspaces,
+    setActiveWorkspaceId,
+    setActiveCategoryId,
+    setActiveFolderId,
+    setActiveItemId,
+  } = useStore();
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [previewMode, setPreviewMode] = useState<"edit" | "split" | "preview">("split");
@@ -100,6 +147,21 @@ export function NoteEditor({ note }: Props) {
       ta.focus();
       ta.setSelectionRange(start + before.length, start + before.length + selected.length);
     }, 0);
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageFiles = async (files: FileList | File[]) => {
+    const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!images.length) return;
+    const parts = await Promise.all(
+      images.map(async (f) => {
+        const dataUrl = await fileToCompressedDataUrl(f);
+        const alt = f.name.replace(/\.[^.]+$/, "") || "image";
+        return `![${alt}](${dataUrl})`;
+      }),
+    );
+    insertText(parts.join("\n") + "\n");
   };
 
   const addTag = () => {
@@ -174,6 +236,36 @@ export function NoteEditor({ note }: Props) {
       ta.setSelectionRange(pos, pos);
     }
   };
+
+  // Wiki-связи [[Title]] → навигация к заметке по заголовку
+  const navigateToNote = (target: NoteItem) => {
+    const folder = folders.find((f) => f.id === target.folderId);
+    const cat = folder ? categories.find((c) => c.id === folder.categoryId) : undefined;
+    const ws = cat ? workspaces.find((w) => w.id === cat.workspaceId) : undefined;
+    if (ws) setActiveWorkspaceId(ws.id);
+    if (cat) setActiveCategoryId(cat.id);
+    setActiveFolderId(target.folderId);
+    setActiveItemId(target.id);
+  };
+
+  const goToNoteByTitle = (t: string) => {
+    const target = notes.find((n) => n.title.toLowerCase() === t.toLowerCase());
+    if (target) navigateToNote(target);
+  };
+
+  // [[Title]] → ссылка со схемой #wiki: (её ловит кастомный рендер <a>)
+  const processedContent = content.replace(
+    /\[\[([^\][]+)\]\]/g,
+    (_m, t) => `[${t.trim()}](#wiki:${encodeURIComponent(t.trim())})`,
+  );
+
+  // Backlinks: какие заметки ссылаются на текущую по её заголовку
+  const backlinks = useMemo(() => {
+    const t = note.title.trim();
+    if (!t) return [];
+    const re = new RegExp(`\\[\\[\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\]\\]`, "i");
+    return notes.filter((n) => n.id !== note.id && re.test(n.content));
+  }, [notes, note.id, note.title]);
 
   return (
     <div
@@ -304,6 +396,26 @@ export function NoteEditor({ note }: Props) {
             {btn.icon}
           </button>
         ))}
+        {/* Вставка изображения (base64, со сжатием) */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          title="Insert image (drag & drop or paste also work)"
+          className="rounded p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+          style={{ color: mutedColor }}
+        >
+          <ImageIcon size={14} />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files) handleImageFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
         <div className="flex-1" />
         <button
           onClick={() => setShowToc((v) => !v)}
@@ -412,6 +524,26 @@ export function NoteEditor({ note }: Props) {
                 }
               }
             }}
+            onPaste={(e) => {
+              const files = Array.from(e.clipboardData.items)
+                .filter((it) => it.type.startsWith("image/"))
+                .map((it) => it.getAsFile())
+                .filter((f): f is File => !!f);
+              if (files.length) {
+                e.preventDefault();
+                handleImageFiles(files);
+              }
+            }}
+            onDrop={(e) => {
+              if (Array.from(e.dataTransfer.files).some((f) => f.type.startsWith("image/"))) {
+                e.preventDefault();
+                handleImageFiles(e.dataTransfer.files);
+              }
+            }}
+            onDragOver={(e) => {
+              if (Array.from(e.dataTransfer.items).some((it) => it.type.startsWith("image/")))
+                e.preventDefault();
+            }}
             className="flex-1 resize-none p-3 font-mono text-sm leading-relaxed outline-none sm:p-6"
             style={{
               background: bg,
@@ -513,16 +645,39 @@ export function NoteEditor({ note }: Props) {
                       {children}
                     </blockquote>
                   ),
-                  a: ({ children, href }) => (
-                    <a
-                      href={href}
-                      className="text-blue-400 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {children}
-                    </a>
-                  ),
+                  a: ({ children, href }) => {
+                    if (href?.startsWith("#wiki:")) {
+                      const wikiTitle = decodeURIComponent(href.slice(6));
+                      const exists = notes.some(
+                        (n) => n.title.toLowerCase() === wikiTitle.toLowerCase(),
+                      );
+                      return (
+                        <button
+                          onClick={() => goToNoteByTitle(wikiTitle)}
+                          disabled={!exists}
+                          className="rounded px-0.5 font-medium"
+                          style={{
+                            color: exists ? "#4CAF50" : mutedColor,
+                            textDecoration: exists ? "none" : "underline dotted",
+                            cursor: exists ? "pointer" : "default",
+                          }}
+                          title={exists ? `Go to "${wikiTitle}"` : `Note "${wikiTitle}" not found`}
+                        >
+                          {children}
+                        </button>
+                      );
+                    }
+                    return (
+                      <a
+                        href={href}
+                        className="text-blue-400 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {children}
+                      </a>
+                    );
+                  },
                   strong: ({ children }) => (
                     <strong style={{ color: textColor }} className="font-bold">
                       {children}
@@ -556,10 +711,43 @@ export function NoteEditor({ note }: Props) {
                     type === "checkbox" ? (
                       <input type="checkbox" checked={checked} readOnly className="mr-2" />
                     ) : null,
+                  img: ({ src, alt }) => (
+                    <img
+                      src={typeof src === "string" ? src : undefined}
+                      alt={alt || ""}
+                      className="my-3 max-w-full rounded-lg"
+                      style={{ border: `1px solid ${border}` }}
+                    />
+                  ),
                 }}
               >
-                {content}
+                {processedContent}
               </ReactMarkdown>
+
+              {/* Backlinks — кто ссылается на эту заметку */}
+              {backlinks.length > 0 && (
+                <div className="mt-8 border-t pt-4" style={{ borderColor: border }}>
+                  <div
+                    className="mb-2 text-xs font-semibold tracking-wider uppercase"
+                    style={{ color: mutedColor }}
+                  >
+                    Linked references ({backlinks.length})
+                  </div>
+                  <ul className="space-y-1">
+                    {backlinks.map((n) => (
+                      <li key={n.id}>
+                        <button
+                          onClick={() => navigateToNote(n)}
+                          className="text-sm hover:underline"
+                          style={{ color: "#4CAF50" }}
+                        >
+                          ← {n.title || "(untitled)"}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}
