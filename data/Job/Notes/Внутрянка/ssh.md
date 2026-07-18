@@ -3,7 +3,7 @@ id: "4y70ir5msmrnihb0d"
 title: "ssh"
 tags: []
 isFavorite: false
-order: 9
+order: "9"
 createdAt: "2026-07-16T12:54:55.741Z"
 updatedAt: "2026-07-16T12:57:29.793Z"
 ---
