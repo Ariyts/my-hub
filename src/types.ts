@@ -102,6 +102,7 @@ export interface LinkItem {
   order?: number;
   sectionId?: string; // ID секции, к которой принадлежит ссылка
   color?: string; // Индивидуальный цвет ячейки (hex)
+  level?: string; // Опциональный уровень сложности: "L1" | "L2" | "L3" (Задача 2.8)
 }
 
 // Секция ссылок (категория внутри файла)

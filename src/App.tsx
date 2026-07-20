@@ -11,6 +11,7 @@ import { PlaybookView } from "./components/PlaybookView";
 import { SettingsModal } from "./components/SettingsModal";
 import { TrashModal } from "./components/TrashModal";
 import { CommandPalette } from "./components/CommandPalette";
+import { UndoToast } from "./components/UndoToast";
 import type { NoteItem, CommandContainer, PromptContainer, PlaybookContainer } from "./types";
 import { FileText, Plus, Menu, FolderOpen } from "lucide-react";
 
@@ -333,6 +334,9 @@ export function App() {
 
       {/* Command Palette (⌘K) */}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
+      {/* Undo-тост для удаления под-элементов (Задача 0.E.2) */}
+      <UndoToast />
     </div>
   );
 }

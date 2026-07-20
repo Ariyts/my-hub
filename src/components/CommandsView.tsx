@@ -13,6 +13,7 @@ import {
   Star,
   Terminal,
 } from "lucide-react";
+import { useAutoSync } from "../hooks/useAutoSync";
 
 const LANG_COLORS: Record<string, string> = {
   bash: "#4CAF50",
@@ -527,6 +528,9 @@ interface Props {
 export function CommandsView({ container }: Props) {
   const { isDarkTheme } = useStore();
   const [search, setSearch] = useState("");
+
+  // Единый автосинк, управляемый тумблером settings.autoSave (Задача 0.E.3)
+  useAutoSync(container.id, container.updatedAt);
 
   const filtered = container.subItems.filter(
     (i) =>

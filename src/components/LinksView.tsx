@@ -27,6 +27,9 @@ import {
   ArrowUpDown,
   TrendingUp,
   ArrowDownAZ,
+  CheckSquare,
+  Tag,
+  FolderInput,
 } from "lucide-react";
 import { LinksImportExportModal } from "./LinksImportExportModal";
 import { ViewHeader } from "./shell/ViewHeader";
@@ -34,49 +37,12 @@ import { ViewToolbar } from "./shell/ViewToolbar";
 import { ResourceCard } from "./shell/ResourceCard";
 import { ResourceList } from "./shell/ResourceList";
 import { ResourceBoard } from "./shell/ResourceBoard";
-
-// Fetch link metadata
-async function fetchLinkMetadata(
-  url: string,
-): Promise<{ title?: string; description?: string; favicon?: string }> {
-  try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) return {};
-
-    const data = await response.json();
-    const html = data.contents;
-
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : undefined;
-
-    const descMatch = html.match(
-      /<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i,
-    );
-    const description = descMatch ? descMatch[1].trim() : undefined;
-
-    const iconMatch = html.match(
-      /<link[^>]*rel=["'](?:icon|shortcut icon)["'][^>]*href=["']([^"']+)["']/i,
-    );
-    let favicon = iconMatch ? iconMatch[1] : undefined;
-
-    if (favicon && !favicon.startsWith("http")) {
-      const urlObj = new URL(url);
-      favicon = favicon.startsWith("/")
-        ? `${urlObj.origin}${favicon}`
-        : `${urlObj.origin}/${favicon}`;
-    }
-
-    if (!favicon) {
-      const urlObj = new URL(url);
-      favicon = `${urlObj.origin}/favicon.ico`;
-    }
-
-    return { title, description, favicon };
-  } catch {
-    return {};
-  }
-}
+import { ColorPicker } from "./shell/ColorPicker";
+import { SelectCheckbox } from "./shell/SelectCheckbox";
+import { HoverPreview } from "./shell/HoverPreview";
+import { LinkPreviewCard } from "./shell/LinkPreviewCard";
+import { LevelBadge } from "./shell/Badge";
+import { fetchLinkMetadata, faviconForDomain } from "../utils/linkMetadata";
 
 // Get domain from URL
 function getDomain(url: string) {
@@ -85,6 +51,47 @@ function getDomain(url: string) {
   } catch {
     return url;
   }
+}
+
+// Уровень сложности ссылки (Задача 2.8) — необязательный
+const LINK_LEVELS = ["L1", "L2", "L3"] as const;
+const LEVEL_PICK_COLORS: Record<string, string> = {
+  L1: "#22c55e",
+  L2: "#eab308",
+  L3: "#ef4444",
+};
+
+// Компактный переключатель уровня для форм редактирования. Пусто = без уровня.
+function LevelPicker({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange: (level: string | undefined) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1" title="Difficulty level (optional)">
+      {LINK_LEVELS.map((lvl) => {
+        const active = value === lvl;
+        const color = LEVEL_PICK_COLORS[lvl];
+        return (
+          <button
+            key={lvl}
+            type="button"
+            onClick={() => onChange(active ? undefined : lvl)}
+            className="rounded px-1.5 py-0.5 text-[10px] font-bold transition-colors"
+            style={
+              active
+                ? { background: `${color}30`, color }
+                : { background: "transparent", color: "#94a3b8", border: "1px solid #94a3b840" }
+            }
+          >
+            {lvl}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 // ============================================
@@ -103,6 +110,10 @@ interface LinkCardProps {
   isDropTarget: boolean;
   dropIndex: number;
   dropSectionId: string | null;
+  // Мультивыбор (Задача 2.4)
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 function LinkCard({
@@ -118,6 +129,9 @@ function LinkCard({
   isDropTarget,
   dropIndex,
   dropSectionId,
+  selectable,
+  selected,
+  onToggleSelect,
 }: LinkCardProps) {
   const { updateLinkItem, deleteLinkItem } = useStore();
   const [editing, setEditing] = useState(false);
@@ -190,6 +204,14 @@ function LinkCard({
             onChange={(e) => setEditData({ ...editData, description: e.target.value })}
             placeholder="Description..."
           />
+          {/* Уровень сложности (Задача 2.8) */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-slate-500">Level:</span>
+            <LevelPicker
+              value={editData.level}
+              onChange={(level) => setEditData({ ...editData, level })}
+            />
+          </div>
           <div className="flex gap-2">
             <button
               onClick={handleSave}
@@ -213,15 +235,22 @@ function LinkCard({
 
   return (
     <div
-      draggable
+      draggable={!selectable}
       onDragStart={(e) => onDragStart(e, item.id, sectionId)}
       onDragOver={(e) => onDragOver(e, index, sectionId)}
       onDrop={onDrop}
-      className={`group relative cursor-grab rounded-xl border transition-all duration-200 active:cursor-grabbing ${isDragging ? "scale-95 opacity-50" : ""}`}
+      onClick={selectable ? () => onToggleSelect?.() : undefined}
+      className={`group relative rounded-xl border transition-all duration-200 ${
+        selectable ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+      } ${isDragging ? "scale-95 opacity-50" : ""}`}
       style={{
         background: bg,
-        borderColor: isCurrentDropTarget ? "#FF9800" : border,
-        boxShadow: isCurrentDropTarget ? "0 0 0 2px #FF980040" : "none",
+        borderColor: selected ? "#FF9800" : isCurrentDropTarget ? "#FF9800" : border,
+        boxShadow: selected
+          ? "0 0 0 2px #FF9800"
+          : isCurrentDropTarget
+            ? "0 0 0 2px #FF980040"
+            : "none",
       }}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -230,12 +259,19 @@ function LinkCard({
         <div className="absolute -top-1 right-2 left-2 z-10 h-0.5 rounded bg-orange-400" />
       )}
 
-      <div
-        className="absolute top-2 left-2 rounded bg-slate-500/20 p-1 opacity-0 transition-opacity group-hover:opacity-100"
-        style={{ cursor: "grab" }}
-      >
-        <GripVertical size={10} style={{ color: isDark ? "#64748b" : "#94a3b8" }} />
-      </div>
+      {/* Чекбокс выбора (Задача 2.4) — вместо ручки перетаскивания */}
+      {selectable ? (
+        <div className="absolute top-2 left-2 z-10">
+          <SelectCheckbox checked={!!selected} onToggle={() => onToggleSelect?.()} />
+        </div>
+      ) : (
+        <div
+          className="absolute top-2 left-2 rounded bg-slate-500/20 p-1 opacity-0 transition-opacity group-hover:opacity-100"
+          style={{ cursor: "grab" }}
+        >
+          <GripVertical size={10} style={{ color: isDark ? "#64748b" : "#94a3b8" }} />
+        </div>
+      )}
 
       <a
         href={item.url}
@@ -245,28 +281,47 @@ function LinkCard({
         onClick={(e) => e.preventDefault()}
       >
         <div className="mb-2 flex items-start gap-2">
-          <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg"
-            style={{ background: isDark ? "#0f172a" : "#f1f5f9" }}
-          >
-            {item.favicon && !faviconError ? (
-              <img
-                src={item.favicon}
-                alt=""
-                className="h-5 w-5 object-contain"
-                onError={() => setFaviconError(true)}
+          {/* Фавикон — наведение показывает превью-карточку (Задача 2.6) */}
+          <HoverPreview
+            className="inline-flex shrink-0"
+            content={
+              <LinkPreviewCard
+                title={item.title}
+                url={item.url}
+                description={item.description}
+                favicon={item.favicon}
+                tags={item.tags}
+                accent="#FF9800"
               />
-            ) : (
-              <Globe size={16} className="text-slate-400" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3
-              className="truncate text-sm font-medium transition-colors hover:text-orange-400"
-              style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+            }
+          >
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+              style={{ background: isDark ? "#0f172a" : "#f1f5f9" }}
             >
-              {item.title}
-            </h3>
+              {item.favicon && !faviconError ? (
+                <img
+                  src={item.favicon}
+                  alt=""
+                  className="h-5 w-5 object-contain"
+                  onError={() => setFaviconError(true)}
+                />
+              ) : (
+                <Globe size={16} className="text-slate-400" />
+              )}
+            </div>
+          </HoverPreview>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h3
+                className="min-w-0 flex-1 truncate text-sm font-medium transition-colors hover:text-orange-400"
+                style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+              >
+                {item.title}
+              </h3>
+              {/* Бейдж уровня (Задача 2.8) — только если задан */}
+              {item.level && <LevelBadge level={item.level} />}
+            </div>
             <p className="truncate text-[10px]" style={{ color: "#94a3b8" }}>
               {getDomain(item.url)}
             </p>
@@ -310,6 +365,14 @@ function LinkCard({
               className={item.isFavorite ? "fill-amber-400 text-amber-400" : "text-slate-400"}
             />
           </button>
+          {/* Color picker (Задача 2.3) */}
+          <div onClick={(e) => e.preventDefault()}>
+            <ColorPicker
+              value={item.color}
+              onChange={(c) => updateLinkItem(containerId, item.id, { color: c })}
+              size={12}
+            />
+          </div>
           <button onClick={handleCopy} className="rounded p-1 hover:bg-slate-500/20">
             {copied ? (
               <Check size={12} className="text-green-400" />
@@ -368,20 +431,11 @@ interface CompactLinkItemProps {
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
   onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
   onDrop: (e: React.DragEvent) => void;
+  // Мультивыбор (Задача 2.4)
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
-
-// Color palette for link items
-const LINK_COLORS = [
-  undefined, // No color (default)
-  "#ef4444", // red
-  "#f97316", // orange
-  "#eab308", // yellow
-  "#22c55e", // green
-  "#14b8a6", // teal
-  "#3b82f6", // blue
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-];
 
 function CompactLinkItem({
   item,
@@ -395,6 +449,9 @@ function CompactLinkItem({
   onDragStart,
   onDragOver,
   onDrop,
+  selectable,
+  selected,
+  onToggleSelect,
 }: CompactLinkItemProps) {
   const [faviconError, setFaviconError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -402,6 +459,7 @@ function CompactLinkItem({
   const [editTitle, setEditTitle] = useState(item.title);
   const [editUrl, setEditUrl] = useState(item.url);
   const [editColor, setEditColor] = useState(item.color);
+  const [editLevel, setEditLevel] = useState(item.level);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Google Drive style colors
@@ -426,6 +484,7 @@ function CompactLinkItem({
     setEditTitle(item.title);
     setEditUrl(item.url);
     setEditColor(item.color);
+    setEditLevel(item.level);
     setIsEditing(true);
   };
 
@@ -436,6 +495,7 @@ function CompactLinkItem({
         title: editTitle.trim(),
         url: editUrl.trim(),
         color: editColor,
+        level: editLevel,
       });
     }
     setIsEditing(false);
@@ -446,6 +506,7 @@ function CompactLinkItem({
     setEditTitle(item.title);
     setEditUrl(item.url);
     setEditColor(item.color);
+    setEditLevel(item.level);
     setIsEditing(false);
   };
 
@@ -457,16 +518,6 @@ function CompactLinkItem({
     } else if (e.key === "Escape") {
       handleCancelEdit();
     }
-  };
-
-  // Cycle color
-  const handleCycleColor = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const currentIndex = LINK_COLORS.indexOf(item.color);
-    const nextIndex = (currentIndex + 1) % LINK_COLORS.length;
-    onUpdateItem(item.id, { color: LINK_COLORS[nextIndex] });
   };
 
   // Delete item
@@ -545,25 +596,10 @@ function CompactLinkItem({
           />
         </div>
 
-        {/* Color selector in edit mode */}
-        <div className="flex flex-shrink-0 items-center gap-1">
-          <select
-            value={editColor || ""}
-            onChange={(e) => setEditColor(e.target.value || undefined)}
-            className="rounded border px-1 py-0.5 text-[10px] outline-none"
-            style={{
-              background: isDark ? "#0f172a" : "#ffffff",
-              borderColor: borderColor,
-              color: isDark ? "#e5e7eb" : "#1f2937",
-            }}
-          >
-            <option value="">No color</option>
-            {LINK_COLORS.filter((c) => c).map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+        {/* Level + color в режиме редактирования (Задачи 2.8 / 2.3) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <LevelPicker value={editLevel} onChange={setEditLevel} />
+          <ColorPicker value={editColor} onChange={setEditColor} size={14} />
         </div>
 
         {/* Save / Cancel buttons */}
@@ -594,12 +630,15 @@ function CompactLinkItem({
   // ========================================
   return (
     <div
-      className={`group relative flex items-center gap-1 rounded-lg border px-2 py-1.5 transition-colors transition-opacity duration-150 ${isDragging ? "scale-95 opacity-50 ring-2 ring-orange-400" : ""} ${isDropTarget ? "bg-blue-500/10 ring-2 ring-blue-400" : ""} `}
+      onClick={selectable ? () => onToggleSelect?.() : undefined}
+      className={`group relative flex items-center gap-1 rounded-lg border px-2 py-1.5 transition-colors transition-opacity duration-150 ${isDragging ? "scale-95 opacity-50 ring-2 ring-orange-400" : ""} ${isDropTarget ? "bg-blue-500/10 ring-2 ring-blue-400" : ""} ${selected ? "ring-2 ring-orange-400" : ""} ${selectable ? "cursor-pointer" : ""}`}
       style={{
         background: isDropTarget ? undefined : getTintedBg(),
         borderColor: isDropTarget
           ? "#3b82f6"
-          : isHovered
+          : selected
+            ? "#FF9800"
+            : isHovered
             ? isDark
               ? "#4b5563"
               : "#d1d5db"
@@ -624,41 +663,70 @@ function CompactLinkItem({
         <div className="h-5 w-1 flex-shrink-0 rounded-full" style={{ background: activeColor }} />
       )}
 
-      {/* DRAG HANDLE - Only this area starts drag */}
-      <div
-        draggable
-        onDragStart={(e) => onDragStart(e, item.id, sectionId)}
-        className="flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-500/20 active:cursor-grabbing"
-        title="Drag to move"
-      >
-        <GripVertical size={12} style={{ color: isDark ? "#6b7280" : "#9ca3af" }} />
-      </div>
+      {/* Чекбокс выбора (Задача 2.4) — вместо ручки перетаскивания */}
+      {selectable ? (
+        <div className="flex-shrink-0">
+          <SelectCheckbox checked={!!selected} onToggle={() => onToggleSelect?.()} size={14} />
+        </div>
+      ) : (
+        /* DRAG HANDLE - Only this area starts drag */
+        <div
+          draggable
+          onDragStart={(e) => onDragStart(e, item.id, sectionId)}
+          className="flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-500/20 active:cursor-grabbing"
+          title="Drag to move"
+        >
+          <GripVertical size={12} style={{ color: isDark ? "#6b7280" : "#9ca3af" }} />
+        </div>
+      )}
 
-      {/* FAVICON */}
-      <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded">
-        {item.favicon && !faviconError ? (
-          <img
-            src={item.favicon}
-            alt=""
-            className="h-4 w-4 object-contain"
-            onError={() => setFaviconError(true)}
+      {/* FAVICON — наведение показывает превью-карточку (Задача 2.6) */}
+      <HoverPreview
+        className="inline-flex shrink-0"
+        content={
+          <LinkPreviewCard
+            title={item.title}
+            url={item.url}
+            description={item.description}
+            favicon={item.favicon}
+            tags={item.tags}
+            accent={item.color || sectionColor || "#FF9800"}
           />
-        ) : (
-          <Globe size={12} style={{ color: isDark ? "#6b7280" : "#9ca3af" }} />
-        )}
-      </div>
+        }
+      >
+        <div className="flex h-4 w-4 items-center justify-center overflow-hidden rounded">
+          {item.favicon && !faviconError ? (
+            <img
+              src={item.favicon}
+              alt=""
+              className="h-4 w-4 object-contain"
+              onError={() => setFaviconError(true)}
+            />
+          ) : (
+            <Globe size={12} style={{ color: isDark ? "#6b7280" : "#9ca3af" }} />
+          )}
+        </div>
+      </HoverPreview>
 
       {/* LINK AREA - Clickable link, no DnD here */}
       <a
         href={item.url}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={selectable ? (e) => e.preventDefault() : undefined}
         className="flex-1 truncate text-xs font-medium transition-colors hover:text-orange-400"
         style={{ color: isDark ? "#e5e7eb" : "#1f2937" }}
         title={`${item.title}\n${item.url}`}
       >
         {item.title}
       </a>
+
+      {/* Бейдж уровня (Задача 2.8) — только если задан */}
+      {item.level && (
+        <span className="shrink-0">
+          <LevelBadge level={item.level} />
+        </span>
+      )}
 
       {/* Favorite indicator */}
       {item.isFavorite && (
@@ -670,20 +738,12 @@ function CompactLinkItem({
         className="flex flex-shrink-0 items-center gap-0.5 transition-opacity duration-150"
         style={{ opacity: isHovered ? 1 : 0, pointerEvents: isHovered ? "auto" : "none" }}
       >
-        {/* Color button */}
-        <button
-          onClick={handleCycleColor}
-          className="rounded p-1 transition-colors hover:bg-slate-500/20"
-          title="Change color"
-        >
-          <div
-            className="h-3 w-3 rounded-full border"
-            style={{
-              background: item.color || "transparent",
-              borderColor: item.color || (isDark ? "#4b5563" : "#d1d5db"),
-            }}
-          />
-        </button>
+        {/* Color picker (Задача 2.3) */}
+        <ColorPicker
+          value={item.color}
+          onChange={(c) => onUpdateItem(item.id, { color: c })}
+          size={12}
+        />
 
         {/* Edit button */}
         <button
@@ -965,6 +1025,10 @@ interface SectionProps {
   onSectionDragStart: (e: React.DragEvent, sectionId: string) => void;
   onSectionDragOver: (e: React.DragEvent, targetIndex: number) => void;
   onSectionDrop: (e: React.DragEvent) => void;
+  // Мультивыбор (Задача 2.4)
+  selectMode: boolean;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
 }
 
 // Predefined color palette
@@ -1008,6 +1072,9 @@ function Section({
   onSectionDragStart,
   onSectionDragOver,
   onSectionDrop,
+  selectMode,
+  selectedIds,
+  onToggleSelect,
 }: SectionProps) {
   const sectionId = section.id;
   const isCollapsed = section.collapsed ?? false;
@@ -1176,18 +1243,26 @@ function Section({
                   onDragStart={onDragStart}
                   onDragOver={onDragOver}
                   onDrop={onDrop}
+                  selectable={selectMode}
+                  selected={selectedIds.has(item.id)}
+                  onToggleSelect={() => onToggleSelect(item.id)}
                 />
               ))}
 
-              {/* Inline Add Link - только при клике на + */}
+              {/* Inline Add Link - только при клике на +.
+                  columnSpan:"all" растягивает форму на всю ширину секции: в Compact
+                  контейнер многоколоночный, иначе форма зажимается в узкую колонку
+                  и кнопки Save/Cancel обрезаются при большом числе ссылок. */}
               {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
-                <InlineAddLink
-                  isDark={isDark}
-                  onCreateLink={async (url, title) => {
-                    await onCreateLink(sectionId, url, title);
-                  }}
-                  onClose={onCloseAddLink}
-                />
+                <div style={{ columnSpan: "all" }}>
+                  <InlineAddLink
+                    isDark={isDark}
+                    onCreateLink={async (url, title) => {
+                      await onCreateLink(sectionId, url, title);
+                    }}
+                    onClose={onCloseAddLink}
+                  />
+                </div>
               )}
             </>
           ) : viewMode === "tiles" ? (
@@ -1206,9 +1281,13 @@ function Section({
                   starred={item.isFavorite}
                   activeTags={activeTags}
                   onTagClick={onTagClick}
+                  level={item.level}
                   onToggleStar={() => onUpdateItem(item.id, { isFavorite: !item.isFavorite })}
                   onOpen={() => window.open(item.url, "_blank", "noopener,noreferrer")}
                   onDelete={() => onDeleteItem(item.id)}
+                  selectable={selectMode}
+                  selected={selectedIds.has(item.id)}
+                  onToggleSelect={() => onToggleSelect(item.id)}
                 />
               ))}
 
@@ -1240,6 +1319,9 @@ function Section({
                   isDropTarget={dragState.dropIndex !== null}
                   dropIndex={dragState.dropIndex ?? -1}
                   dropSectionId={dragState.dropSectionId}
+                  selectable={selectMode}
+                  selected={selectedIds.has(item.id)}
+                  onToggleSelect={() => onToggleSelect(item.id)}
                 />
               ))}
 
@@ -1334,6 +1416,26 @@ export function LinksView({ containerId }: Props) {
   const toggleTag = (tag: string) =>
     setActiveTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
 
+  // Мультивыбор и пакетные операции (Задача 2.4)
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [moveMenuOpen, setMoveMenuOpen] = useState(false);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+    setMoveMenuOpen(false);
+  }, []);
+
   // Drag & Drop state
   const [dragState, setDragState] = useState<{
     draggingItemId: string | null;
@@ -1368,24 +1470,39 @@ export function LinksView({ containerId }: Props) {
     return [...existingSections].sort((a, b) => a.order - b.order);
   }, [container?.sections]);
 
-  // Get links for a section
+  // Ссылки, сгруппированные по секции: фильтр+сортировка ОДНИМ проходом (0.E.1).
+  // Раньше getLinksForSection вызывался на каждую секцию и каждый раз сканировал
+  // ВСЕ subItems (+ .toLowerCase() поиска на каждую ссылку) — это O(секции × ссылки).
+  // Теперь один проход O(n) + сортировка по секциям, а геттер — просто lookup.
+  const linksBySection = useMemo(() => {
+    const map = new Map<string, LinkItem[]>();
+    if (!container) return map;
+    const q = search.toLowerCase();
+    for (const link of container.subItems) {
+      if (!link.sectionId) continue;
+      if (q && !(link.title.toLowerCase().includes(q) || link.url.toLowerCase().includes(q)))
+        continue;
+      if (starredOnly && !link.isFavorite) continue;
+      if (activeTags.length && !activeTags.every((t) => link.tags?.includes(t))) continue;
+      let arr = map.get(link.sectionId);
+      if (!arr) {
+        arr = [];
+        map.set(link.sectionId, arr);
+      }
+      arr.push(link);
+    }
+    for (const arr of map.values()) {
+      arr.sort((a, b) =>
+        sortMode === "az" ? a.title.localeCompare(b.title) : (a.order ?? 0) - (b.order ?? 0),
+      );
+    }
+    return map;
+  }, [container, search, starredOnly, sortMode, activeTags]);
+
+  const EMPTY_LINKS: LinkItem[] = useMemo(() => [], []);
   const getLinksForSection = useCallback(
-    (sectionId: string) => {
-      if (!container) return [];
-      return container.subItems
-        .filter((link) => link.sectionId === sectionId)
-        .filter(
-          (link) =>
-            link.title.toLowerCase().includes(search.toLowerCase()) ||
-            link.url.toLowerCase().includes(search.toLowerCase()),
-        )
-        .filter((link) => !starredOnly || link.isFavorite)
-        .filter((link) => activeTags.every((t) => link.tags?.includes(t)))
-        .sort((a, b) =>
-          sortMode === "az" ? a.title.localeCompare(b.title) : (a.order ?? 0) - (b.order ?? 0),
-        );
-    },
-    [container, search, starredOnly, sortMode, activeTags],
+    (sectionId: string) => linksBySection.get(sectionId) ?? EMPTY_LINKS,
+    [linksBySection, EMPTY_LINKS],
   );
 
   // Плоский список ссылок с их секцией — для раскладки List (глобальная сортировка)
@@ -1403,6 +1520,80 @@ export function LinksView({ containerId }: Props) {
       )
       .map((l) => ({ link: l, section: secById.get(l.sectionId!)! }));
   }, [container, sections, search, starredOnly, sortMode, activeTags]);
+
+  // Все видимые (после фильтров) id — для «выбрать всё» и его состояния (Задача 2.4)
+  const visibleLinkIds = useMemo(() => {
+    if (!container) return [] as string[];
+    const secIds = new Set(sections.map((s) => s.id));
+    const q = search.toLowerCase();
+    return container.subItems
+      .filter((l) => l.sectionId && secIds.has(l.sectionId))
+      .filter((l) => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
+      .filter((l) => !starredOnly || l.isFavorite)
+      .filter((l) => activeTags.every((t) => l.tags?.includes(t)))
+      .map((l) => l.id);
+  }, [container, sections, search, starredOnly, activeTags]);
+
+  const allVisibleSelected =
+    visibleLinkIds.length > 0 && visibleLinkIds.every((id) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      // Если все видимые уже выбраны — снимаем их; иначе добавляем все видимые
+      if (visibleLinkIds.every((id) => prev.has(id))) {
+        const next = new Set(prev);
+        visibleLinkIds.forEach((id) => next.delete(id));
+        return next;
+      }
+      return new Set([...prev, ...visibleLinkIds]);
+    });
+  };
+
+  // Пакетное удаление — одним атомарным апдейтом контейнера
+  const bulkDelete = () => {
+    if (!container || selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} selected link(s)?`)) return;
+    updateLinkContainer(container.id, {
+      subItems: container.subItems.filter((l) => !selectedIds.has(l.id)),
+    });
+    clearSelection();
+  };
+
+  // Пакетное перемещение в секцию (в конец целевой секции, порядок выбранных сохраняется)
+  const bulkMove = (targetSectionId: string) => {
+    if (!container || selectedIds.size === 0) return;
+    let nextOrder = container.subItems
+      .filter((l) => l.sectionId === targetSectionId && !selectedIds.has(l.id))
+      .reduce((max, l) => Math.max(max, (l.order ?? 0) + 1), 0);
+    const moved = container.subItems
+      .filter((l) => selectedIds.has(l.id))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const orderById = new Map<string, number>();
+    moved.forEach((l) => orderById.set(l.id, nextOrder++));
+    updateLinkContainer(container.id, {
+      subItems: container.subItems.map((l) =>
+        selectedIds.has(l.id)
+          ? { ...l, sectionId: targetSectionId, order: orderById.get(l.id) }
+          : l,
+      ),
+    });
+    setMoveMenuOpen(false);
+    clearSelection();
+  };
+
+  // Пакетное добавление тега (выбор не сбрасываем — можно навесить несколько)
+  const bulkAddTag = () => {
+    if (!container || selectedIds.size === 0) return;
+    const tag = prompt("Add tag to selected links:")?.trim();
+    if (!tag) return;
+    updateLinkContainer(container.id, {
+      subItems: container.subItems.map((l) =>
+        selectedIds.has(l.id)
+          ? { ...l, tags: l.tags?.includes(tag) ? l.tags : [...(l.tags || []), tag] }
+          : l,
+      ),
+    });
+  };
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, itemId: string, sectionId: string) => {
@@ -1569,18 +1760,27 @@ export function LinksView({ containerId }: Props) {
       return item;
     });
 
-    // Normalize orders per section
-    const normalizedSubItems = shiftedSubItems.map((item) => {
-      const sectionId = item.sectionId || null;
-      const sectionLinks = shiftedSubItems
-        .filter((l) => (l.sectionId || null) === sectionId)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-      return {
-        ...item,
-        order: sectionLinks.findIndex((l) => l.id === item.id),
-      };
-    });
+    // Normalize orders per section — позиция каждого id вычисляется один раз (0.E.1).
+    // Раньше здесь на каждый элемент фильтровался+сортировался весь массив — O(n²).
+    const orderIndex = new Map<string, number>();
+    const grouped = new Map<string | null, LinkItem[]>();
+    for (const l of shiftedSubItems) {
+      const sid = l.sectionId || null;
+      let arr = grouped.get(sid);
+      if (!arr) {
+        arr = [];
+        grouped.set(sid, arr);
+      }
+      arr.push(l);
+    }
+    for (const arr of grouped.values()) {
+      arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      arr.forEach((l, i) => orderIndex.set(l.id, i));
+    }
+    const normalizedSubItems = shiftedSubItems.map((item) => ({
+      ...item,
+      order: orderIndex.get(item.id) ?? 0,
+    }));
 
     updateLinkContainer(container.id, { subItems: normalizedSubItems });
     setDragState({
@@ -1656,18 +1856,19 @@ export function LinksView({ containerId }: Props) {
     if (!container || !url.trim()) return;
 
     let finalTitle = title;
-    let favicon: string | undefined;
+    // Фавикон детерминированно выводится из домена — доступен всегда (Задача 2.5)
+    let favicon = faviconForDomain(getDomain(url));
 
     if (!finalTitle) {
       const meta = await fetchLinkMetadata(url);
       finalTitle = meta.title || getDomain(url);
-      favicon = meta.favicon;
+      favicon = meta.favicon || favicon;
     }
 
     addLinkItem(container.id, {
       url: url.trim(),
       title: finalTitle || getDomain(url),
-      favicon: favicon || `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=32`,
+      favicon,
       tags: [],
       isFavorite: false,
       sectionId: sectionId,
@@ -1761,7 +1962,7 @@ export function LinksView({ containerId }: Props) {
   const isDark = isDarkTheme;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
       {/* Панель управления (Задача 0.C) */}
       <ViewToolbar
         search={search}
@@ -1794,6 +1995,18 @@ export function LinksView({ containerId }: Props) {
         onLayout={(v) => handleSetViewMode(v as LinksViewMode)}
         rightSlot={
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                selectMode
+                  ? "bg-links/15 text-links"
+                  : "hover:bg-sunken bg-surface text-foreground"
+              }`}
+              title="Select multiple links"
+            >
+              <CheckSquare size={14} className={selectMode ? "" : "text-links"} />
+              <span className="hidden sm:inline">{selectMode ? "Done" : "Select"}</span>
+            </button>
             <button
               onClick={() => setAddingSection(true)}
               className="hover:bg-sunken flex items-center gap-2 rounded-lg bg-surface px-3 py-1.5 text-sm font-medium text-foreground transition-colors"
@@ -1905,9 +2118,13 @@ export function LinksView({ containerId }: Props) {
                 starred: link.isFavorite,
                 categoryLabel: section.title,
                 categoryColor: section.color || "#FF9800",
+                level: link.level,
                 onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
                 onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
                 onDelete: () => handleDeleteItem(link.id),
+                selectable: selectMode,
+                selected: selectedIds.has(link.id),
+                onToggleSelect: () => toggleSelect(link.id),
               }))}
             />
           ) : sections.length > 0 ? (
@@ -1937,9 +2154,13 @@ export function LinksView({ containerId }: Props) {
                   accent: section.color || "#FF9800",
                   tags: link.tags,
                   starred: link.isFavorite,
+                  level: link.level,
                   onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
                   onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
                   onDelete: () => handleDeleteItem(link.id),
+                  selectable: selectMode,
+                  selected: selectedIds.has(link.id),
+                  onToggleSelect: () => toggleSelect(link.id),
                 })),
               }))}
           />
@@ -1973,6 +2194,9 @@ export function LinksView({ containerId }: Props) {
               onDeleteItem={handleDeleteItem}
               activeTags={activeTags}
               onTagClick={toggleTag}
+              selectMode={selectMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
               addingLinkToSection={addingLinkToSection}
               onStartAddLink={handleStartAddLink}
               onCloseAddLink={handleCloseAddLink}
@@ -2004,6 +2228,91 @@ export function LinksView({ containerId }: Props) {
           </div>
         )}
       </div>
+
+      {/* Панель пакетных операций (Задача 2.4) */}
+      {selectMode && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 flex justify-center px-3">
+          <div className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 shadow-2xl">
+            {/* Выбрать всё видимое */}
+            <button
+              onClick={toggleSelectAll}
+              className="hover:bg-sunken flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-foreground transition-colors"
+              title={allVisibleSelected ? "Deselect all" : "Select all visible"}
+            >
+              <SelectCheckbox checked={allVisibleSelected} onToggle={toggleSelectAll} size={15} />
+              <span>
+                {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
+              </span>
+            </button>
+
+            <div className="h-5 w-px bg-border" />
+
+            {/* Переместить в секцию */}
+            <div className="relative">
+              <button
+                onClick={() => setMoveMenuOpen((v) => !v)}
+                disabled={selectedIds.size === 0}
+                className="hover:bg-sunken flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FolderInput size={14} className="text-links" />
+                <span className="hidden sm:inline">Move</span>
+              </button>
+              {moveMenuOpen && selectedIds.size > 0 && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMoveMenuOpen(false)} />
+                  <div className="absolute bottom-full left-0 z-20 mb-1 max-h-60 w-48 overflow-auto rounded-lg border border-border bg-surface py-1 shadow-2xl">
+                    <div className="px-3 py-1 text-[10px] tracking-wide text-subtle uppercase">
+                      Move to section
+                    </div>
+                    {sections.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => bulkMove(s.id)}
+                        className="hover:bg-sunken flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-foreground transition-colors"
+                      >
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ background: s.color || "#FF9800" }}
+                        />
+                        <span className="truncate">{s.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Добавить тег */}
+            <button
+              onClick={bulkAddTag}
+              disabled={selectedIds.size === 0}
+              className="hover:bg-sunken flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Tag size={14} className="text-links" />
+              <span className="hidden sm:inline">Tag</span>
+            </button>
+
+            {/* Удалить */}
+            <button
+              onClick={bulkDelete}
+              disabled={selectedIds.size === 0}
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Trash2 size={14} />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+
+            <div className="h-5 w-px bg-border" />
+
+            <button
+              onClick={exitSelectMode}
+              className="hover:bg-sunken rounded-lg px-2 py-1 text-xs font-medium text-muted transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Import/Export modal */}
       {showImportExport && container && (

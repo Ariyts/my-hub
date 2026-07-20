@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useStore } from "../store";
 import type { PromptContainer, PromptItem, PromptSection } from "../types";
+import { useAutoSync } from "../hooks/useAutoSync";
 import {
   Plus,
   Search,
@@ -681,6 +682,9 @@ interface Props {
 export function PromptsView({ container }: Props) {
   const { isDarkTheme, addPromptItem, addPromptSection, updatePromptSection, deletePromptSection } =
     useStore();
+
+  // Единый автосинк, управляемый тумблером settings.autoSave (Задача 0.E.3)
+  useAutoSync(container.id, container.updatedAt);
 
   const [search, setSearch] = useState("");
   const [addingSection, setAddingSection] = useState(false);

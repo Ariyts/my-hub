@@ -14,6 +14,7 @@ import type {
   LinkItem,
   PromptItem,
   PlaybookItem,
+  LinkSection,
   PromptSection,
   PlaybookSection,
   PlaybookVariable,
@@ -43,9 +44,57 @@ const defaultSettings: Settings = {
 };
 
 // ============================================
+// UNDO (Задача 0.E.2)
+// ============================================
+// Лёгкий undo удаления под-элементов/секций, которые иначе удаляются мимо
+// корзины безвозвратно. Точечное восстановление (re-insert), не снапшот всего
+// контейнера — чтобы не затирать правки, сделанные после удаления. В localStorage
+// НЕ персистится (сессионная история).
+export type UndoEntry =
+  | { kind: "linkItem"; label: string; containerId: string; item: LinkItem; index: number }
+  | { kind: "commandItem"; label: string; containerId: string; item: CommandItem; index: number }
+  | { kind: "promptItem"; label: string; containerId: string; item: PromptItem; index: number }
+  | { kind: "playbookItem"; label: string; containerId: string; item: PlaybookItem; index: number }
+  | {
+      kind: "linkSection";
+      label: string;
+      containerId: string;
+      section: LinkSection;
+      itemIds: string[];
+    }
+  | {
+      kind: "promptSection";
+      label: string;
+      containerId: string;
+      section: PromptSection;
+      itemIds: string[];
+    }
+  | {
+      kind: "playbookSection";
+      label: string;
+      containerId: string;
+      section: PlaybookSection;
+      itemIds: string[];
+    };
+
+const UNDO_LIMIT = 30;
+const pushUndo = (stack: UndoEntry[], entry: UndoEntry): UndoEntry[] =>
+  [...stack, entry].slice(-UNDO_LIMIT);
+
+function insertAt<T>(arr: T[], index: number, item: T): T[] {
+  const copy = [...arr];
+  copy.splice(Math.max(0, Math.min(index, copy.length)), 0, item);
+  return copy;
+}
+
+// ============================================
 // STORE ACTIONS INTERFACE
 // ============================================
 interface StoreActions {
+  // Undo (Задача 0.E.2)
+  undoStack: UndoEntry[];
+  undoLastDelete: () => void;
+
   // Workspace actions
   setActiveWorkspaceId: (id: string) => void;
   addWorkspace: (workspace: Omit<Workspace, "id" | "createdAt" | "updatedAt">) => void;
@@ -230,6 +279,9 @@ export const useStore = create<AppState & StoreActions>()(
       // Trash
       trash: [],
       showTrash: false,
+
+      // Undo history (сессионная, не персистится) — Задача 0.E.2
+      undoStack: [],
 
       settings: defaultSettings,
       searchQuery: "",
@@ -625,16 +677,27 @@ export const useStore = create<AppState & StoreActions>()(
         })),
 
       deleteCommandItem: (containerId, itemId) =>
-        set((s) => ({
-          commands: s.commands.map((c) =>
-            c.id === containerId
-              ? {
-                  ...c,
-                  subItems: c.subItems.filter((i) => i.id !== itemId),
-                }
-              : c,
-          ),
-        })),
+        set((s) => {
+          const container = s.commands.find((c) => c.id === containerId);
+          const index = container?.subItems.findIndex((i) => i.id === itemId) ?? -1;
+          const item = index >= 0 ? container!.subItems[index] : undefined;
+          return {
+            commands: s.commands.map((c) =>
+              c.id === containerId
+                ? { ...c, subItems: c.subItems.filter((i) => i.id !== itemId) }
+                : c,
+            ),
+            undoStack: item
+              ? pushUndo(s.undoStack, {
+                  kind: "commandItem",
+                  label: item.command?.slice(0, 40) || "command",
+                  containerId,
+                  item,
+                  index,
+                })
+              : s.undoStack,
+          };
+        }),
 
       // ============================================
       // LINK CONTAINER ACTIONS
@@ -740,16 +803,27 @@ export const useStore = create<AppState & StoreActions>()(
         })),
 
       deleteLinkItem: (containerId, itemId) =>
-        set((s) => ({
-          links: s.links.map((l) =>
-            l.id === containerId
-              ? {
-                  ...l,
-                  subItems: l.subItems.filter((i) => i.id !== itemId),
-                }
-              : l,
-          ),
-        })),
+        set((s) => {
+          const container = s.links.find((l) => l.id === containerId);
+          const index = container?.subItems.findIndex((i) => i.id === itemId) ?? -1;
+          const item = index >= 0 ? container!.subItems[index] : undefined;
+          return {
+            links: s.links.map((l) =>
+              l.id === containerId
+                ? { ...l, subItems: l.subItems.filter((i) => i.id !== itemId) }
+                : l,
+            ),
+            undoStack: item
+              ? pushUndo(s.undoStack, {
+                  kind: "linkItem",
+                  label: item.title || "link",
+                  containerId,
+                  item,
+                  index,
+                })
+              : s.undoStack,
+          };
+        }),
 
       // ============================================
       // LINK SECTION ACTIONS
@@ -799,20 +873,35 @@ export const useStore = create<AppState & StoreActions>()(
       },
 
       deleteLinkSection: (containerId, sectionId) =>
-        set((s) => ({
-          links: s.links.map((l) => {
-            if (l.id !== containerId) return l;
-            // Remove section and move its links to "no section" (null)
-            return {
-              ...l,
-              sections: (l.sections || []).filter((sec) => sec.id !== sectionId),
-              subItems: l.subItems.map((item) =>
-                item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
-              ),
-              updatedAt: new Date().toISOString(),
-            };
-          }),
-        })),
+        set((s) => {
+          const container = s.links.find((l) => l.id === containerId);
+          const section = container?.sections?.find((sec) => sec.id === sectionId);
+          const itemIds =
+            container?.subItems.filter((i) => i.sectionId === sectionId).map((i) => i.id) ?? [];
+          return {
+            links: s.links.map((l) => {
+              if (l.id !== containerId) return l;
+              // Remove section and move its links to "no section" (null)
+              return {
+                ...l,
+                sections: (l.sections || []).filter((sec) => sec.id !== sectionId),
+                subItems: l.subItems.map((item) =>
+                  item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
+                ),
+                updatedAt: new Date().toISOString(),
+              };
+            }),
+            undoStack: section
+              ? pushUndo(s.undoStack, {
+                  kind: "linkSection",
+                  label: section.title || "section",
+                  containerId,
+                  section,
+                  itemIds,
+                })
+              : s.undoStack,
+          };
+        }),
 
       reorderLinkSections: (containerId, sectionIds) =>
         set((s) => ({
@@ -934,16 +1023,27 @@ export const useStore = create<AppState & StoreActions>()(
         })),
 
       deletePromptItem: (containerId, itemId) =>
-        set((s) => ({
-          prompts: s.prompts.map((p) =>
-            p.id === containerId
-              ? {
-                  ...p,
-                  subItems: p.subItems.filter((i) => i.id !== itemId),
-                }
-              : p,
-          ),
-        })),
+        set((s) => {
+          const container = s.prompts.find((p) => p.id === containerId);
+          const index = container?.subItems.findIndex((i) => i.id === itemId) ?? -1;
+          const item = index >= 0 ? container!.subItems[index] : undefined;
+          return {
+            prompts: s.prompts.map((p) =>
+              p.id === containerId
+                ? { ...p, subItems: p.subItems.filter((i) => i.id !== itemId) }
+                : p,
+            ),
+            undoStack: item
+              ? pushUndo(s.undoStack, {
+                  kind: "promptItem",
+                  label: item.title || "prompt",
+                  containerId,
+                  item,
+                  index,
+                })
+              : s.undoStack,
+          };
+        }),
 
       // ============================================
       // PROMPT SECTION ACTIONS
@@ -991,19 +1091,34 @@ export const useStore = create<AppState & StoreActions>()(
       },
 
       deletePromptSection: (containerId, sectionId) =>
-        set((s) => ({
-          prompts: s.prompts.map((p) => {
-            if (p.id !== containerId) return p;
-            return {
-              ...p,
-              sections: (p.sections || []).filter((sec) => sec.id !== sectionId),
-              subItems: p.subItems.map((item) =>
-                item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
-              ),
-              updatedAt: new Date().toISOString(),
-            };
-          }),
-        })),
+        set((s) => {
+          const container = s.prompts.find((p) => p.id === containerId);
+          const section = container?.sections?.find((sec) => sec.id === sectionId);
+          const itemIds =
+            container?.subItems.filter((i) => i.sectionId === sectionId).map((i) => i.id) ?? [];
+          return {
+            prompts: s.prompts.map((p) => {
+              if (p.id !== containerId) return p;
+              return {
+                ...p,
+                sections: (p.sections || []).filter((sec) => sec.id !== sectionId),
+                subItems: p.subItems.map((item) =>
+                  item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
+                ),
+                updatedAt: new Date().toISOString(),
+              };
+            }),
+            undoStack: section
+              ? pushUndo(s.undoStack, {
+                  kind: "promptSection",
+                  label: section.title || "section",
+                  containerId,
+                  section,
+                  itemIds,
+                })
+              : s.undoStack,
+          };
+        }),
 
       reorderPromptSections: (containerId, sectionIds) =>
         set((s) => ({
@@ -1117,16 +1232,27 @@ export const useStore = create<AppState & StoreActions>()(
         })),
 
       deletePlaybookItem: (containerId, itemId) =>
-        set((s) => ({
-          playbooks: s.playbooks.map((pb) =>
-            pb.id === containerId
-              ? {
-                  ...pb,
-                  subItems: pb.subItems.filter((i) => i.id !== itemId),
-                }
-              : pb,
-          ),
-        })),
+        set((s) => {
+          const container = s.playbooks.find((pb) => pb.id === containerId);
+          const index = container?.subItems.findIndex((i) => i.id === itemId) ?? -1;
+          const item = index >= 0 ? container!.subItems[index] : undefined;
+          return {
+            playbooks: s.playbooks.map((pb) =>
+              pb.id === containerId
+                ? { ...pb, subItems: pb.subItems.filter((i) => i.id !== itemId) }
+                : pb,
+            ),
+            undoStack: item
+              ? pushUndo(s.undoStack, {
+                  kind: "playbookItem",
+                  label: item.command?.slice(0, 40) || "command",
+                  containerId,
+                  item,
+                  index,
+                })
+              : s.undoStack,
+          };
+        }),
 
       // ============================================
       // PLAYBOOK SECTION ACTIONS
@@ -1174,19 +1300,34 @@ export const useStore = create<AppState & StoreActions>()(
       },
 
       deletePlaybookSection: (containerId, sectionId) =>
-        set((s) => ({
-          playbooks: s.playbooks.map((pb) => {
-            if (pb.id !== containerId) return pb;
-            return {
-              ...pb,
-              sections: (pb.sections || []).filter((sec) => sec.id !== sectionId),
-              subItems: pb.subItems.map((item) =>
-                item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
-              ),
-              updatedAt: new Date().toISOString(),
-            };
-          }),
-        })),
+        set((s) => {
+          const container = s.playbooks.find((pb) => pb.id === containerId);
+          const section = container?.sections?.find((sec) => sec.id === sectionId);
+          const itemIds =
+            container?.subItems.filter((i) => i.sectionId === sectionId).map((i) => i.id) ?? [];
+          return {
+            playbooks: s.playbooks.map((pb) => {
+              if (pb.id !== containerId) return pb;
+              return {
+                ...pb,
+                sections: (pb.sections || []).filter((sec) => sec.id !== sectionId),
+                subItems: pb.subItems.map((item) =>
+                  item.sectionId === sectionId ? { ...item, sectionId: undefined } : item,
+                ),
+                updatedAt: new Date().toISOString(),
+              };
+            }),
+            undoStack: section
+              ? pushUndo(s.undoStack, {
+                  kind: "playbookSection",
+                  label: section.title || "section",
+                  containerId,
+                  section,
+                  itemIds,
+                })
+              : s.undoStack,
+          };
+        }),
 
       reorderPlaybookSections: (containerId, sectionIds) =>
         set((s) => ({
@@ -1393,6 +1534,117 @@ export const useStore = create<AppState & StoreActions>()(
         })),
 
       clearTrash: () => set({ trash: [] }),
+
+      // ============================================
+      // UNDO (Задача 0.E.2)
+      // ============================================
+      undoLastDelete: () =>
+        set((s) => {
+          const entry = s.undoStack[s.undoStack.length - 1];
+          if (!entry) return s;
+          const undoStack = s.undoStack.slice(0, -1);
+
+          switch (entry.kind) {
+            case "linkItem":
+              return {
+                undoStack,
+                links: s.links.map((l) =>
+                  l.id === entry.containerId
+                    ? { ...l, subItems: insertAt(l.subItems, entry.index, entry.item) }
+                    : l,
+                ),
+              };
+            case "commandItem":
+              return {
+                undoStack,
+                commands: s.commands.map((c) =>
+                  c.id === entry.containerId
+                    ? { ...c, subItems: insertAt(c.subItems, entry.index, entry.item) }
+                    : c,
+                ),
+              };
+            case "promptItem":
+              return {
+                undoStack,
+                prompts: s.prompts.map((p) =>
+                  p.id === entry.containerId
+                    ? { ...p, subItems: insertAt(p.subItems, entry.index, entry.item) }
+                    : p,
+                ),
+              };
+            case "playbookItem":
+              return {
+                undoStack,
+                playbooks: s.playbooks.map((pb) =>
+                  pb.id === entry.containerId
+                    ? { ...pb, subItems: insertAt(pb.subItems, entry.index, entry.item) }
+                    : pb,
+                ),
+              };
+            case "linkSection": {
+              const ids = new Set(entry.itemIds);
+              return {
+                undoStack,
+                links: s.links.map((l) => {
+                  if (l.id !== entry.containerId) return l;
+                  const sections = [...(l.sections || []), entry.section].sort(
+                    (a, b) => a.order - b.order,
+                  );
+                  return {
+                    ...l,
+                    sections,
+                    subItems: l.subItems.map((it) =>
+                      ids.has(it.id) ? { ...it, sectionId: entry.section.id } : it,
+                    ),
+                    updatedAt: new Date().toISOString(),
+                  };
+                }),
+              };
+            }
+            case "promptSection": {
+              const ids = new Set(entry.itemIds);
+              return {
+                undoStack,
+                prompts: s.prompts.map((p) => {
+                  if (p.id !== entry.containerId) return p;
+                  const sections = [...(p.sections || []), entry.section].sort(
+                    (a, b) => a.order - b.order,
+                  );
+                  return {
+                    ...p,
+                    sections,
+                    subItems: p.subItems.map((it) =>
+                      ids.has(it.id) ? { ...it, sectionId: entry.section.id } : it,
+                    ),
+                    updatedAt: new Date().toISOString(),
+                  };
+                }),
+              };
+            }
+            case "playbookSection": {
+              const ids = new Set(entry.itemIds);
+              return {
+                undoStack,
+                playbooks: s.playbooks.map((pb) => {
+                  if (pb.id !== entry.containerId) return pb;
+                  const sections = [...(pb.sections || []), entry.section].sort(
+                    (a, b) => a.order - b.order,
+                  );
+                  return {
+                    ...pb,
+                    sections,
+                    subItems: pb.subItems.map((it) =>
+                      ids.has(it.id) ? { ...it, sectionId: entry.section.id } : it,
+                    ),
+                    updatedAt: new Date().toISOString(),
+                  };
+                }),
+              };
+            }
+            default:
+              return { undoStack };
+          }
+        }),
 
       // ============================================
       // UI ACTIONS

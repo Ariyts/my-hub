@@ -18,6 +18,7 @@ import { ImportExportModal } from "./ImportExportModal";
 import { MarkdownView } from "./playbook/MarkdownView";
 import { generateSectionExport } from "../utils/importExport";
 import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
+import { useAutoSync } from "../hooks/useAutoSync";
 
 interface Props {
   container: PlaybookContainer;
@@ -41,6 +42,9 @@ export function PlaybookView({ container }: Props) {
     reorderPlaybookSections,
     reorderPlaybookItems,
   } = useStore();
+
+  // Единый автосинк, управляемый тумблером settings.autoSave (Задача 0.E.3)
+  useAutoSync(container.id, container.updatedAt);
 
   // DnD секций (Задача 3.1). Перетаскивание отключено при активных фильтрах:
   // порядок в отфильтрованном списке не соответствует реальному.

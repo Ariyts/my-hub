@@ -21,14 +21,16 @@ export function useAutoSync(_dataId: string | undefined, updatedAt: string | und
   const canSave = useStore((state) => state.canSave);
   const syncToCloud = useStore((state) => state.syncToCloud);
   const syncStatus = useStore((state) => state.syncStatus);
+  // Тумблер «Auto-save» из настроек (раньше был декоративным) — Задача 0.E.3
+  const autoSave = useStore((state) => state.settings.autoSave);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTriggeredRef = useRef<string>("");
 
   // Debounced sync function
   const triggerSync = useCallback(() => {
-    if (!canSave) {
-      debug("[AutoSync] Cannot sync: canSave is false");
+    if (!canSave || !autoSave) {
+      debug("[AutoSync] Skip: canSave/autoSave is false");
       return;
     }
 
@@ -46,11 +48,11 @@ export function useAutoSync(_dataId: string | undefined, updatedAt: string | und
         syncToCloud();
       }
     }, DEBOUNCE_TIME);
-  }, [canSave, syncToCloud, syncStatus, updatedAt]);
+  }, [canSave, autoSave, syncToCloud, syncStatus, updatedAt]);
 
   // Watch for changes - trigger sync when updatedAt changes
   useEffect(() => {
-    if (!updatedAt || !canSave) return;
+    if (!updatedAt || !canSave || !autoSave) return;
 
     // If this is a new update, trigger debounced sync
     if (updatedAt !== lastTriggeredRef.current) {
@@ -64,12 +66,12 @@ export function useAutoSync(_dataId: string | undefined, updatedAt: string | und
         clearTimeout(timerRef.current);
       }
     };
-  }, [updatedAt, canSave, triggerSync]);
+  }, [updatedAt, canSave, autoSave, triggerSync]);
 
   // Return sync status for UI
   return {
     isSyncing: syncStatus === "syncing",
-    canAutoSave: canSave,
+    canAutoSave: canSave && autoSave,
     syncStatus,
   };
 }

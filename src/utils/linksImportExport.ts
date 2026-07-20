@@ -95,6 +95,9 @@ export function generateFullExport(container: LinkContainer): string {
       if (item.isFavorite) {
         lines.push("Favorite: true");
       }
+      if (item.level) {
+        lines.push(`Level: ${item.level}`);
+      }
       if (item.color) {
         lines.push(`<!-- color: ${item.color} -->`);
       }
@@ -121,6 +124,9 @@ export function generateFullExport(container: LinkContainer): string {
       if (item.isFavorite) {
         lines.push("Favorite: true");
       }
+      if (item.level) {
+        lines.push(`Level: ${item.level}`);
+      }
       lines.push("");
     }
   }
@@ -146,6 +152,7 @@ export interface ParsedLinkItem {
   tags: string[];
   isFavorite: boolean;
   color?: string;
+  level?: string;
 }
 
 export interface ParsedLinks {
@@ -238,6 +245,12 @@ export function parseMarkdown(content: string): ParsedLinks {
           continue;
         }
 
+        const levelMatch = trimmedLine.match(/^Level:\s*(L[123])/i);
+        if (levelMatch) {
+          currentItem.level = levelMatch[1].toUpperCase();
+          continue;
+        }
+
         // Check for item-level color comment
         const itemColorMatch = trimmedLine.match(/<!--\s*color:\s*(#[0-9a-fA-F]{6})\s*-->/);
         if (itemColorMatch) {
@@ -285,6 +298,86 @@ export function parseMarkdown(content: string): ParsedLinks {
   return result;
 }
 
+// ---- Браузерные закладки (Netscape Bookmark HTML) — Задача 2.7 -------------
+
+/** Минимальный декодер HTML-сущностей (заголовки закладок часто их содержат). */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0*39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#x?[0-9a-f]+;/gi, (m) => {
+      const hex = /^&#x/i.test(m);
+      const code = parseInt(m.replace(/&#x?|;/gi, ""), hex ? 16 : 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    });
+}
+
+/**
+ * Парсер экспорта закладок Chrome/Firefox/Edge (Netscape Bookmark File).
+ * HTML в таких файлах обычно «грязный» (незакрытые <DT>/<p>), поэтому вместо
+ * DOM используем последовательный токен-скан со стеком папок: <H3> задаёт имя
+ * папки, следующий <DL> открывает её, </DL> — закрывает. Ссылки (<A HREF>)
+ * приписываются к текущему пути папок; путь становится названием секции.
+ */
+export function parseBookmarksHtml(content: string): ParsedLinks {
+  const result: ParsedLinks = { title: "Imported bookmarks", sections: [] };
+
+  const titleMatch = content.match(/<title[^>]*>([^<]*)<\/title>/i);
+  if (titleMatch && titleMatch[1].trim()) result.title = decodeHtmlEntities(titleMatch[1].trim());
+
+  // Секции по пути папок; порядок появления сохраняем через Map
+  const byPath = new Map<string, ParsedLinkSection>();
+  const getSection = (path: string[]): ParsedLinkSection => {
+    const key = path.filter(Boolean).join(" / ") || "Imported bookmarks";
+    let sec = byPath.get(key);
+    if (!sec) {
+      sec = { title: key, items: [] };
+      byPath.set(key, sec);
+    }
+    return sec;
+  };
+
+  const stack: string[] = [];
+  let pendingFolder: string | null = null;
+
+  // Токены в порядке появления: открытие/закрытие DL, папка H3, ссылка A
+  const tokenRe =
+    /<dl[^>]*>|<\/dl>|<h3[^>]*>([\s\S]*?)<\/h3>|<a\s+[^>]*href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+
+  let m: RegExpExecArray | null;
+  while ((m = tokenRe.exec(content)) !== null) {
+    const token = m[0].toLowerCase();
+    if (token.startsWith("<dl")) {
+      stack.push(pendingFolder ?? "");
+      pendingFolder = null;
+    } else if (token === "</dl>") {
+      stack.pop();
+    } else if (m[1] !== undefined) {
+      // <H3> — имя папки, откроется следующим <DL>
+      pendingFolder = decodeHtmlEntities(m[1].replace(/<[^>]+>/g, "").trim());
+    } else if (m[2] !== undefined) {
+      // <A HREF> — ссылка
+      const url = m[2].trim();
+      if (!url || /^javascript:/i.test(url) || url.startsWith("place:")) continue;
+      const title = decodeHtmlEntities(m[3].replace(/<[^>]+>/g, "").trim()) || url;
+      getSection(stack).items.push({
+        url,
+        title,
+        description: "",
+        tags: [],
+        isFavorite: false,
+      });
+    }
+  }
+
+  result.sections = [...byPath.values()].filter((s) => s.items.length > 0);
+  return result;
+}
+
 export function parseJson(content: string): ParsedLinks {
   const data = JSON.parse(content);
   return {
@@ -300,6 +393,7 @@ export function parseJson(content: string): ParsedLinks {
         tags: i.tags || [],
         isFavorite: i.isFavorite || false,
         color: i.color,
+        level: i.level,
       })),
     })),
   };
@@ -313,6 +407,13 @@ export function autoDetect(content: string): ParsedLinks {
     } catch {
       // fall through to markdown
     }
+  }
+  // Экспорт браузерных закладок (Netscape Bookmark HTML) — Задача 2.7
+  const looksLikeBookmarks =
+    /netscape-bookmark-file/i.test(trimmed) ||
+    (/<dl[\s>]/i.test(trimmed) && /<a\s+[^>]*href\s*=/i.test(trimmed));
+  if (looksLikeBookmarks) {
+    return parseBookmarksHtml(trimmed);
   }
   return parseMarkdown(trimmed);
 }

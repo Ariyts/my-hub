@@ -2,6 +2,9 @@ import { useState, type ReactNode } from "react";
 import { Copy, Check, ExternalLink, Trash2, Globe } from "lucide-react";
 import { Chip, Badge, LevelBadge } from "./Badge";
 import { StarToggle } from "./StarToggle";
+import { SelectCheckbox } from "./SelectCheckbox";
+import { HoverPreview } from "./HoverPreview";
+import { LinkPreviewCard } from "./LinkPreviewCard";
 import { domainOf } from "./util";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
@@ -33,6 +36,10 @@ interface ResourceCardProps {
   /** Фасеты тегов: активные теги и клик по тегу */
   activeTags?: string[];
   onTagClick?: (tag: string) => void;
+  /** Мультивыбор (Задача 2.4) */
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 export function ResourceCard({
@@ -51,29 +58,54 @@ export function ResourceCard({
   categoryIcon,
   activeTags,
   onTagClick,
+  selectable,
+  selected,
+  onToggleSelect,
 }: ResourceCardProps) {
   const [faviconOk, setFaviconOk] = useState(true);
   const { copied, copy } = useCopyToClipboard();
 
   return (
-    <div className="group flex flex-col gap-2 rounded-xl border border-border bg-surface p-3 transition-all hover:border-border-subtle hover:shadow-lg">
-      {/* Верхняя строка: фавикон + домен + звезда */}
+    <div
+      className={`group flex flex-col gap-2 rounded-xl border bg-surface p-3 transition-all hover:shadow-lg ${
+        selected ? "border-primary ring-1 ring-primary" : "border-border hover:border-border-subtle"
+      }`}
+    >
+      {/* Верхняя строка: чекбокс + фавикон + домен + звезда */}
       <div className="flex items-center gap-2">
-        <div
-          className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md"
-          style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}
-        >
-          {favicon && faviconOk ? (
-            <img
-              src={favicon}
-              alt=""
-              className="h-4 w-4"
-              onError={() => setFaviconOk(false)}
+        {selectable && onToggleSelect && (
+          <SelectCheckbox checked={!!selected} onToggle={onToggleSelect} />
+        )}
+        {/* Фавикон — наведение показывает превью-карточку (Задача 2.6) */}
+        <HoverPreview
+          className="inline-flex shrink-0"
+          content={
+            <LinkPreviewCard
+              title={title}
+              url={url}
+              description={description}
+              favicon={favicon}
+              tags={tags}
+              accent={accent}
             />
-          ) : (
-            <Globe size={13} style={{ color: accent }} />
-          )}
-        </div>
+          }
+        >
+          <div
+            className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md"
+            style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}
+          >
+            {favicon && faviconOk ? (
+              <img
+                src={favicon}
+                alt=""
+                className="h-4 w-4"
+                onError={() => setFaviconOk(false)}
+              />
+            ) : (
+              <Globe size={13} style={{ color: accent }} />
+            )}
+          </div>
+        </HoverPreview>
         <span className="min-w-0 flex-1 truncate text-[11px] tracking-wide text-subtle uppercase">
           {domainOf(url)}
         </span>

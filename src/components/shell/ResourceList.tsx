@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Copy, Check, ExternalLink, Trash2, Globe } from "lucide-react";
 import { Chip, Badge, LevelBadge } from "./Badge";
 import { StarToggle } from "./StarToggle";
+import { SelectCheckbox } from "./SelectCheckbox";
+import { HoverPreview } from "./HoverPreview";
+import { LinkPreviewCard } from "./LinkPreviewCard";
 import { domainOf } from "./util";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
@@ -27,6 +30,10 @@ export interface ResourceRowData {
   onOpen?: () => void;
   onToggleStar?: () => void;
   onDelete?: () => void;
+  /** Мультивыбор (Задача 2.4) */
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 function Row({
@@ -44,20 +51,42 @@ function Row({
   const accent = row.accent || "var(--primary)";
 
   return (
-    <tr className="group border-t border-border-subtle transition-colors hover:bg-surface">
+    <tr
+      className={`group border-t border-border-subtle transition-colors hover:bg-surface ${
+        row.selected ? "bg-surface" : ""
+      }`}
+    >
       {/* Resource */}
       <td className="px-3 py-2">
         <div className="flex items-center gap-2">
-          <div
-            className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md"
-            style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}
+          {row.selectable && row.onToggleSelect && (
+            <SelectCheckbox checked={!!row.selected} onToggle={row.onToggleSelect} size={15} />
+          )}
+          {/* Фавикон — наведение показывает превью-карточку (Задача 2.6) */}
+          <HoverPreview
+            className="inline-flex shrink-0"
+            content={
+              <LinkPreviewCard
+                title={row.title}
+                url={row.url}
+                description={row.description}
+                favicon={row.favicon}
+                tags={row.tags}
+                accent={accent}
+              />
+            }
           >
-            {row.favicon && faviconOk ? (
-              <img src={row.favicon} alt="" className="h-4 w-4" onError={() => setFaviconOk(false)} />
-            ) : (
-              <Globe size={13} style={{ color: accent }} />
-            )}
-          </div>
+            <div
+              className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md"
+              style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}
+            >
+              {row.favicon && faviconOk ? (
+                <img src={row.favicon} alt="" className="h-4 w-4" onError={() => setFaviconOk(false)} />
+              ) : (
+                <Globe size={13} style={{ color: accent }} />
+              )}
+            </div>
+          </HoverPreview>
           <div className="min-w-0">
             <button
               onClick={row.onOpen}

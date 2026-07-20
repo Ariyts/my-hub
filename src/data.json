@@ -100,7 +100,7 @@
     },
     {
       "workspaceId": "ws_1llp",
-      "name": "New playbooks",
+      "name": "playbook",
       "icon": "📁",
       "color": "#6366f1",
       "baseType": "playbooks",

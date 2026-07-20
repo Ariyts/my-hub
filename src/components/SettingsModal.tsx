@@ -840,7 +840,7 @@ export function SettingsModal() {
           {activeTab === "editor" && (
             <>
               {[
-                { key: "autoSave", label: "Auto-save", desc: "Save automatically" },
+                { key: "autoSave", label: "Auto-save", desc: "Auto-sync changes to the cloud" },
                 { key: "spellCheck", label: "Spell Check", desc: "Browser spell checking" },
                 { key: "lineNumbers", label: "Line Numbers", desc: "Show line numbers" },
               ].map(({ key, label, desc }) => (

@@ -19,6 +19,7 @@ import {
   type ParsedLinks,
   type ValidationResult,
 } from "../utils/linksImportExport";
+import { faviconForDomain } from "../utils/linkMetadata";
 
 type Tab = "template" | "import" | "export";
 type MergeMode = "append" | "replace";
@@ -220,12 +221,14 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                   Upload file
                   <input
                     type="file"
-                    accept=".md,.markdown,.txt,.json"
+                    accept=".md,.markdown,.txt,.json,.html,.htm"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
                 </label>
-                <span className="text-[11px] text-slate-500">Supports Markdown and JSON</span>
+                <span className="text-[11px] text-slate-500">
+                  Supports Markdown, JSON and browser bookmarks (.html)
+                </span>
               </div>
 
               <textarea
@@ -474,7 +477,8 @@ function applyParsed(parsed: ParsedLinks, container: LinkContainer, mode: MergeM
           isFavorite: item.isFavorite,
           sectionId: targetSection?.id,
           color: item.color,
-          favicon: `https://www.google.com/s2/favicons?domain=${getDomain(item.url)}&sz=32`,
+          level: item.level,
+          favicon: faviconForDomain(getDomain(item.url)),
         });
       }
     }, 10);

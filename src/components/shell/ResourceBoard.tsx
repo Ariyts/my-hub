@@ -75,6 +75,9 @@ export function ResourceBoard({
                     onToggleStar={item.onToggleStar}
                     onOpen={item.onOpen}
                     onDelete={item.onDelete}
+                    selectable={item.selectable}
+                    selected={item.selected}
+                    onToggleSelect={item.onToggleSelect}
                   />
                 ))
               ) : (

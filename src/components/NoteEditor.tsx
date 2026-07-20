@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useStore } from "../store";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { useAutoSync } from "../hooks/useAutoSync";
 import type { NoteItem } from "../types";
 import {
   Save,
@@ -87,6 +88,10 @@ export function NoteEditor({ note }: Props) {
     setActiveFolderId,
     setActiveItemId,
   } = useStore();
+
+  // Единый автосинк, управляемый тумблером settings.autoSave (Задача 0.E.3)
+  useAutoSync(note.id, note.updatedAt);
+
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [previewMode, setPreviewMode] = useState<"edit" | "split" | "preview">("split");

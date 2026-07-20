@@ -126,6 +126,7 @@ export function createLinkFileWithSections(container: LinkContainer): string {
       if (item.isFavorite) linkMeta.isFavorite = true;
       if (item.sectionId) linkMeta.sectionId = item.sectionId;
       if (item.color) linkMeta.color = item.color;
+      if (item.level) linkMeta.level = item.level;
       if (item.description) linkMeta.description = item.description;
 
       let linkLine = `- [${item.title}](${item.url})`;
@@ -155,6 +156,7 @@ export function createLinkFileWithSections(container: LinkContainer): string {
       if (item.tags.length > 0) linkMeta.tags = item.tags;
       if (item.isFavorite) linkMeta.isFavorite = true;
       if (item.color) linkMeta.color = item.color;
+      if (item.level) linkMeta.level = item.level;
       if (item.description) linkMeta.description = item.description;
 
       let linkLine = `- [${item.title}](${item.url})`;
@@ -343,6 +345,7 @@ export function parseLinkFileWithSections(content: string): {
           order: linkMeta.order ?? linkOrder++,
           sectionId: linkMeta.sectionId,
           color: linkMeta.color,
+          level: linkMeta.level,
         };
 
         if (currentSection) {
