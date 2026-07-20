@@ -9,10 +9,14 @@ import {
   Target,
   X,
   Check,
+  GripVertical,
+  Share2,
+  Copy,
+  Download,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { PlaybookSection, PlaybookItem, PlaybookVariable, ChecklistStatus } from "../../types";
-import { SECTION_COLORS, getPhaseTag } from "./constants";
+import { SECTION_COLORS, getPhaseTag, PHASE_COLORS } from "./constants";
 import { CommandCard, type ViewMode } from "./CommandCard";
 import { CommandListItem } from "./CommandListItem";
 
@@ -25,6 +29,13 @@ interface Props {
   layout: "grid" | "list";
   getChecklistStatus: (itemId: string) => ChecklistStatus;
   onChecklistCycle: (itemId: string) => void;
+  /** DnD секций (Задача 3.1). Если не передан — перетаскивание недоступно. */
+  onDragStartSection?: (e: React.DragEvent) => void;
+  onDragEndSection?: () => void;
+  /** Переупорядочивание команд внутри секции. Не передан — DnD команд выключен. */
+  onReorderItems?: (itemIds: string[]) => void;
+  /** Экспорт секции в markdown (Задача 3.6). Не передан — кнопка скрыта. */
+  onExportSection?: (kind: "copy" | "download") => void;
   onToggleCollapse: () => void;
   onRenameSection: (newTitle: string) => void;
   onDeleteSection: () => void;
@@ -46,14 +57,84 @@ export function PlaybookSectionCard({
   onDeleteSection,
   onColorSection,
   onAddItem,
+  onDragStartSection,
+  onDragEndSection,
+  onReorderItems,
+  onExportSection,
 }: Props) {
   const isCollapsed = section.collapsed ?? false;
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  // DnD команд внутри секции (Задача 3.1)
+  const [itemDrag, setItemDrag] = useState<{ id: string | null; overIndex: number | null }>({
+    id: null,
+    overIndex: null,
+  });
+
+  const handleItemDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.effectAllowed = "move";
+    setItemDrag({ id, overIndex: null });
+  };
+
+  const handleItemDragOver = (e: React.DragEvent, index: number) => {
+    if (!itemDrag.id) return;
+    e.preventDefault();
+    setItemDrag((d) => (d.overIndex === index ? d : { ...d, overIndex: index }));
+  };
+
+  const handleItemDrop = () => {
+    const { id, overIndex } = itemDrag;
+    setItemDrag({ id: null, overIndex: null });
+    if (!id || overIndex === null || !onReorderItems) return;
+
+    const ids = items.map((i) => i.id);
+    const from = ids.indexOf(id);
+    if (from === -1 || from === overIndex) return;
+
+    const next = [...ids];
+    const [moved] = next.splice(from, 1);
+    next.splice(overIndex, 0, moved);
+    onReorderItems(next);
+  };
+
+  // Обёртка с ручкой перетаскивания и индикатором места вставки
+  const draggableItem = (item: PlaybookItem, index: number, child: React.ReactNode) => (
+    <div
+      key={item.id}
+      className="group/item relative"
+      onDragOver={(e) => handleItemDragOver(e, index)}
+      onDrop={handleItemDrop}
+      style={{ opacity: itemDrag.id === item.id ? 0.5 : 1 }}
+    >
+      {itemDrag.id && itemDrag.id !== item.id && itemDrag.overIndex === index && (
+        <div className="absolute -top-px right-0 left-0 z-10 h-0.5 rounded-full bg-cyan-400" />
+      )}
+      <div className="flex items-start gap-1">
+        {onReorderItems && (
+          <div
+            draggable
+            onDragStart={(e) => handleItemDragStart(e, item.id)}
+            onDragEnd={() => setItemDrag({ id: null, overIndex: null })}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1.5 flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 hover:bg-slate-700/50 active:cursor-grabbing"
+            title="Drag to reorder command"
+          >
+            <GripVertical size={12} className="text-slate-600" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">{child}</div>
+      </div>
+    </div>
+  );
   const [editTitle, setEditTitle] = useState(section.title);
 
-  const color = section.color || "#00BCD4";
+  // Фаза задаёт цвет секции по умолчанию (визуальная группировка по фазам).
+  // Явно выбранный цвет секции имеет приоритет.
   const phaseTag = getPhaseTag(section.title);
+  const phaseColor = phaseTag ? PHASE_COLORS[phaseTag] : undefined;
+  const color = section.color || phaseColor || "#00BCD4";
 
   // Checklist progress for this section
   const done = items.filter((i) => getChecklistStatus(i.id) === "done").length;
@@ -86,6 +167,23 @@ export function PlaybookSectionCard({
           className="absolute top-0 bottom-0 left-0 w-1 rounded-r-full transition-all"
           style={{ background: color, boxShadow: `0 0 12px ${color}40` }}
         />
+
+        {/* Drag handle (Задача 3.1) — тянуть за него, чтобы поменять порядок секций */}
+        {onDragStartSection && (
+          <div
+            draggable
+            onDragStart={(e) => {
+              e.stopPropagation();
+              onDragStartSection(e);
+            }}
+            onDragEnd={onDragEndSection}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700/50 active:cursor-grabbing"
+            title="Drag to reorder section"
+          >
+            <GripVertical size={14} className="text-slate-500" />
+          </div>
+        )}
 
         {/* Collapse chevron */}
         <button
@@ -148,14 +246,14 @@ export function PlaybookSectionCard({
               {section.title}
             </h2>
 
-            {/* Phase tag */}
+            {/* Phase tag — всегда цветом фазы, чтобы фазы различались визуально */}
             {phaseTag && (
               <span
                 className="flex-shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold tracking-[0.15em]"
                 style={{
-                  color,
-                  background: `${color}15`,
-                  borderColor: `${color}40`,
+                  color: phaseColor || color,
+                  background: `${phaseColor || color}15`,
+                  borderColor: `${phaseColor || color}40`,
                 }}
               >
                 {phaseTag}
@@ -231,6 +329,46 @@ export function PlaybookSectionCard({
               )}
             </div>
 
+            {/* Экспорт секции в markdown (Задача 3.6) */}
+            {onExportSection && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowExport((v) => !v)}
+                  className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-cyan-300"
+                  title="Export section as markdown"
+                >
+                  <Share2 size={13} />
+                </button>
+                {showExport && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowExport(false)} />
+                    <div className="absolute top-full right-0 z-20 mt-1 w-44 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-2xl">
+                      <button
+                        onClick={() => {
+                          onExportSection("copy");
+                          setShowExport(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-slate-300 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+                      >
+                        <Copy size={11} />
+                        Copy markdown
+                      </button>
+                      <button
+                        onClick={() => {
+                          onExportSection("download");
+                          setShowExport(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-slate-300 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+                      >
+                        <Download size={11} />
+                        Download .md
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => {
                 setEditing(true);
@@ -273,37 +411,38 @@ export function PlaybookSectionCard({
             layout === "list" ? (
               /* LIST MODE — compact rows */
               <div className="divide-y divide-slate-800/40">
-                {items.map((item) => (
-                  <CommandListItem
-                    key={item.id}
-                    item={item}
-                    containerId={containerId}
-                    mode={mode}
-                    variables={variables}
-                    checklistStatus={getChecklistStatus(item.id)}
-                    onChecklistCycle={() => onChecklistCycle(item.id)}
-                    onEdit={() => {
-                      /* Switch to grid mode and the user can edit via CommandCard */
-                      // This is the simplest approach — list mode is for quick scanning,
-                      // grid mode is for detailed editing
-                    }}
-                  />
-                ))}
+                {items.map((item, index) =>
+                  draggableItem(
+                    item,
+                    index,
+                    <CommandListItem
+                      item={item}
+                      containerId={containerId}
+                      mode={mode}
+                      variables={variables}
+                      checklistStatus={getChecklistStatus(item.id)}
+                      onChecklistCycle={() => onChecklistCycle(item.id)}
+                    />,
+                  ),
+                )}
               </div>
             ) : (
               /* GRID MODE — current card layout */
               <div className="grid grid-cols-1 gap-2.5 p-3">
-                {items.map((item) => (
-                  <CommandCard
-                    key={item.id}
-                    item={item}
-                    containerId={containerId}
-                    mode={mode}
-                    variables={variables}
-                    checklistStatus={getChecklistStatus(item.id)}
-                    onChecklistCycle={() => onChecklistCycle(item.id)}
-                  />
-                ))}
+                {items.map((item, index) =>
+                  draggableItem(
+                    item,
+                    index,
+                    <CommandCard
+                      item={item}
+                      containerId={containerId}
+                      mode={mode}
+                      variables={variables}
+                      checklistStatus={getChecklistStatus(item.id)}
+                      onChecklistCycle={() => onChecklistCycle(item.id)}
+                    />,
+                  ),
+                )}
               </div>
             )
           ) : (

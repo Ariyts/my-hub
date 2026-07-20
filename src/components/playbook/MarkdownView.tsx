@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Save, RotateCcw, Eye, Edit3 } from "lucide-react";
 import { useStore } from "../../store";
-import type { PlaybookContainer } from "../../types";
+import type { PlaybookContainer, PlaybookSection, PlaybookItem } from "../../types";
 import { generateFullExport, autoDetect, validateParsed } from "../../utils/importExport";
 
 interface Props {
@@ -13,8 +13,7 @@ interface Props {
  * Syncs changes back to the store on "Save" (with parse + merge).
  */
 export function MarkdownView({ playbook }: Props) {
-  const { updatePlaybookContainer, addPlaybookSection, addPlaybookItem, updatePlaybookSection } =
-    useStore();
+  const { updatePlaybookContainer } = useStore();
 
   const [markdown, setMarkdown] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -45,55 +44,72 @@ export function MarkdownView({ playbook }: Props) {
         return;
       }
 
-      // Replace mode — clear and re-add
-      updatePlaybookContainer(playbook.id, {
-        sections: [],
-        subItems: [],
-        variables:
-          parsed.variables?.map((v) => ({
-            id: "var-" + Math.random().toString(36).slice(2, 10),
-            name: v.name,
-            value: v.value,
-            description: v.description,
-          })) || [],
+      // Собираем новое состояние целиком и пишем ОДНИМ атомарным апдейтом.
+      // Раньше здесь был clear + два вложенных setTimeout(50) с поиском секций
+      // по заголовку: хрупко (гонка состояния) и терялись id, а вместе с ними —
+      // прогресс чеклиста (он хранится по id команды).
+      const newId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+
+      const prevSections = playbook.sections || [];
+      const prevItems = playbook.subItems || [];
+      const prevVars = playbook.variables || [];
+      const usedIds = new Set<string>();
+
+      const sections: PlaybookSection[] = [];
+      const subItems: PlaybookItem[] = [];
+
+      parsed.sections.forEach((section, sIdx) => {
+        const title = section.title || "Untitled";
+        // Переиспользуем id прежней секции с тем же заголовком — сохраняем привязки
+        const prevSection = prevSections.find((s) => s.title === title && !usedIds.has(s.id));
+        const sectionId = prevSection?.id ?? newId("sec");
+        usedIds.add(sectionId);
+
+        sections.push({
+          id: sectionId,
+          title,
+          order: sIdx,
+          collapsed: prevSection?.collapsed ?? false,
+          color: section.color ?? prevSection?.color,
+        });
+
+        section.items.forEach((item, iIdx) => {
+          // Тот же текст команды в той же секции → тот же id (чеклист уцелеет)
+          const prevItem = prevItems.find(
+            (p) => p.sectionId === sectionId && p.command === item.command && !usedIds.has(p.id),
+          );
+          const itemId = prevItem?.id ?? newId("cmd");
+          usedIds.add(itemId);
+
+          subItems.push({
+            id: itemId,
+            command: item.command,
+            description: item.description,
+            language: item.language,
+            tags: item.tags,
+            isFavorite: item.isFavorite,
+            sectionId,
+            order: iIdx,
+          });
+        });
       });
 
-      // Add sections + items with slight delay for state to settle
-      setTimeout(() => {
-        for (const section of parsed.sections) {
-          addPlaybookSection(playbook.id, section.title || "Untitled");
-        }
+      updatePlaybookContainer(playbook.id, {
+        sections,
+        subItems,
+        variables: (parsed.variables ?? []).map((v) => ({
+          id: prevVars.find((p) => p.name === v.name)?.id ?? newId("var"),
+          name: v.name,
+          value: v.value,
+          description: v.description,
+        })),
+      });
 
-        setTimeout(() => {
-          const current = useStore.getState().playbooks.find((p) => p.id === playbook.id);
-          if (!current) return;
-
-          for (const section of parsed.sections) {
-            const match = (current.sections || []).find((s) => s.title === section.title);
-            if (!match) continue;
-
-            if (section.color) {
-              updatePlaybookSection(playbook.id, match.id, { color: section.color });
-            }
-
-            for (const item of section.items) {
-              addPlaybookItem(playbook.id, {
-                command: item.command,
-                description: item.description,
-                language: item.language,
-                tags: item.tags,
-                isFavorite: item.isFavorite,
-                sectionId: match.id,
-              });
-            }
-          }
-
-          setDirty(false);
-          setSaveStatus("success");
-          setValidationMsg(null);
-          setTimeout(() => setSaveStatus("idle"), 2000);
-        }, 50);
-      }, 50);
+      setDirty(false);
+      setSaveStatus("success");
+      setValidationMsg(null);
+      // Косметический таймер тоста — не связан с состоянием
+      setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
       setValidationMsg(`Parse error: ${(err as Error).message}`);
       setSaveStatus("error");

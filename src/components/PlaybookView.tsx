@@ -8,6 +8,7 @@ import { InlineAddCommand } from "./playbook/InlineAddCommand";
 import { EmptyState } from "./playbook/EmptyStates";
 import { CommandCard, type ViewMode } from "./playbook/CommandCard";
 import { stripMdMetadata, cleanDescription } from "./playbook/utils";
+import { getPhaseTag } from "./playbook/constants";
 import { useChecklist } from "../hooks/useChecklist";
 import { HeroCollapsed } from "./HeroCollapsed";
 import { useHeroState } from "../hooks/useHeroState";
@@ -15,6 +16,8 @@ import { useViewLayout } from "../hooks/useViewLayout";
 import { CommandListItem } from "./playbook/CommandListItem";
 import { ImportExportModal } from "./ImportExportModal";
 import { MarkdownView } from "./playbook/MarkdownView";
+import { generateSectionExport } from "../utils/importExport";
+import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 
 interface Props {
   container: PlaybookContainer;
@@ -22,13 +25,34 @@ interface Props {
 
 type FilterMode = PlaybookLanguage | "all" | "favorites";
 
+// Значение чипа фильтра → фаза из getPhaseTag
+const PHASE_FILTER_TAGS: Record<string, string> = {
+  recon: "RECON",
+  exploit: "EXPLOIT",
+  post: "POST",
+};
+
 export function PlaybookView({ container }: Props) {
-  const { addPlaybookItem, addPlaybookSection, updatePlaybookSection, deletePlaybookSection } =
-    useStore();
+  const {
+    addPlaybookItem,
+    addPlaybookSection,
+    updatePlaybookSection,
+    deletePlaybookSection,
+    reorderPlaybookSections,
+    reorderPlaybookItems,
+  } = useStore();
+
+  // DnD секций (Задача 3.1). Перетаскивание отключено при активных фильтрах:
+  // порядок в отфильтрованном списке не соответствует реальному.
+  const [sectionDrag, setSectionDrag] = useState<{
+    id: string | null;
+    overIndex: number | null;
+  }>({ id: null, overIndex: null });
 
   const [search, setSearch] = useState("");
   const { heroExpanded, toggleHero } = useHeroState();
   const [layout, setLayout] = useViewLayout();
+  const { copy } = useCopyToClipboard();
   const [langFilter, setLangFilter] = useState<FilterMode>("all");
   const [mode, setMode] = useState<ViewMode>("reference");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -88,15 +112,15 @@ export function PlaybookView({ container }: Props) {
     return checklist.status(item.id) === statusFilter;
   };
 
+  // Фильтр фаз опирается на тот же getPhaseTag, что и бейджи, — раньше здесь была
+  // вторая, расходящаяся regex-таблица (напр. «shell» получал бейдж EXPLOIT,
+  // но фильтром «exploit» не находился)
   const matchesPhaseFilter = (item: PlaybookItem): boolean => {
     if (phaseFilter === "all") return true;
     const section = sections.find((s) => s.id === item.sectionId);
     if (!section) return false;
-    const title = section.title.toLowerCase();
-    if (phaseFilter === "recon") return /recon|enum|discover|scan|fingerprint/.test(title);
-    if (phaseFilter === "exploit") return /exploit|attack|vuln|rce/.test(title);
-    if (phaseFilter === "post") return /post|privesc|persist|lateral/.test(title);
-    return true;
+    const expected = PHASE_FILTER_TAGS[phaseFilter];
+    return expected ? getPhaseTag(section.title) === expected : true;
   };
 
   const filterItem = (item: PlaybookItem): boolean => {
@@ -144,6 +168,37 @@ export function PlaybookView({ container }: Props) {
     phaseFilter !== "all" ||
     (mode === "engagement" && statusFilter !== "all");
 
+  // --- DnD секций ---
+  const sectionDragEnabled = !isFiltered;
+
+  const handleSectionDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.effectAllowed = "move";
+    setSectionDrag({ id, overIndex: null });
+  };
+
+  const handleSectionDragOver = (e: React.DragEvent, index: number) => {
+    if (!sectionDrag.id) return;
+    e.preventDefault();
+    setSectionDrag((d) => (d.overIndex === index ? d : { ...d, overIndex: index }));
+  };
+
+  const handleSectionDrop = () => {
+    const { id, overIndex } = sectionDrag;
+    setSectionDrag({ id: null, overIndex: null });
+    if (!id || overIndex === null) return;
+
+    const ordered = [...sections];
+    const from = ordered.findIndex((s) => s.id === id);
+    if (from === -1 || from === overIndex) return;
+
+    const [moved] = ordered.splice(from, 1);
+    ordered.splice(overIndex, 0, moved);
+    reorderPlaybookSections(
+      container.id,
+      ordered.map((s) => s.id),
+    );
+  };
+
   // Handlers
   const handleAddSection = (title: string) => {
     addPlaybookSection(container.id, title);
@@ -178,6 +233,33 @@ export function PlaybookView({ container }: Props) {
 
   const handleDeleteSection = (sectionId: string) => {
     deletePlaybookSection(container.id, sectionId);
+  };
+
+  /**
+   * Экспорт одной секции в markdown (Задача 3.6). Формат тот же, что у полного
+   * экспорта, поэтому файл можно импортировать обратно в режиме append.
+   */
+  const handleExportSection = (sectionId: string, kind: "copy" | "download") => {
+    const md = generateSectionExport(container, sectionId);
+    if (!md) return;
+
+    if (kind === "copy") {
+      copy(md);
+      return;
+    }
+
+    const section = (container.sections || []).find((s) => s.id === sectionId);
+    const slug = (section?.title || "section")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug || "section"}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleExpandAll = () => {
@@ -343,9 +425,28 @@ export function PlaybookView({ container }: Props) {
             )}
 
             {/* Sections */}
-            {filteredSections.map(({ section, items }) => (
-              <div key={section.id} className="space-y-2">
+            {filteredSections.map(({ section, items }, sectionIndex) => (
+              <div
+                key={section.id}
+                className="space-y-2"
+                onDragOver={(e) => sectionDragEnabled && handleSectionDragOver(e, sectionIndex)}
+                onDrop={handleSectionDrop}
+                style={{ opacity: sectionDrag.id === section.id ? 0.5 : 1 }}
+              >
+                {/* Индикатор места вставки */}
+                {sectionDrag.id && sectionDrag.id !== section.id && sectionDrag.overIndex === sectionIndex && (
+                  <div className="h-1 rounded-full bg-cyan-400" />
+                )}
                 <PlaybookSectionCard
+                  onDragStartSection={
+                    sectionDragEnabled ? (e) => handleSectionDragStart(e, section.id) : undefined
+                  }
+                  onDragEndSection={() => setSectionDrag({ id: null, overIndex: null })}
+                  onReorderItems={
+                    sectionDragEnabled
+                      ? (itemIds) => reorderPlaybookItems(container.id, itemIds)
+                      : undefined
+                  }
                   section={section}
                   items={items}
                   containerId={container.id}
@@ -359,6 +460,7 @@ export function PlaybookView({ container }: Props) {
                   onDeleteSection={() => handleDeleteSection(section.id)}
                   onColorSection={(color) => handleColorSection(section.id, color)}
                   onAddItem={() => setAddingToSection(section.id)}
+                  onExportSection={(kind) => handleExportSection(section.id, kind)}
                 />
 
                 {/* Inline add command to this section */}
@@ -392,7 +494,6 @@ export function PlaybookView({ container }: Props) {
                           variables={variables}
                           checklistStatus={checklist.status(item.id)}
                           onChecklistCycle={() => checklist.cycle(item.id)}
-                          onEdit={() => {}}
                         />
                       ))}
                   </div>

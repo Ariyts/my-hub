@@ -76,6 +76,17 @@ export function getServiceIcon(title: string): string {
 }
 
 // Short "phase" tag derived from section title — helps visual scanning
+// Цвета фаз атаки — единая шкала для бейджей и акцентов секций (Задача 3.4)
+export const PHASE_COLORS: Record<string, string> = {
+  RECON: "#3b82f6", // синий — разведка
+  FUZZ: "#eab308", // жёлтый — перебор/фаззинг
+  EXPLOIT: "#ef4444", // красный — эксплуатация
+  POST: "#a855f7", // фиолетовый — пост-эксплуатация
+  PIVOT: "#14b8a6", // бирюзовый — продвижение
+  "WRAP-UP": "#64748b", // серый — завершение
+};
+
+/** Единственный источник определения фазы по названию секции. */
 export function getPhaseTag(title: string): string | null {
   const t = title.toLowerCase();
   if (/recon|enum|discover|scan/.test(t)) return "RECON";

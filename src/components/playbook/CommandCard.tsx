@@ -1,16 +1,23 @@
-import { useState, useRef, useEffect } from "react";
-import { Copy, Check, Edit3, Trash2, Star, Circle, CheckCircle2, XCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  Copy,
+  Check,
+  Edit3,
+  Trash2,
+  Star,
+  Circle,
+  CheckCircle2,
+  XCircle,
+  FileCode,
+} from "lucide-react";
 import { cn } from "../../utils/cn";
 import { useStore } from "../../store";
-import type {
-  PlaybookItem,
-  PlaybookLanguage,
-  PlaybookVariable,
-  ChecklistStatus,
-} from "../../types";
-import { LANG_COLORS, LANG_LABELS, PLAYBOOK_LANGUAGES } from "./constants";
+import type { PlaybookItem, PlaybookVariable, ChecklistStatus } from "../../types";
+import { LANG_COLORS, LANG_LABELS } from "./constants";
 import { stripMdMetadata, cleanDescription, highlightSyntax } from "./utils";
 import { highlightRendered } from "./variables";
+import { CommandEditForm } from "./CommandEditForm";
+import { generateItemExport } from "../../utils/importExport";
 
 export type ViewMode = "reference" | "engagement";
 
@@ -36,12 +43,6 @@ export function CommandCard({
   const [copied, setCopied] = useState(false);
   const [copiedFlash, setCopiedFlash] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState({ ...item });
-  const editCmdRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (editing) editCmdRef.current?.focus();
-  }, [editing]);
 
   const template = stripMdMetadata(item.command);
   const description = cleanDescription(item.description);
@@ -49,8 +50,11 @@ export function CommandCard({
   const langLabel = LANG_LABELS[item.language] || item.language.toUpperCase();
 
   // Render command: substitute variables in engagement mode
+  // Подстановка считается всегда (а не только в engagement) — в reference-режиме
+  // она нужна для кнопки «Resolved», чтобы быстро скопировать готовую команду
+  // с подставленными $VAR, не запуская чеклист (Задача 3.3)
   const getRenderedText = (): string => {
-    if (mode !== "engagement" || variables.length === 0) return template;
+    if (variables.length === 0) return template;
     let out = template;
     for (const v of variables) {
       if (!v.value) continue;
@@ -86,26 +90,6 @@ export function CommandCard({
     setTimeout(() => setCopiedFlash(false), 500);
   };
 
-  const handleSave = () => {
-    if (!editData.command.trim()) return;
-    updatePlaybookItem(containerId, item.id, editData);
-    setEditing(false);
-  };
-
-  const handleCancelEdit = () => {
-    setEditData({ ...item });
-    setEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancelEdit();
-    }
-  };
-
   const isDone = checklistStatus === "done";
   const isSkipped = checklistStatus === "skipped";
   const dimmed = isDone || isSkipped;
@@ -113,71 +97,7 @@ export function CommandCard({
   // ---------------- EDIT MODE ----------------
   if (editing) {
     return (
-      <div className="animate-in space-y-2 rounded-xl border border-cyan-400/40 bg-slate-900/60 p-3 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <select
-            className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-[11px] text-slate-200 outline-none focus:border-cyan-400"
-            value={editData.language}
-            onChange={(e) =>
-              setEditData({ ...editData, language: e.target.value as PlaybookLanguage })
-            }
-          >
-            {PLAYBOOK_LANGUAGES.map((l) => (
-              <option key={l} value={l}>
-                {LANG_LABELS[l]}
-              </option>
-            ))}
-          </select>
-          <input
-            ref={editCmdRef}
-            className="flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-xs text-slate-100 outline-none focus:border-cyan-400"
-            value={editData.command}
-            onChange={(e) => setEditData({ ...editData, command: e.target.value })}
-            onKeyDown={handleKeyDown}
-            placeholder="command (use $VAR for context variables)..."
-          />
-        </div>
-        <input
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-cyan-400"
-          value={editData.description}
-          onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-          placeholder="description..."
-          onKeyDown={handleKeyDown}
-        />
-        <input
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-cyan-400"
-          value={editData.tags.join(", ")}
-          onChange={(e) =>
-            setEditData({
-              ...editData,
-              tags: e.target.value
-                .split(",")
-                .map((t) => t.trim())
-                .filter(Boolean),
-            })
-          }
-          placeholder="tags (comma separated)..."
-          onKeyDown={handleKeyDown}
-        />
-        <div className="flex items-center justify-end gap-2">
-          <span className="mr-auto text-[10px] text-slate-500">
-            ⌘/Ctrl + Enter to save · Esc to cancel
-          </span>
-          <button
-            onClick={handleCancelEdit}
-            className="rounded-md px-2.5 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-800"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!editData.command.trim()}
-            className="rounded-md bg-cyan-500/20 px-2.5 py-1 text-xs font-medium text-cyan-300 transition-colors hover:bg-cyan-500/30 disabled:opacity-40"
-          >
-            Save
-          </button>
-        </div>
-      </div>
+      <CommandEditForm item={item} containerId={containerId} onDone={() => setEditing(false)} />
     );
   }
 
@@ -353,6 +273,17 @@ export function CommandCard({
                 Template
               </button>
             )}
+            {/* Reference mode: быстро скопировать команду с подставленными $VAR */}
+            {mode !== "engagement" && renderedText !== template && (
+              <button
+                onClick={() => handleCopy(renderedText)}
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-cyan-400 transition-colors hover:bg-cyan-500/15 hover:text-cyan-300"
+                title={`Copy with variables substituted:\n${renderedText}`}
+              >
+                <Copy size={11} />
+                Resolved
+              </button>
+            )}
             <button
               onClick={() => handleCopy()}
               className={cn(
@@ -364,6 +295,14 @@ export function CommandCard({
             >
               {copied ? <Check size={11} /> : <Copy size={11} />}
               {copied ? "Copied" : mode === "engagement" ? "Copy Resolved" : "Copy"}
+            </button>
+            {/* Экспорт команды как markdown-фрагмента: язык, описание, теги (Задача 3.6) */}
+            <button
+              onClick={() => handleCopy(generateItemExport(item))}
+              className="rounded-md px-1.5 py-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+              title="Copy as Markdown (with description and tags)"
+            >
+              <FileCode size={11} />
             </button>
             <button
               onClick={() => setEditing(true)}

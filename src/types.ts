@@ -189,6 +189,9 @@ export interface PlaybookItem {
   isFavorite: boolean;
   sectionId?: string; // ID секции, к которой принадлежит команда
   order: number;
+  /** Прогресс чеклиста (engagement mode). Хранится на команде, чтобы
+   *  синхронизироваться через GitHub, а не только в localStorage. */
+  status?: ChecklistStatus;
 }
 
 // Секция плейбука (категория внутри файла)

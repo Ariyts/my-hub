@@ -20,6 +20,15 @@ import {
 } from "lucide-react";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
+// Человекочитаемые имена для новых категорий (иначе выходило «New playbooks»)
+const BASE_TYPE_NAMES: Record<BaseDataType, string> = {
+  notes: "Notes",
+  commands: "Commands",
+  links: "Links",
+  prompts: "Prompts",
+  playbooks: "Playbooks",
+};
+
 const BASE_TYPE_OPTIONS: { value: BaseDataType; label: string }[] = [
   { value: "notes", label: "Notes (text content)" },
   { value: "commands", label: "Commands (code snippets)" },
@@ -123,7 +132,7 @@ export function Sidebar() {
   const handleAddCategory = (baseType: BaseDataType) => {
     addCategory({
       workspaceId: activeWorkspaceId!,
-      name: `New ${baseType}`,
+      name: BASE_TYPE_NAMES[baseType],
       icon: "📁",
       color: "#6366f1",
       baseType,

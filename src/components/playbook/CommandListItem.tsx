@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Copy, Check, Edit3, Trash2, Star } from "lucide-react";
+import { Copy, Check, Edit3, Trash2, Star, Braces } from "lucide-react";
 import { cn } from "../../utils/cn";
 import { useStore } from "../../store";
 import type { PlaybookItem, PlaybookVariable, ChecklistStatus } from "../../types";
 import { LANG_COLORS, LANG_LABELS } from "./constants";
 import { stripMdMetadata } from "./utils";
+import { CommandEditForm } from "./CommandEditForm";
 
 interface Props {
   item: PlaybookItem;
@@ -13,7 +14,6 @@ interface Props {
   variables: PlaybookVariable[];
   checklistStatus: ChecklistStatus;
   onChecklistCycle: () => void;
-  onEdit: () => void;
 }
 
 /**
@@ -27,11 +27,11 @@ export function CommandListItem({
   variables,
   checklistStatus,
   onChecklistCycle,
-  onEdit,
 }: Props) {
   const { updatePlaybookItem, deletePlaybookItem } = useStore();
   const [copied, setCopied] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   // Clean markdown metadata from display
   const template = stripMdMetadata(item.command);
@@ -39,8 +39,10 @@ export function CommandListItem({
   const langLabel = LANG_LABELS[item.language] || item.language.toUpperCase().slice(0, 2);
 
   // Render command: substitute variables in engagement mode
+  // Считаем подстановку всегда — в reference-режиме нужна для быстрого
+  // копирования готовой команды с $VAR (Задача 3.3)
   const getRenderedText = (): string => {
-    if (mode !== "engagement" || variables.length === 0) return template;
+    if (variables.length === 0) return template;
     let out = template;
     for (const v of variables) {
       if (!v.value) continue;
@@ -53,11 +55,11 @@ export function CommandListItem({
   const renderedText = getRenderedText();
   const copyText = mode === "engagement" ? renderedText : template;
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = (e: React.MouseEvent, text: string = copyText) => {
     e.stopPropagation();
-    navigator.clipboard?.writeText(copyText).catch(() => {
+    navigator.clipboard?.writeText(text).catch(() => {
       const ta = document.createElement("textarea");
-      ta.value = copyText;
+      ta.value = text;
       ta.style.position = "fixed";
       ta.style.opacity = "0";
       document.body.appendChild(ta);
@@ -75,6 +77,18 @@ export function CommandListItem({
 
   const isDone = checklistStatus === "done";
   const isSkipped = checklistStatus === "skipped";
+
+  if (editing) {
+    return (
+      <div className="p-2">
+        <CommandEditForm
+          item={item}
+          containerId={containerId}
+          onDone={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -180,6 +194,16 @@ export function CommandListItem({
           hovered ? "opacity-100" : "opacity-0",
         )}
       >
+        {/* Reference mode: копия с подставленными $VAR (Задача 3.3) */}
+        {mode !== "engagement" && renderedText !== template && (
+          <button
+            onClick={(e) => handleCopy(e, renderedText)}
+            className="rounded p-1 text-cyan-500 transition-colors hover:bg-cyan-500/15 hover:text-cyan-300"
+            title={`Copy with variables substituted:\n${renderedText}`}
+          >
+            <Braces size={11} />
+          </button>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -198,7 +222,7 @@ export function CommandListItem({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onEdit();
+            setEditing(true);
           }}
           className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-cyan-300"
           title="Edit"

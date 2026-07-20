@@ -1,29 +1,16 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useStore } from "../store";
 import type { ChecklistStatus } from "../types";
 
-type ChecklistMap = Record<string, ChecklistStatus>;
+// ============================================
+// useChecklist (Задача 3.5)
+// ============================================
+// Прогресс чеклиста хранится на самих командах (PlaybookItem.status), поэтому
+// он персистится вместе с данными и уезжает в GitHub — раньше он жил только в
+// localStorage (`pb:checklist:<id>`) и терялся между устройствами/при очистке кэша.
+// Старые данные из localStorage переносятся один раз при первом открытии.
 
-const STORAGE_PREFIX = "pb:checklist:";
-
-function readFromStorage(playbookId: string): ChecklistMap {
-  try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + playbookId);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object") return parsed as ChecklistMap;
-    return {};
-  } catch {
-    return {};
-  }
-}
-
-function writeToStorage(playbookId: string, map: ChecklistMap) {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + playbookId, JSON.stringify(map));
-  } catch {
-    /* ignore quota errors */
-  }
-}
+const LEGACY_PREFIX = "pb:checklist:";
 
 export interface ChecklistApi {
   status: (itemId: string) => ChecklistStatus;
@@ -35,68 +22,77 @@ export interface ChecklistApi {
 }
 
 export function useChecklist(playbookId: string, itemIds: string[]): ChecklistApi {
-  const [map, setMap] = useState<ChecklistMap>(() => readFromStorage(playbookId));
+  const playbook = useStore((s) => s.playbooks.find((p) => p.id === playbookId));
+  const updatePlaybookItem = useStore((s) => s.updatePlaybookItem);
+  const resetPlaybookChecklist = useStore((s) => s.resetPlaybookChecklist);
+  const setPlaybookChecklist = useStore((s) => s.setPlaybookChecklist);
 
-  // Persist on change
+  // Разовая миграция прежнего прогресса из localStorage
   useEffect(() => {
-    writeToStorage(playbookId, map);
-  }, [playbookId, map]);
+    const key = LEGACY_PREFIX + playbookId;
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(key);
+    } catch {
+      return;
+    }
+    if (!raw) return;
 
-  // Reset if playbook changes
-  useEffect(() => {
-    setMap(readFromStorage(playbookId));
-  }, [playbookId]);
-
-  const status = useCallback((itemId: string): ChecklistStatus => map[itemId] || "pending", [map]);
-
-  const setStatus = useCallback((itemId: string, s: ChecklistStatus) => {
-    setMap((prev) => {
-      if (s === "pending") {
-        const { [itemId]: _removed, ...rest } = prev;
-        return rest;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+        setPlaybookChecklist(playbookId, parsed as Record<string, ChecklistStatus>);
       }
-      return { ...prev, [itemId]: s };
-    });
-  }, []);
+    } catch {
+      /* повреждённые данные просто отбрасываем */
+    }
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  }, [playbookId, setPlaybookChecklist]);
 
-  const toggle = useCallback((itemId: string) => {
-    setMap((prev) => {
-      const cur = prev[itemId];
-      if (cur === "done") {
-        const { [itemId]: _removed, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [itemId]: "done" };
-    });
-  }, []);
+  const status = useCallback(
+    (itemId: string): ChecklistStatus =>
+      playbook?.subItems.find((i) => i.id === itemId)?.status || "pending",
+    [playbook],
+  );
 
-  const cycle = useCallback((itemId: string) => {
-    setMap((prev) => {
-      const cur: ChecklistStatus = prev[itemId] || "pending";
+  const setStatus = useCallback(
+    (itemId: string, s: ChecklistStatus) => {
+      updatePlaybookItem(playbookId, itemId, { status: s === "pending" ? undefined : s });
+    },
+    [playbookId, updatePlaybookItem],
+  );
+
+  const toggle = useCallback(
+    (itemId: string) => {
+      const cur = status(itemId);
+      setStatus(itemId, cur === "done" ? "pending" : "done");
+    },
+    [status, setStatus],
+  );
+
+  const cycle = useCallback(
+    (itemId: string) => {
+      const cur = status(itemId);
       const next: ChecklistStatus =
         cur === "pending" ? "done" : cur === "done" ? "skipped" : "pending";
-      if (next === "pending") {
-        const { [itemId]: _removed, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [itemId]: next };
-    });
-  }, []);
+      setStatus(itemId, next);
+    },
+    [status, setStatus],
+  );
 
   const reset = useCallback(() => {
-    setMap({});
-    try {
-      localStorage.removeItem(STORAGE_PREFIX + playbookId);
-    } catch {
-      /* */
-    }
-  }, [playbookId]);
+    resetPlaybookChecklist(playbookId);
+  }, [playbookId, resetPlaybookChecklist]);
 
   const counts = {
     total: itemIds.length,
-    done: itemIds.filter((id) => map[id] === "done").length,
-    skipped: itemIds.filter((id) => map[id] === "skipped").length,
-    pending: itemIds.filter((id) => !map[id] || map[id] === "pending").length,
+    done: itemIds.filter((id) => status(id) === "done").length,
+    skipped: itemIds.filter((id) => status(id) === "skipped").length,
+    pending: itemIds.filter((id) => status(id) === "pending").length,
   };
 
   return { status, setStatus, toggle, cycle, reset, counts };

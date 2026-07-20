@@ -450,6 +450,8 @@ function parsePlaybooksWithSectionsFromBody(body) {
         tags: cmdMeta.tags || (tagsMatch ? tagsMatch[1].split(",").map((v) => v.trim()) : []),
         isFavorite: cmdMeta.isFavorite ?? false,
         sectionId: itemSectionId,
+        // Прогресс чеклиста (Задача 3.5); pending не сохраняется
+        ...(cmdMeta.status ? { status: cmdMeta.status } : {}),
       };
 
       subItems.push(cmdItem);

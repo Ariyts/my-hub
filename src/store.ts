@@ -20,6 +20,7 @@ import type {
   Settings,
   AnyItem,
   TrashItem,
+  ChecklistStatus,
 } from "./types";
 import { initializeGitHubSync, saveToGitHub } from "./utils/githubSync";
 import { debug } from "./utils/debug";
@@ -143,6 +144,11 @@ interface StoreActions {
   ) => void;
   deletePlaybookSection: (containerId: string, sectionId: string) => void;
   reorderPlaybookSections: (containerId: string, sectionIds: string[]) => void;
+  reorderPlaybookItems: (containerId: string, itemIds: string[]) => void;
+  /** Сброс прогресса чеклиста плейбука (снимает status со всех команд). */
+  resetPlaybookChecklist: (containerId: string) => void;
+  /** Массовая простановка статусов (используется при миграции из localStorage). */
+  setPlaybookChecklist: (containerId: string, statuses: Record<string, ChecklistStatus>) => void;
 
   // Playbook variable actions
   addPlaybookVariable: (
@@ -1194,6 +1200,63 @@ export const useStore = create<AppState & StoreActions>()(
                   order: sectionIds.indexOf(sec.id),
                 }))
                 .sort((a, b) => a.order - b.order),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
+
+      // Переупорядочивание команд (Задача 3.1). Отображение берёт порядок из
+      // массива subItems, поэтому переставляем именно его: позиции, занятые
+      // элементами группы, заполняем в новом порядке; остальные не трогаем.
+      // Поле order актуализируем, чтобы порядок пережил round-trip через .md.
+      reorderPlaybookItems: (containerId, itemIds) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) => {
+            if (pb.id !== containerId) return pb;
+            const idSet = new Set(itemIds);
+            const byId = new Map(pb.subItems.map((i) => [i.id, i]));
+            const reordered = itemIds
+              .map((id, idx) => {
+                const it = byId.get(id);
+                return it ? { ...it, order: idx } : null;
+              })
+              .filter((i): i is PlaybookItem => i !== null);
+            let k = 0;
+            return {
+              ...pb,
+              subItems: pb.subItems.map((it) => (idSet.has(it.id) ? reordered[k++] : it)),
+              updatedAt: new Date().toISOString(),
+            };
+          }),
+        })),
+
+      resetPlaybookChecklist: (containerId) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) =>
+            pb.id === containerId
+              ? {
+                  ...pb,
+                  subItems: pb.subItems.map(({ status: _drop, ...rest }) => rest),
+                  updatedAt: new Date().toISOString(),
+                }
+              : pb,
+          ),
+        })),
+
+      setPlaybookChecklist: (containerId, statuses) =>
+        set((s) => ({
+          playbooks: s.playbooks.map((pb) => {
+            if (pb.id !== containerId) return pb;
+            return {
+              ...pb,
+              subItems: pb.subItems.map((it) => {
+                const st = statuses[it.id];
+                if (!st || st === "pending") {
+                  const { status: _drop, ...rest } = it;
+                  return rest;
+                }
+                return { ...it, status: st };
+              }),
               updatedAt: new Date().toISOString(),
             };
           }),

@@ -8,9 +8,15 @@ import {
   FileText,
   AlertCircle,
   CheckCircle2,
+  LayoutTemplate,
 } from "lucide-react";
 import { useStore } from "../store";
-import type { PlaybookContainer } from "../types";
+import type {
+  PlaybookContainer,
+  PlaybookSection,
+  PlaybookItem,
+  PlaybookVariable,
+} from "../types";
 import {
   generateMarkdownTemplate,
   generateFullExport,
@@ -19,8 +25,9 @@ import {
   type ParsedPlaybook,
   type ValidationResult,
 } from "../utils/importExport";
+import { PLAYBOOK_TEMPLATES, type PlaybookTemplate } from "../utils/playbookTemplates";
 
-type Tab = "template" | "import" | "export";
+type Tab = "templates" | "template" | "import" | "export";
 type MergeMode = "append" | "replace";
 
 interface Props {
@@ -35,6 +42,9 @@ export function ImportExportModal({ playbook, onClose }: Props) {
   const [copied, setCopied] = useState(false);
   const [importResult, setImportResult] = useState<ValidationResult | null>(null);
   const [imported, setImported] = useState(false);
+  // Templates (Задача 3.7)
+  const [selectedTemplate, setSelectedTemplate] = useState<PlaybookTemplate | null>(null);
+  const [templateApplied, setTemplateApplied] = useState(false);
 
   const template = generateMarkdownTemplate(playbook.title);
   const fullExport = generateFullExport(playbook);
@@ -115,6 +125,26 @@ export function ImportExportModal({ playbook, onClose }: Props) {
     }
   };
 
+  /**
+   * Применение встроенного шаблона (Задача 3.7). Шаблон — markdown того же
+   * формата, что импорт, поэтому используем ту же пару autoDetect + applyParsed.
+   * В непустой плейбук просим подтверждение перед replace, чтобы не затереть.
+   */
+  const handleApplyTemplate = (mode: MergeMode) => {
+    if (!selectedTemplate) return;
+    const hasContent = (playbook.sections?.length || 0) > 0 || (playbook.subItems?.length || 0) > 0;
+    if (mode === "replace" && hasContent) {
+      if (!confirm(`Replace all content of "${playbook.title}" with this template?`)) return;
+    }
+    try {
+      const parsed = autoDetect(selectedTemplate.markdown);
+      applyParsed(parsed, playbook, mode);
+      setTemplateApplied(true);
+    } catch (err) {
+      alert(`Failed to apply template: ${(err as Error).message}`);
+    }
+  };
+
   return (
     <div
       className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
@@ -142,6 +172,12 @@ export function ImportExportModal({ playbook, onClose }: Props) {
         {/* Tabs */}
         <div className="flex gap-1 border-b border-slate-800 bg-slate-950/40 px-5 py-2">
           <TabButton
+            active={activeTab === "templates"}
+            onClick={() => setActiveTab("templates")}
+            icon={<LayoutTemplate size={12} />}
+            label="Templates"
+          />
+          <TabButton
             active={activeTab === "template"}
             onClick={() => setActiveTab("template")}
             icon={<Copy size={12} />}
@@ -163,6 +199,104 @@ export function ImportExportModal({ playbook, onClose }: Props) {
 
         {/* Content */}
         <div className="flex flex-1 flex-col overflow-hidden">
+          {/* =========== TEMPLATES TAB (Задача 3.7) =========== */}
+          {activeTab === "templates" && (
+            <div className="flex-1 overflow-auto p-5">
+              {!selectedTemplate ? (
+                <div className="space-y-3">
+                  <div className="text-xs text-slate-400">
+                    Готовые заготовки с секциями, командами и переменными — быстрый старт
+                    вместо пустого плейбука.
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {PLAYBOOK_TEMPLATES.map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        onClick={() => {
+                          setSelectedTemplate(tpl);
+                          setTemplateApplied(false);
+                        }}
+                        className="group flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-left transition-colors hover:border-cyan-500/40 hover:bg-slate-800/40"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{tpl.icon}</span>
+                          <span className="text-sm font-semibold text-slate-100 group-hover:text-cyan-200">
+                            {tpl.title}
+                          </span>
+                        </div>
+                        <p className="text-[11px] leading-snug text-slate-400">{tpl.description}</p>
+                        <div className="mt-auto flex items-center gap-3 text-[10px] text-slate-500">
+                          <span>
+                            <b className="text-slate-300">{tpl.sections}</b> секций
+                          </span>
+                          <span>
+                            <b className="text-slate-300">{tpl.commands}</b> команд
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedTemplate(null);
+                        setTemplateApplied(false);
+                      }}
+                      className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-slate-700"
+                    >
+                      ← Все шаблоны
+                    </button>
+                    <span className="text-lg">{selectedTemplate.icon}</span>
+                    <span className="text-sm font-semibold text-slate-100">
+                      {selectedTemplate.title}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => handleApplyTemplate("append")}
+                      disabled={templateApplied}
+                      className="flex items-center gap-1.5 rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {templateApplied ? <CheckCircle2 size={12} /> : <Upload size={12} />}
+                      {templateApplied ? "Добавлено!" : "Добавить к плейбуку"}
+                    </button>
+                    <button
+                      onClick={() => handleApplyTemplate("replace")}
+                      disabled={templateApplied}
+                      className="flex items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <AlertCircle size={12} />
+                      Заменить содержимое
+                    </button>
+                    {templateApplied && (
+                      <button
+                        onClick={onClose}
+                        className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                      >
+                        Готово — закрыть
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="text-[11px] text-slate-500">
+                    «Добавить» дописывает секции к текущему плейбуку (совпадающие по названию
+                    объединяются), «Заменить» — очищает и ставит только шаблон.
+                  </div>
+
+                  <textarea
+                    value={selectedTemplate.markdown}
+                    readOnly
+                    className="h-[45vh] w-full resize-none rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-200 outline-none"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {/* =========== TEMPLATE TAB =========== */}
           {activeTab === "template" && (
             <div className="flex-1 space-y-3 overflow-auto p-5">
@@ -424,59 +558,86 @@ function TabButton({
 // APPLY PARSED DATA TO STORE
 // ============================================================================
 
+/**
+ * Собирает итоговое состояние плейбука и пишет его ОДНИМ атомарным апдейтом.
+ *
+ * Раньше здесь на каждую секцию заводился setTimeout(10), внутри которого
+ * состояние перечитывалось и секция искалась по заголовку (бралась последняя
+ * совпавшая) — потому что addPlaybookSection не возвращает id. При нескольких
+ * секциях это гонка: таймеры срабатывают вперемешку, команды могли уехать не в
+ * ту секцию. Теперь id генерируются заранее, и никаких таймеров не нужно.
+ */
 function applyParsed(parsed: ParsedPlaybook, playbook: PlaybookContainer, mode: MergeMode) {
   const store = useStore.getState();
+  const newId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+  const replace = mode === "replace";
 
-  // Replace mode: clear all existing sections and items
-  if (mode === "replace") {
-    store.updatePlaybookContainer(playbook.id, {
-      sections: [],
-      subItems: [],
-      variables: [],
-    });
+  // В replace начинаем с чистого листа, в append — с текущего содержимого
+  const sections: PlaybookSection[] = replace
+    ? []
+    : (playbook.sections || []).map((s) => ({ ...s }));
+  const subItems: PlaybookItem[] = replace ? [] : (playbook.subItems || []).map((i) => ({ ...i }));
+  const variables: PlaybookVariable[] = replace
+    ? []
+    : (playbook.variables || []).map((v) => ({ ...v }));
+
+  // Счётчики порядка команд по секциям
+  const orderBySection = new Map<string, number>();
+  for (const it of subItems) {
+    const key = it.sectionId ?? "";
+    orderBySection.set(key, Math.max(orderBySection.get(key) ?? 0, (it.order ?? 0) + 1));
   }
 
-  // Add variables
-  if (parsed.variables) {
-    for (const v of parsed.variables) {
-      store.addPlaybookVariable(playbook.id, v.name, v.value, v.description);
+  // Переменные: по имени — обновляем существующую, иначе добавляем
+  for (const v of parsed.variables ?? []) {
+    const idx = variables.findIndex((x) => x.name === v.name);
+    if (idx >= 0) {
+      variables[idx] = { ...variables[idx], value: v.value, description: v.description };
+    } else {
+      variables.push({
+        id: newId("var"),
+        name: v.name,
+        value: v.value,
+        description: v.description,
+      });
     }
   }
 
-  // Add sections and items
+  // Секции и команды
   for (const section of parsed.sections) {
-    store.addPlaybookSection(playbook.id, section.title || "Untitled Section");
+    const title = section.title || "Untitled Section";
 
-    // addPlaybookSection doesn't return the section ID.
-    // We use a setTimeout to read the latest state and find the newly created section.
-    const sectionTitle = section.title || "Untitled Section";
-    const itemsToAdd = section.items;
-    const sectionColor = section.color;
+    let targetId: string;
+    const existingIdx = sections.findIndex((s) => s.title === title);
+    if (existingIdx >= 0) {
+      targetId = sections[existingIdx].id;
+      if (section.color) sections[existingIdx] = { ...sections[existingIdx], color: section.color };
+    } else {
+      targetId = newId("sec");
+      sections.push({
+        id: targetId,
+        title,
+        order: sections.length,
+        collapsed: false,
+        color: section.color,
+      });
+    }
 
-    setTimeout(() => {
-      const currentPlaybook = useStore.getState().playbooks.find((p) => p.id === playbook.id);
-      if (!currentPlaybook) return;
-      // Find the most recently created section with this title
-      const matchingSections = (currentPlaybook.sections || []).filter(
-        (s) => s.title === sectionTitle,
-      );
-      const targetSection = matchingSections[matchingSections.length - 1];
-
-      for (const item of itemsToAdd) {
-        store.addPlaybookItem(playbook.id, {
-          command: item.command,
-          description: item.description,
-          language: item.language,
-          tags: item.tags,
-          isFavorite: item.isFavorite,
-          sectionId: targetSection?.id,
-        });
-      }
-
-      // Apply color if specified
-      if (sectionColor && targetSection) {
-        store.updatePlaybookSection(playbook.id, targetSection.id, { color: sectionColor });
-      }
-    }, 10);
+    for (const item of section.items) {
+      const order = orderBySection.get(targetId) ?? 0;
+      orderBySection.set(targetId, order + 1);
+      subItems.push({
+        id: newId("cmd"),
+        command: item.command,
+        description: item.description,
+        language: item.language,
+        tags: item.tags,
+        isFavorite: item.isFavorite,
+        sectionId: targetId,
+        order,
+      });
+    }
   }
+
+  store.updatePlaybookContainer(playbook.id, { sections, subItems, variables });
 }

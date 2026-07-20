@@ -612,6 +612,8 @@ export function createPlaybookFileWithSections(container: PlaybookContainer): st
       if (item.sectionId) cmdMeta.sectionId = item.sectionId;
       if (item.isFavorite) cmdMeta.isFavorite = true;
       if (item.tags && item.tags.length > 0) cmdMeta.tags = item.tags;
+      // Прогресс чеклиста едет вместе с командой (Задача 3.5)
+      if (item.status && item.status !== "pending") cmdMeta.status = item.status;
       lines.push(`<!-- cmd: ${JSON.stringify(cmdMeta)} -->`);
       lines.push("");
     }
@@ -633,6 +635,8 @@ export function createPlaybookFileWithSections(container: PlaybookContainer): st
       const cmdMeta: Record<string, unknown> = { id: item.id, language: item.language };
       if (item.isFavorite) cmdMeta.isFavorite = true;
       if (item.tags && item.tags.length > 0) cmdMeta.tags = item.tags;
+      // Прогресс чеклиста едет вместе с командой (Задача 3.5)
+      if (item.status && item.status !== "pending") cmdMeta.status = item.status;
       lines.push(`<!-- cmd: ${JSON.stringify(cmdMeta)} -->`);
       lines.push("");
     }

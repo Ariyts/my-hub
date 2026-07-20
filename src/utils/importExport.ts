@@ -1,4 +1,9 @@
-import type { PlaybookContainer, PlaybookLanguage } from "../types";
+import type {
+  PlaybookContainer,
+  PlaybookItem,
+  PlaybookLanguage,
+  PlaybookVariable,
+} from "../types";
 
 /**
  * Markdown Import/Export utilities.
@@ -64,21 +69,94 @@ Privilege escalation and persistence.
 `;
 }
 
+/** Одна команда в markdown-формате (тот же, что понимает импорт). */
+function pushItem(lines: string[], item: PlaybookItem): void {
+  if (item.description) {
+    lines.push(item.description);
+    lines.push("");
+  }
+  lines.push("```" + (item.language || "bash"));
+  lines.push(item.command);
+  lines.push("```");
+  if (item.tags && item.tags.length > 0) {
+    lines.push("Tags: " + item.tags.map((t) => "#" + t).join(", "));
+  }
+  if (item.isFavorite) {
+    lines.push("Favorite: true");
+  }
+  lines.push("");
+}
+
+/** Блок переменных `<!-- Variables: ... -->`. */
+function pushVariables(lines: string[], variables: PlaybookVariable[]): void {
+  if (variables.length === 0) return;
+  lines.push("<!-- Variables:");
+  for (const v of variables) {
+    const desc = v.description ? ` — ${v.description}` : "";
+    lines.push(`  $${v.name} = ${v.value}${desc}`);
+  }
+  lines.push("-->");
+  lines.push("");
+}
+
+/** Команды секции в порядке отображения. */
+function itemsOfSection(playbook: PlaybookContainer, sectionId: string): PlaybookItem[] {
+  return playbook.subItems
+    .filter((i) => i.sectionId === sectionId)
+    .sort((a, b) => a.order - b.order);
+}
+
+/**
+ * Экспорт одной секции — самодостаточный markdown, который можно
+ * импортировать обратно (в режиме append) как отдельную секцию (Задача 3.6).
+ * Переменные включаются только те, что реально встречаются в командах секции.
+ */
+export function generateSectionExport(
+  playbook: PlaybookContainer,
+  sectionId: string,
+): string {
+  const section = (playbook.sections || []).find((s) => s.id === sectionId);
+  if (!section) return "";
+
+  const items = itemsOfSection(playbook, sectionId);
+  const lines: string[] = [];
+  lines.push(`# Playbook: ${playbook.title} — ${section.title}`);
+  lines.push("");
+
+  const haystack = items.map((i) => i.command).join("\n");
+  const used = (playbook.variables || []).filter((v) =>
+    new RegExp(`\\$\\{${v.name}\\}|\\$${v.name}\\b`).test(haystack),
+  );
+  pushVariables(lines, used);
+
+  lines.push(`## ${section.title}`);
+  if (section.color) lines.push(`<!-- color: ${section.color} -->`);
+  lines.push("");
+
+  if (items.length === 0) {
+    lines.push("_Empty section._");
+    lines.push("");
+  } else {
+    for (const item of items) pushItem(lines, item);
+  }
+
+  return lines.join("\n");
+}
+
+/** Экспорт одной команды как markdown-фрагмента (вставить в заметку/чат). */
+export function generateItemExport(item: PlaybookItem): string {
+  const lines: string[] = [];
+  pushItem(lines, item);
+  return lines.join("\n").trimEnd();
+}
+
 export function generateFullExport(playbook: PlaybookContainer): string {
   const lines: string[] = [];
   lines.push(`# Playbook: ${playbook.title}`);
   lines.push("");
 
   // Variables (if any)
-  if (playbook.variables && playbook.variables.length > 0) {
-    lines.push("<!-- Variables:");
-    for (const v of playbook.variables) {
-      const desc = v.description ? ` — ${v.description}` : "";
-      lines.push(`  $${v.name} = ${v.value}${desc}`);
-    }
-    lines.push("-->");
-    lines.push("");
-  }
+  pushVariables(lines, playbook.variables || []);
 
   // Sections
   const sections = [...(playbook.sections || [])].sort((a, b) => a.order - b.order);
@@ -95,9 +173,7 @@ export function generateFullExport(playbook: PlaybookContainer): string {
     }
     lines.push("");
 
-    const items = playbook.subItems
-      .filter((i) => i.sectionId === section.id)
-      .sort((a, b) => a.order - b.order);
+    const items = itemsOfSection(playbook, section.id);
 
     if (items.length === 0) {
       lines.push("_Empty section._");
@@ -105,23 +181,7 @@ export function generateFullExport(playbook: PlaybookContainer): string {
       continue;
     }
 
-    for (const item of items) {
-      if (item.description) {
-        lines.push(item.description);
-        lines.push("");
-      }
-      const lang = item.language || "bash";
-      lines.push("```" + lang);
-      lines.push(item.command);
-      lines.push("```");
-      if (item.tags && item.tags.length > 0) {
-        lines.push("Tags: " + item.tags.map((t) => "#" + t).join(", "));
-      }
-      if (item.isFavorite) {
-        lines.push("Favorite: true");
-      }
-      lines.push("");
-    }
+    for (const item of items) pushItem(lines, item);
   }
 
   // Uncategorized
@@ -129,19 +189,7 @@ export function generateFullExport(playbook: PlaybookContainer): string {
   if (uncategorized.length > 0) {
     lines.push("## Uncategorized");
     lines.push("");
-    for (const item of uncategorized) {
-      if (item.description) {
-        lines.push(item.description);
-        lines.push("");
-      }
-      lines.push("```" + (item.language || "bash"));
-      lines.push(item.command);
-      lines.push("```");
-      if (item.tags && item.tags.length > 0) {
-        lines.push("Tags: " + item.tags.map((t) => "#" + t).join(", "));
-      }
-      lines.push("");
-    }
+    for (const item of uncategorized) pushItem(lines, item);
   }
 
   return lines.join("\n");
