@@ -12,7 +12,6 @@ import {
   Check,
   Copy,
   Globe,
-  RefreshCw,
   GripVertical,
   X,
   ChevronDown,
@@ -779,26 +778,17 @@ interface InlineAddLinkProps {
 function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [isFetching, setIsFetching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!url.trim()) return;
-
-    let finalTitle = title.trim();
-
-    if (!finalTitle) {
-      setIsFetching(true);
-      const meta = await fetchLinkMetadata(url.trim());
-      finalTitle = meta.title || getDomain(url.trim());
-      setIsFetching(false);
-    }
-
-    await onCreateLink(url.trim(), finalTitle);
+    // Заголовок здесь НЕ тянем — добавляем мгновенно, а метаданные обогащаются
+    // в фоне (handleCreateLink). Пустой заголовок => фоновый автозаголовок.
+    onCreateLink(url.trim(), title.trim() || undefined);
     onClose();
   };
 
@@ -870,15 +860,11 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleAdd}
-          disabled={!url.trim() || isFetching}
+          disabled={!url.trim()}
           className="rounded p-1 transition-colors hover:bg-green-500/20 disabled:opacity-50"
           title="Add link (Enter)"
         >
-          {isFetching ? (
-            <RefreshCw size={14} className="animate-spin text-orange-400" />
-          ) : (
-            <Check size={14} className="text-green-400" />
-          )}
+          <Check size={14} className="text-green-400" />
         </button>
         <button
           onMouseDown={(e) => e.preventDefault()}
@@ -1851,28 +1837,42 @@ export function LinksView({ containerId }: Props) {
     setAddingLinkToSection(undefined);
   };
 
-  // Handle inline link creation with URL and title
+  // Создание ссылки: оптимистично добавляем сразу, метаданные тянем в фоне.
+  // Раньше здесь был блокирующий await fetchLinkMetadata (до 6 c через прокси) —
+  // из-за него ссылка появлялась только через несколько секунд. Теперь добавление
+  // мгновенное, а заголовок/описание «подтягиваются» позже, если прокси ответит.
   const handleCreateLink = async (sectionId: string, url: string, title?: string) => {
     if (!container || !url.trim()) return;
 
-    let finalTitle = title;
-    // Фавикон детерминированно выводится из домена — доступен всегда (Задача 2.5)
-    let favicon = faviconForDomain(getDomain(url));
+    const cleanUrl = url.trim();
+    const domain = getDomain(cleanUrl);
+    const manualTitle = title?.trim();
+    // Фавикон детерминированно выводится из домена — доступен сразу (Задача 2.5)
+    const favicon = faviconForDomain(domain);
 
-    if (!finalTitle) {
-      const meta = await fetchLinkMetadata(url);
-      finalTitle = meta.title || getDomain(url);
-      favicon = meta.favicon || favicon;
-    }
-
-    addLinkItem(container.id, {
-      url: url.trim(),
-      title: finalTitle || getDomain(url),
+    const newId = addLinkItem(container.id, {
+      url: cleanUrl,
+      title: manualTitle || domain,
       favicon,
       tags: [],
       isFavorite: false,
-      sectionId: sectionId,
+      sectionId,
     });
+
+    // Заголовок не задан вручную — обогащаем в фоне, не блокируя UI
+    if (!manualTitle) {
+      fetchLinkMetadata(cleanUrl)
+        .then((meta) => {
+          const updates: Partial<LinkItem> = {};
+          if (meta.title && meta.title !== domain) updates.title = meta.title;
+          if (meta.description) updates.description = meta.description;
+          if (meta.favicon && meta.favicon !== favicon) updates.favicon = meta.favicon;
+          if (Object.keys(updates).length) updateLinkItem(container.id, newId, updates);
+        })
+        .catch(() => {
+          /* автозаголовок не критичен — остаётся домен */
+        });
+    }
   };
 
   // Section actions

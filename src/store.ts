@@ -139,7 +139,7 @@ interface StoreActions {
   ) => void;
   updateLinkContainer: (id: string, updates: Partial<LinkContainer>) => void;
   deleteLinkContainer: (id: string) => void;
-  addLinkItem: (containerId: string, item: Omit<LinkItem, "id">) => void;
+  addLinkItem: (containerId: string, item: Omit<LinkItem, "id">) => string;
   updateLinkItem: (containerId: string, itemId: string, updates: Partial<LinkItem>) => void;
   deleteLinkItem: (containerId: string, itemId: string) => void;
   // Link section actions
@@ -758,6 +758,9 @@ export const useStore = create<AppState & StoreActions>()(
         }),
 
       addLinkItem: (containerId, item) => {
+        // id генерируем заранее и возвращаем — чтобы вызывающий код мог обновить
+        // именно эту ссылку (напр. фоновое обогащение метаданными, Задача 2.5/UX)
+        const newId = genId();
         set((s) => {
           const container = s.links.find((l) => l.id === containerId);
           if (!container) return s;
@@ -771,7 +774,7 @@ export const useStore = create<AppState & StoreActions>()(
 
           const newItem: LinkItem = {
             ...item,
-            id: genId(),
+            id: newId,
             order: maxOrder + 1, // Add to end
           };
 
@@ -787,6 +790,7 @@ export const useStore = create<AppState & StoreActions>()(
             ),
           };
         });
+        return newId;
       },
 
       updateLinkItem: (containerId, itemId, updates) =>
