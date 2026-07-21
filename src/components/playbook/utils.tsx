@@ -90,7 +90,7 @@ export function highlightSyntax(code: string): ReactElement {
         }
         if (tok.startsWith("#")) {
           return (
-            <span key={i} className="text-slate-500 italic">
+            <span key={i} className="text-subtle italic">
               {tok}
             </span>
           );

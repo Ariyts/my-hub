@@ -41,15 +41,15 @@ export function ContextPanel({ containerId, variables }: Props) {
   };
 
   return (
-    <div className="border-t border-slate-800/60 bg-slate-900/30 backdrop-blur-sm">
+    <div className="border-t border-border bg-surface/30 backdrop-blur-sm">
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-4 py-2 transition-colors hover:bg-slate-800/40"
+        className="flex w-full items-center gap-2 px-4 py-2 transition-colors hover:bg-sunken"
       >
         <Settings2 size={13} className="text-cyan-400" />
-        <span className="text-xs font-semibold text-slate-300">Context Variables</span>
-        <span className="text-[10px] text-slate-500">({variables.length})</span>
+        <span className="text-xs font-semibold text-muted">Context Variables</span>
+        <span className="text-[10px] text-subtle">({variables.length})</span>
         <div className="flex-1" />
         {variables.length > 0 && (
           <div className="flex items-center gap-1">
@@ -67,7 +67,7 @@ export function ContextPanel({ containerId, variables }: Props) {
               </span>
             ))}
             {variables.length > 3 && (
-              <span className="text-[9px] text-slate-500">+{variables.length - 3}</span>
+              <span className="text-[9px] text-subtle">+{variables.length - 3}</span>
             )}
           </div>
         )}
@@ -77,7 +77,7 @@ export function ContextPanel({ containerId, variables }: Props) {
       {expanded && (
         <div className="animate-in space-y-2 px-4 pb-3">
           {variables.length === 0 && !adding && (
-            <p className="text-[11px] text-slate-500 italic">
+            <p className="text-[11px] text-subtle italic">
               No variables defined. Add variables like TARGET, PORTS to auto-substitute in commands.
             </p>
           )}
@@ -106,14 +106,14 @@ export function ContextPanel({ containerId, variables }: Props) {
                   }
                   onKeyDown={handleKeyDown}
                   placeholder="NAME (e.g. TARGET)"
-                  className="flex-1 rounded border border-slate-800 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100 outline-none focus:border-cyan-400"
+                  className="flex-1 rounded border border-border bg-background px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-cyan-400"
                 />
                 <input
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="value (e.g. 10.10.10.5)"
-                  className="flex-1 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-100 outline-none focus:border-cyan-400"
+                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
                 />
               </div>
               <input
@@ -121,12 +121,12 @@ export function ContextPanel({ containerId, variables }: Props) {
                 onChange={(e) => setNewDesc(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="description (optional)"
-                className="w-full rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-100 outline-none focus:border-cyan-400"
+                className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
               />
               <div className="flex items-center justify-end gap-1">
                 <button
                   onClick={() => setAdding(false)}
-                  className="rounded px-2 py-1 text-[11px] text-slate-400 transition-colors hover:bg-slate-800"
+                  className="rounded px-2 py-1 text-[11px] text-muted transition-colors hover:bg-sunken"
                 >
                   Cancel
                 </button>
@@ -143,14 +143,14 @@ export function ContextPanel({ containerId, variables }: Props) {
           ) : (
             <button
               onClick={() => setAdding(true)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-800/40 px-3 py-1.5 text-[11px] font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-sunken px-3 py-1.5 text-[11px] font-medium text-muted transition-colors hover:bg-sunken hover:text-foreground"
             >
               <Plus size={12} />
               Add Variable
             </button>
           )}
 
-          <p className="text-[10px] leading-relaxed text-slate-500">
+          <p className="text-[10px] leading-relaxed text-subtle">
             Use <code className="text-cyan-400">$NAME</code> or{" "}
             <code className="text-cyan-400">{"${NAME}"}</code> in commands. Values will be
             auto-substituted in Engagement mode.
@@ -204,20 +204,20 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
 
   if (editing) {
     return (
-      <div className="space-y-1.5 rounded-lg border border-slate-700 bg-slate-950/60 p-2">
+      <div className="space-y-1.5 rounded-lg border border-border-subtle bg-background/60 p-2">
         <div className="flex items-center gap-2">
           <input
             autoFocus
             value={editName}
             onChange={(e) => setEditName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "_"))}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-slate-800 bg-slate-900 px-2 py-1 font-mono text-xs text-slate-100 outline-none focus:border-cyan-400"
+            className="flex-1 rounded border border-border bg-surface px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-cyan-400"
           />
           <input
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-cyan-400"
+            className="flex-1 rounded border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
           />
         </div>
         <input
@@ -225,12 +225,12 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
           onChange={(e) => setEditDesc(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="description"
-          className="w-full rounded border border-slate-800 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-cyan-400"
+          className="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
         />
         <div className="flex items-center justify-end gap-1">
           <button
             onClick={handleCancel}
-            className="rounded px-2 py-1 text-[11px] text-slate-400 transition-colors hover:bg-slate-800"
+            className="rounded px-2 py-1 text-[11px] text-muted transition-colors hover:bg-sunken"
           >
             Cancel
           </button>
@@ -248,7 +248,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
   }
 
   return (
-    <div className="group flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/40 px-2 py-1.5 transition-colors hover:border-slate-700">
+    <div className="group flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2 py-1.5 transition-colors hover:border-border-subtle">
       <div
         className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
         style={{ background: variable.color || "#00BCD4" }}
@@ -259,13 +259,13 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
       >
         ${variable.name}
       </code>
-      <span className="text-slate-600">=</span>
-      <span className="flex-1 truncate font-mono text-xs text-slate-300">
-        {variable.value || <span className="text-slate-500 italic">(empty)</span>}
+      <span className="text-subtle">=</span>
+      <span className="flex-1 truncate font-mono text-xs text-muted">
+        {variable.value || <span className="text-subtle italic">(empty)</span>}
       </span>
       {variable.description && (
         <span
-          className="max-w-[200px] truncate text-[10px] text-slate-500"
+          className="max-w-[200px] truncate text-[10px] text-subtle"
           title={variable.description}
         >
           {variable.description}
@@ -274,7 +274,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
       <div className="flex flex-shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
         <button
           onClick={() => setEditing(true)}
-          className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+          className="rounded p-1 text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
         >
           <Edit3 size={11} />
         </button>
@@ -282,7 +282,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
           onClick={() => {
             if (confirm(`Delete variable $${variable.name}?`)) onDelete();
           }}
-          className="rounded p-1 text-slate-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
+          className="rounded p-1 text-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
         >
           <Trash2 size={11} />
         </button>

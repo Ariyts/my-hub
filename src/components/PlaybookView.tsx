@@ -294,7 +294,7 @@ export function PlaybookView({ container }: Props) {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-slate-950">
+    <div className="flex h-full flex-col overflow-hidden bg-background">
       {/* Hero header — collapsible */}
       {heroExpanded ? (
         <PlaybookHero
@@ -347,8 +347,8 @@ export function PlaybookView({ container }: Props) {
         <div className="flex flex-wrap items-center gap-3 border-b border-emerald-500/20 bg-emerald-500/5 px-3 py-2 sm:px-6">
           <div className="flex items-center gap-2 text-[11px]">
             <span className="font-semibold text-emerald-300">Engagement Mode</span>
-            <span className="text-slate-500">·</span>
-            <span className="text-slate-400">
+            <span className="text-subtle">·</span>
+            <span className="text-muted">
               Progress:{" "}
               <span className="font-medium text-emerald-300">{checklist.counts.done}</span> done
               {checklist.counts.skipped > 0 && (
@@ -360,10 +360,10 @@ export function PlaybookView({ container }: Props) {
                   skipped
                 </>
               )}
-              <span className="text-slate-500"> / {checklist.counts.total}</span>
+              <span className="text-subtle"> / {checklist.counts.total}</span>
             </span>
           </div>
-          <div className="h-1.5 max-w-xs flex-1 overflow-hidden rounded-full bg-slate-800">
+          <div className="h-1.5 max-w-xs flex-1 overflow-hidden rounded-full bg-sunken">
             <div className="flex h-full">
               <div
                 className="h-full bg-emerald-500"
@@ -390,7 +390,7 @@ export function PlaybookView({ container }: Props) {
               onClick={() => {
                 if (confirm("Reset all progress for this playbook?")) checklist.reset();
               }}
-              className="text-[11px] text-slate-400 transition-colors hover:text-slate-200"
+              className="text-[11px] text-muted transition-colors hover:text-foreground"
             >
               Reset progress
             </button>
@@ -480,12 +480,12 @@ export function PlaybookView({ container }: Props) {
 
             {/* Uncategorized items (no sectionId) */}
             {container.subItems.filter((i) => !i.sectionId).length > 0 && (
-              <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/30">
-                <h3 className="px-4 pt-4 pb-2 text-sm font-semibold text-slate-300">
+              <div className="overflow-hidden rounded-xl border border-border bg-surface/30">
+                <h3 className="px-4 pt-4 pb-2 text-sm font-semibold text-muted">
                   Uncategorized
                 </h3>
                 {layout === "list" ? (
-                  <div className="divide-y divide-slate-800/40">
+                  <div className="divide-y divide-border/40">
                     {container.subItems
                       .filter((i) => !i.sectionId)
                       .filter(filterItem)

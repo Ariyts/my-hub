@@ -57,7 +57,7 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as PlaybookLanguage)}
-          className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-2 text-[11px] font-semibold text-slate-200 outline-none focus:border-cyan-400"
+          className="rounded-lg border border-border bg-background px-2.5 py-2 text-[11px] font-semibold text-foreground outline-none focus:border-cyan-400"
         >
           {PLAYBOOK_LANGUAGES.map((l) => (
             <option key={l} value={l}>
@@ -71,7 +71,7 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
           onChange={(e) => setCommand(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="nmap -sV -sC <target> ..."
-          className="flex-1 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 font-mono text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-cyan-400"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-foreground placeholder-subtle outline-none focus:border-cyan-400"
         />
       </div>
 
@@ -81,25 +81,25 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
           onChange={(e) => setDescription(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Description — what does this command do?"
-          className="flex-1 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-cyan-400"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder-subtle outline-none focus:border-cyan-400"
         />
         <input
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="tags (comma sep.)"
-          className="w-40 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-cyan-400"
+          className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder-subtle outline-none focus:border-cyan-400"
         />
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex flex-1 items-center gap-1.5 text-[11px] text-slate-500">
+        <div className="flex flex-1 items-center gap-1.5 text-[11px] text-subtle">
           <Terminal size={11} />
           <span>⌘/Ctrl+Enter to add · Esc to cancel</span>
         </div>
         <button
           onClick={onClose}
-          className="rounded-lg px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+          className="rounded-lg px-3 py-1.5 text-xs text-muted transition-colors hover:bg-sunken hover:text-foreground"
         >
           Cancel
         </button>

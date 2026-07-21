@@ -40,7 +40,7 @@ export function InlineAddSection({ onAdd, onClose }: Props) {
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="New section title (e.g., Recon, Exploitation, Post-Exploitation)..."
-          className="flex-1 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-cyan-400"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-subtle outline-none focus:border-cyan-400"
         />
         <button
           onMouseDown={(e) => e.preventDefault()}
@@ -54,13 +54,13 @@ export function InlineAddSection({ onAdd, onClose }: Props) {
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+          className="rounded-lg p-2 text-muted transition-colors hover:bg-sunken hover:text-foreground"
           title="Cancel (Esc)"
         >
           <X size={14} />
         </button>
       </div>
-      <p className="mt-2 pl-10 text-[11px] text-slate-500">
+      <p className="mt-2 pl-10 text-[11px] text-subtle">
         Tip: names like &quot;Recon&quot;, &quot;Fuzzing&quot;, &quot;Exploitation&quot;,
         &quot;Post-Exploitation&quot; get automatic phase badges.
       </p>

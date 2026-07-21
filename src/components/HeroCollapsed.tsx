@@ -26,27 +26,27 @@ export function HeroCollapsed({
   onImportExport,
 }: Props) {
   return (
-    <div className="flex h-10 items-center gap-3 border-b border-slate-800 bg-slate-900 px-6">
+    <div className="flex h-10 items-center gap-3 border-b border-border bg-surface px-6">
       {/* Icon (small) */}
-      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-slate-700/60 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-sm">
+      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-border-subtle bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-sm">
         🎯
       </div>
 
       {/* Title */}
-      <h1 className="flex-shrink-0 truncate text-sm font-bold text-slate-100">{title}</h1>
+      <h1 className="flex-shrink-0 truncate text-sm font-bold text-foreground">{title}</h1>
 
       {/* Stats inline */}
-      <div className="flex flex-shrink-0 items-center gap-2 text-[11px] text-slate-500">
+      <div className="flex flex-shrink-0 items-center gap-2 text-[11px] text-subtle">
         <span>
-          <span className="font-semibold text-slate-200">{totalCommands}</span> cmds
+          <span className="font-semibold text-foreground">{totalCommands}</span> cmds
         </span>
-        <span className="text-slate-700">·</span>
+        <span className="text-subtle">·</span>
         <span>
-          <span className="font-semibold text-slate-200">{sectionCount}</span> sec
+          <span className="font-semibold text-foreground">{sectionCount}</span> sec
         </span>
         {favoriteCount > 0 && (
           <>
-            <span className="text-slate-700">·</span>
+            <span className="text-subtle">·</span>
             <span>
               <span className="font-semibold text-amber-400">{favoriteCount}</span> ★
             </span>
@@ -61,7 +61,7 @@ export function HeroCollapsed({
       {onImportExport && (
         <button
           onClick={onImportExport}
-          className="flex flex-shrink-0 items-center gap-1 rounded-md border border-slate-700/60 bg-slate-800/80 px-2 py-1 text-[11px] font-medium text-slate-200 transition-colors hover:bg-slate-700"
+          className="flex flex-shrink-0 items-center gap-1 rounded-md border border-border-subtle bg-sunken px-2 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-sunken"
           title="Import/Export playbook"
         >
           <ArrowUpDown size={11} className="text-cyan-400" />
@@ -72,7 +72,7 @@ export function HeroCollapsed({
       {/* Add Section button */}
       <button
         onClick={onAddSection}
-        className="flex flex-shrink-0 items-center gap-1 rounded-md border border-slate-700/60 bg-slate-800/80 px-2 py-1 text-[11px] font-medium text-slate-200 transition-colors hover:bg-slate-700"
+        className="flex flex-shrink-0 items-center gap-1 rounded-md border border-border-subtle bg-sunken px-2 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-sunken"
         title="Add new section"
       >
         <FolderPlus size={11} className="text-cyan-400" />
@@ -92,7 +92,7 @@ export function HeroCollapsed({
       {/* Expand button */}
       <button
         onClick={onExpand}
-        className="flex-shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+        className="flex-shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-foreground"
         title="Expand hero header"
       >
         <ChevronDown size={15} />

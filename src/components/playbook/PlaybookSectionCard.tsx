@@ -118,10 +118,10 @@ export function PlaybookSectionCard({
             onDragStart={(e) => handleItemDragStart(e, item.id)}
             onDragEnd={() => setItemDrag({ id: null, overIndex: null })}
             onClick={(e) => e.stopPropagation()}
-            className="mt-1.5 flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 hover:bg-slate-700/50 active:cursor-grabbing"
+            className="mt-1.5 flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 hover:bg-sunken active:cursor-grabbing"
             title="Drag to reorder command"
           >
-            <GripVertical size={12} className="text-slate-600" />
+            <GripVertical size={12} className="text-subtle" />
           </div>
         )}
         <div className="min-w-0 flex-1">{child}</div>
@@ -152,14 +152,14 @@ export function PlaybookSectionCard({
     <div
       id={`section-${section.id}`}
       className={cn(
-        "overflow-hidden rounded-xl border border-slate-800 bg-slate-900/30 backdrop-blur-sm",
+        "overflow-hidden rounded-xl border border-border bg-surface/30 backdrop-blur-sm",
         "transition-all duration-200",
-        "hover:border-slate-700",
+        "hover:border-border-subtle",
       )}
     >
       {/* Header */}
       <div
-        className="group relative flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors select-none hover:bg-slate-800/40"
+        className="group relative flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors select-none hover:bg-sunken"
         onClick={onToggleCollapse}
       >
         {/* Left accent bar */}
@@ -178,16 +178,16 @@ export function PlaybookSectionCard({
             }}
             onDragEnd={onDragEndSection}
             onClick={(e) => e.stopPropagation()}
-            className="flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700/50 active:cursor-grabbing"
+            className="flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-sunken active:cursor-grabbing"
             title="Drag to reorder section"
           >
-            <GripVertical size={14} className="text-slate-500" />
+            <GripVertical size={14} className="text-subtle" />
           </div>
         )}
 
         {/* Collapse chevron */}
         <button
-          className="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-slate-700/50"
+          className="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-sunken"
           onClick={(e) => {
             e.stopPropagation();
             onToggleCollapse();
@@ -222,7 +222,7 @@ export function PlaybookSectionCard({
                   setEditing(false);
                 }
               }}
-              className="flex-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none focus:border-cyan-400"
+              className="flex-1 rounded-md border border-border-subtle bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-cyan-400"
             />
             <button
               onClick={handleSaveTitle}
@@ -242,7 +242,7 @@ export function PlaybookSectionCard({
           </div>
         ) : (
           <>
-            <h2 className="flex-1 truncate text-sm font-semibold text-slate-100">
+            <h2 className="flex-1 truncate text-sm font-semibold text-foreground">
               {section.title}
             </h2>
 
@@ -270,7 +270,7 @@ export function PlaybookSectionCard({
 
             {mode === "engagement" && items.length > 0 && (
               <div className="flex w-20 flex-shrink-0 items-center gap-1.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sunken">
                   <div className="flex h-full" style={{ width: `${progressPct}%` }}>
                     <div
                       className="h-full bg-emerald-500"
@@ -282,7 +282,7 @@ export function PlaybookSectionCard({
                     <div className="h-full flex-1 bg-amber-500/70" />
                   </div>
                 </div>
-                <span className="w-8 text-right text-[10px] font-medium text-slate-400 tabular-nums">
+                <span className="w-8 text-right text-[10px] font-medium text-muted tabular-nums">
                   {Math.round((done / items.length) * 100)}%
                 </span>
               </div>
@@ -300,7 +300,7 @@ export function PlaybookSectionCard({
             <div className="relative">
               <button
                 onClick={() => setShowColorPicker((s) => !s)}
-                className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
+                className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-foreground"
                 title="Change color"
               >
                 <Palette size={13} />
@@ -308,7 +308,7 @@ export function PlaybookSectionCard({
               {showColorPicker && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowColorPicker(false)} />
-                  <div className="absolute top-full right-0 z-20 mt-1 grid w-28 grid-cols-3 gap-1 rounded-lg border border-slate-700 bg-slate-900 p-1.5 shadow-2xl">
+                  <div className="absolute top-full right-0 z-20 mt-1 grid w-28 grid-cols-3 gap-1 rounded-lg border border-border-subtle bg-surface p-1.5 shadow-2xl">
                     {SECTION_COLORS.map((c) => (
                       <button
                         key={c}
@@ -319,7 +319,7 @@ export function PlaybookSectionCard({
                         className={cn(
                           "h-6 w-6 rounded-md transition-transform hover:scale-110",
                           color === c &&
-                            "ring-2 ring-slate-100 ring-offset-2 ring-offset-slate-900",
+                            "ring-2 ring-foreground ring-offset-2 ring-offset-surface",
                         )}
                         style={{ background: c }}
                       />
@@ -334,7 +334,7 @@ export function PlaybookSectionCard({
               <div className="relative">
                 <button
                   onClick={() => setShowExport((v) => !v)}
-                  className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-cyan-300"
+                  className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
                   title="Export section as markdown"
                 >
                   <Share2 size={13} />
@@ -342,13 +342,13 @@ export function PlaybookSectionCard({
                 {showExport && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowExport(false)} />
-                    <div className="absolute top-full right-0 z-20 mt-1 w-44 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-2xl">
+                    <div className="absolute top-full right-0 z-20 mt-1 w-44 overflow-hidden rounded-lg border border-border-subtle bg-surface py-1 shadow-2xl">
                       <button
                         onClick={() => {
                           onExportSection("copy");
                           setShowExport(false);
                         }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-slate-300 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
                       >
                         <Copy size={11} />
                         Copy markdown
@@ -358,7 +358,7 @@ export function PlaybookSectionCard({
                           onExportSection("download");
                           setShowExport(false);
                         }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-slate-300 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
                       >
                         <Download size={11} />
                         Download .md
@@ -374,7 +374,7 @@ export function PlaybookSectionCard({
                 setEditing(true);
                 setEditTitle(section.title);
               }}
-              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-cyan-300"
+              className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
               title="Rename section"
             >
               <Edit3 size={13} />
@@ -387,7 +387,7 @@ export function PlaybookSectionCard({
                 }
                 onDeleteSection();
               }}
-              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
+              className="rounded-md p-1.5 text-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
               title="Delete section"
             >
               <Trash2 size={13} />
@@ -406,11 +406,11 @@ export function PlaybookSectionCard({
 
       {/* Content */}
       {!isCollapsed && (
-        <div className="border-t border-slate-800/80 bg-slate-950/40">
+        <div className="border-t border-border bg-background/40">
           {items.length > 0 ? (
             layout === "list" ? (
               /* LIST MODE — compact rows */
-              <div className="divide-y divide-slate-800/40">
+              <div className="divide-y divide-border">
                 {items.map((item, index) =>
                   draggableItem(
                     item,
@@ -447,12 +447,12 @@ export function PlaybookSectionCard({
             )
           ) : (
             <button onClick={onAddItem} className="group/empty w-full py-8 text-center">
-              <div className="inline-flex flex-col items-center gap-2 rounded-lg border border-dashed border-slate-700 px-4 py-3 transition-colors group-hover/empty:border-cyan-400/60">
+              <div className="inline-flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-subtle px-4 py-3 transition-colors group-hover/empty:border-cyan-400/60">
                 <Plus
                   size={18}
-                  className="text-slate-600 transition-colors group-hover/empty:text-cyan-400"
+                  className="text-subtle transition-colors group-hover/empty:text-cyan-400"
                 />
-                <span className="text-xs text-slate-500 transition-colors group-hover/empty:text-slate-300">
+                <span className="text-xs text-muted transition-colors group-hover/empty:text-foreground">
                   Add your first command to this section
                 </span>
               </div>

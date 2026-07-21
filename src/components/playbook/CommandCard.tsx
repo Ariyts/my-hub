@@ -105,13 +105,13 @@ export function CommandCard({
   return (
     <div
       className={cn(
-        "group relative rounded-xl border bg-slate-900/40 backdrop-blur-sm",
+        "group relative rounded-xl border bg-surface backdrop-blur-sm",
         "overflow-hidden transition-all duration-200",
-        "hover:bg-slate-900/70 hover:shadow-lg hover:shadow-black/20",
-        dimmed ? "border-slate-800/60 opacity-60" : "border-slate-800 hover:border-slate-700",
+        "hover:bg-sunken hover:shadow-lg hover:shadow-black/20",
+        dimmed ? "border-border opacity-60" : "border-border hover:border-border-subtle",
         copiedFlash && "ring-2 ring-emerald-400/60",
         isDone && "border-emerald-500/30",
-        isSkipped && "border-slate-700/60",
+        isSkipped && "border-border-subtle",
       )}
     >
       <div className="flex">
@@ -124,8 +124,8 @@ export function CommandCard({
               isDone
                 ? "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20"
                 : isSkipped
-                  ? "border-slate-700 bg-slate-800/40 hover:bg-slate-700/40"
-                  : "border-slate-800 bg-slate-900/40 hover:bg-slate-800/40",
+                  ? "border-border-subtle bg-sunken hover:bg-sunken"
+                  : "border-border bg-surface hover:bg-sunken",
             )}
             title={`Click to cycle: ${checklistStatus} → ${
               checklistStatus === "pending"
@@ -138,9 +138,9 @@ export function CommandCard({
             {isDone ? (
               <CheckCircle2 size={20} className="text-emerald-400" />
             ) : isSkipped ? (
-              <XCircle size={20} className="text-slate-500" />
+              <XCircle size={20} className="text-subtle" />
             ) : (
-              <Circle size={20} className="text-slate-600 group-hover:text-slate-400" />
+              <Circle size={20} className="text-subtle group-hover:text-muted" />
             )}
           </button>
         )}
@@ -170,7 +170,7 @@ export function CommandCard({
               {item.tags.slice(0, 4).map((tag) => (
                 <span
                   key={tag}
-                  className="rounded border border-slate-700/50 bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-slate-400"
+                  className="rounded border border-border-subtle bg-sunken px-1.5 py-0.5 text-[10px] text-muted"
                 >
                   #{tag}
                 </span>
@@ -196,7 +196,7 @@ export function CommandCard({
                   "transition-colors",
                   item.isFavorite
                     ? "fill-amber-400 text-amber-400"
-                    : "text-slate-600 hover:text-amber-400",
+                    : "text-subtle hover:text-amber-400",
                 )}
               />
             </button>
@@ -207,7 +207,7 @@ export function CommandCard({
             onClick={() => handleCopy()}
             className={cn(
               "group/code relative w-full px-3 py-2.5 text-left focus:outline-none",
-              isDone && "line-through decoration-slate-600 decoration-1",
+              isDone && "line-through decoration-subtle decoration-1",
             )}
             title={
               mode === "engagement" ? "Click to copy rendered command" : "Click to copy template"
@@ -215,7 +215,7 @@ export function CommandCard({
           >
             <div
               className={cn(
-                "font-mono text-[12.5px] leading-relaxed break-all whitespace-pre-wrap text-slate-100",
+                "font-mono text-[12.5px] leading-relaxed break-all whitespace-pre-wrap text-foreground",
                 "transition-opacity",
                 copied && "opacity-40",
               )}
@@ -239,9 +239,9 @@ export function CommandCard({
 
             {!copied && (
               <div className="pointer-events-none absolute top-2 right-2 opacity-0 transition-opacity group-hover/code:opacity-100">
-                <div className="flex items-center gap-1 rounded border border-slate-700 bg-slate-800/90 px-1.5 py-0.5">
-                  <Copy size={10} className="text-slate-400" />
-                  <span className="text-[9px] font-medium text-slate-400">
+                <div className="flex items-center gap-1 rounded border border-border-subtle bg-sunken px-1.5 py-0.5">
+                  <Copy size={10} className="text-muted" />
+                  <span className="text-[9px] font-medium text-muted">
                     {mode === "engagement" ? "COPY RESOLVED" : "COPY"}
                   </span>
                 </div>
@@ -253,8 +253,8 @@ export function CommandCard({
             <div className="px-3 pb-2">
               <p
                 className={cn(
-                  "text-[11.5px] leading-snug text-slate-400",
-                  isDone && "line-through decoration-slate-600",
+                  "text-[11.5px] leading-snug text-muted",
+                  isDone && "line-through decoration-subtle",
                 )}
               >
                 {description}
@@ -262,11 +262,11 @@ export function CommandCard({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-1 border-t border-slate-800/70 bg-slate-950/40 px-2 py-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="flex items-center justify-end gap-1 border-t border-border bg-background/40 px-2 py-1.5 opacity-0 transition-opacity group-hover:opacity-100">
             {mode === "engagement" && variables.length > 0 && renderedText !== template && (
               <button
                 onClick={() => handleCopy(template)}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted transition-colors hover:bg-sunken hover:text-foreground"
                 title="Copy original template with $VARS"
               >
                 <Copy size={11} />
@@ -290,7 +290,7 @@ export function CommandCard({
                 "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors",
                 copied
                   ? "bg-emerald-500/15 text-emerald-300"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200",
+                  : "text-muted hover:bg-sunken hover:text-foreground",
               )}
             >
               {copied ? <Check size={11} /> : <Copy size={11} />}
@@ -299,14 +299,14 @@ export function CommandCard({
             {/* Экспорт команды как markdown-фрагмента: язык, описание, теги (Задача 3.6) */}
             <button
               onClick={() => handleCopy(generateItemExport(item))}
-              className="rounded-md px-1.5 py-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+              className="rounded-md px-1.5 py-1 text-muted transition-colors hover:bg-sunken hover:text-foreground"
               title="Copy as Markdown (with description and tags)"
             >
               <FileCode size={11} />
             </button>
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted transition-colors hover:bg-sunken hover:text-foreground"
             >
               <Edit3 size={11} />
               Edit
@@ -315,7 +315,7 @@ export function CommandCard({
               onClick={() => {
                 if (confirm("Delete this command?")) deletePlaybookItem(containerId, item.id);
               }}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-slate-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
             >
               <Trash2 size={11} />
               Delete

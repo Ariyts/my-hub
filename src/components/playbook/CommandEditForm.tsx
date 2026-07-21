@@ -45,10 +45,10 @@ export function CommandEditForm({ item, containerId, onDone }: Props) {
   };
 
   return (
-    <div className="animate-in space-y-2 rounded-xl border border-cyan-400/40 bg-slate-900/60 p-3 backdrop-blur">
+    <div className="animate-in space-y-2 rounded-xl border border-cyan-400/40 bg-surface/60 p-3 backdrop-blur">
       <div className="flex items-center gap-2">
         <select
-          className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-[11px] text-slate-200 outline-none focus:border-cyan-400"
+          className="rounded-md border border-border-subtle bg-background px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-cyan-400"
           value={editData.language}
           onChange={(e) => setEditData({ ...editData, language: e.target.value as PlaybookLanguage })}
         >
@@ -60,7 +60,7 @@ export function CommandEditForm({ item, containerId, onDone }: Props) {
         </select>
         <input
           ref={cmdRef}
-          className="flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-xs text-slate-100 outline-none focus:border-cyan-400"
+          className="flex-1 rounded-md border border-border-subtle bg-background px-3 py-1.5 font-mono text-xs text-foreground outline-none focus:border-cyan-400"
           value={editData.command}
           onChange={(e) => setEditData({ ...editData, command: e.target.value })}
           onKeyDown={onKeyDown}
@@ -68,14 +68,14 @@ export function CommandEditForm({ item, containerId, onDone }: Props) {
         />
       </div>
       <input
-        className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-cyan-400"
+        className="w-full rounded-md border border-border-subtle bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400"
         value={editData.description}
         onChange={(e) => setEditData({ ...editData, description: e.target.value })}
         placeholder="description..."
         onKeyDown={onKeyDown}
       />
       <input
-        className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-cyan-400"
+        className="w-full rounded-md border border-border-subtle bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-cyan-400"
         value={editData.tags.join(", ")}
         onChange={(e) =>
           setEditData({
@@ -90,12 +90,12 @@ export function CommandEditForm({ item, containerId, onDone }: Props) {
         onKeyDown={onKeyDown}
       />
       <div className="flex items-center justify-end gap-2">
-        <span className="mr-auto text-[10px] text-slate-500">
+        <span className="mr-auto text-[10px] text-subtle">
           ⌘/Ctrl + Enter to save · Esc to cancel
         </span>
         <button
           onClick={cancel}
-          className="rounded-md px-2.5 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-800"
+          className="rounded-md px-2.5 py-1 text-xs text-muted transition-colors hover:bg-sunken"
         >
           Cancel
         </button>

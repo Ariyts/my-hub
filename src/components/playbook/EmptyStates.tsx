@@ -12,17 +12,17 @@ export function EmptyState({ hasSections, isFiltered, onAddSection, onClearFilte
   if (isFiltered) {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-20">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-700/50 bg-slate-800/60">
-          <SearchIcon size={26} className="text-slate-500" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border-subtle bg-sunken">
+          <SearchIcon size={26} className="text-subtle" />
         </div>
-        <h3 className="mb-1 text-base font-semibold text-slate-200">No matches found</h3>
-        <p className="mb-5 max-w-sm text-center text-sm text-slate-500">
+        <h3 className="mb-1 text-base font-semibold text-foreground">No matches found</h3>
+        <p className="mb-5 max-w-sm text-center text-sm text-subtle">
           Try different keywords or adjust the filters above.
         </p>
         {onClearFilters && (
           <button
             onClick={onClearFilters}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700"
+            className="rounded-lg border border-border-subtle bg-sunken px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-sunken"
           >
             Clear filters
           </button>
@@ -37,12 +37,12 @@ export function EmptyState({ hasSections, isFiltered, onAddSection, onClearFilte
       <div className="flex flex-col items-center justify-center px-6 py-24">
         <div className="relative mb-6">
           <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-2xl" />
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-slate-700/60 bg-gradient-to-br from-cyan-500/30 to-violet-500/30 backdrop-blur-sm">
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-border-subtle bg-gradient-to-br from-cyan-500/30 to-violet-500/30 backdrop-blur-sm">
             <Target size={34} className="text-cyan-300" />
           </div>
         </div>
-        <h3 className="mb-2 text-xl font-bold text-slate-100">Build your pentest playbook</h3>
-        <p className="mb-6 max-w-md text-center text-sm leading-relaxed text-slate-400">
+        <h3 className="mb-2 text-xl font-bold text-foreground">Build your pentest playbook</h3>
+        <p className="mb-6 max-w-md text-center text-sm leading-relaxed text-muted">
           Organize commands into phases — <span className="font-medium text-blue-400">Recon</span>,{" "}
           <span className="font-medium text-orange-400">Fuzzing</span>,{" "}
           <span className="font-medium text-red-400">Exploitation</span>,{" "}
@@ -72,10 +72,10 @@ export function EmptyState({ hasSections, isFiltered, onAddSection, onClearFilte
 
 function TipCard({ emoji, title, desc }: { emoji: string; title: string; desc: string }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+    <div className="rounded-lg border border-border bg-surface/40 p-3">
       <div className="mb-1 text-xl">{emoji}</div>
-      <div className="mb-0.5 text-xs font-semibold text-slate-200">{title}</div>
-      <div className="text-[11px] text-slate-500">{desc}</div>
+      <div className="mb-0.5 text-xs font-semibold text-foreground">{title}</div>
+      <div className="text-[11px] text-subtle">{desc}</div>
     </div>
   );
 }

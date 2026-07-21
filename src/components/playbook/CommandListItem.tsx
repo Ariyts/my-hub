@@ -97,8 +97,8 @@ export function CommandListItem({
       onMouseLeave={() => setHovered(false)}
       title={item.description || "Click to copy"}
       className={cn(
-        "relative flex cursor-pointer items-center gap-2 border-b border-slate-800/60 px-3 py-1.5 transition-colors",
-        "hover:bg-slate-800/40",
+        "relative flex cursor-pointer items-center gap-2 border-b border-border px-3 py-1.5 transition-colors",
+        "hover:bg-sunken",
         isDone && "opacity-50",
         isSkipped && "opacity-40",
       )}
@@ -115,13 +115,13 @@ export function CommandListItem({
             isDone
               ? "border-emerald-500/50 bg-emerald-500/20"
               : isSkipped
-                ? "border-slate-600 bg-slate-700/40"
-                : "border-slate-700 hover:border-slate-500",
+                ? "border-border-subtle bg-sunken"
+                : "border-border-subtle hover:border-muted",
           )}
           title={`Status: ${checklistStatus}`}
         >
           {isDone && <Check size={10} className="text-emerald-400" />}
-          {isSkipped && <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />}
+          {isSkipped && <span className="h-1.5 w-1.5 rounded-full bg-subtle" />}
         </button>
       )}
 
@@ -142,9 +142,9 @@ export function CommandListItem({
       {/* Code (with truncation) */}
       <div
         className={cn(
-          "min-w-0 flex-1 font-mono text-[11.5px] text-slate-100",
+          "min-w-0 flex-1 font-mono text-[11.5px] text-foreground",
           "max-h-20 overflow-hidden leading-relaxed break-all whitespace-pre-wrap",
-          isDone && "line-through decoration-slate-600",
+          isDone && "line-through decoration-subtle",
         )}
       >
         {copyText}
@@ -155,13 +155,13 @@ export function CommandListItem({
         {(item.tags || []).slice(0, 2).map((tag: string) => (
           <span
             key={tag}
-            className="flex-shrink-0 rounded border border-slate-700/50 bg-slate-800/80 px-1.5 py-0.5 text-[9px] text-slate-400"
+            className="flex-shrink-0 rounded border border-border-subtle bg-sunken px-1.5 py-0.5 text-[9px] text-muted"
           >
             #{tag}
           </span>
         ))}
         {(item.tags || []).length > 2 && (
-          <span className="flex-shrink-0 text-[9px] text-slate-600">
+          <span className="flex-shrink-0 text-[9px] text-subtle">
             +{(item.tags || []).length - 2}
           </span>
         )}
@@ -182,7 +182,7 @@ export function CommandListItem({
             "transition-colors",
             item.isFavorite
               ? "fill-amber-400 text-amber-400"
-              : "text-slate-700 hover:text-amber-400",
+              : "text-subtle hover:text-amber-400",
           )}
         />
       </button>
@@ -213,7 +213,7 @@ export function CommandListItem({
             "rounded p-1 transition-colors",
             copied
               ? "bg-emerald-500/20 text-emerald-400"
-              : "text-slate-500 hover:bg-slate-800 hover:text-slate-200",
+              : "text-subtle hover:bg-sunken hover:text-foreground",
           )}
           title="Copy"
         >
@@ -224,7 +224,7 @@ export function CommandListItem({
             e.stopPropagation();
             setEditing(true);
           }}
-          className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+          className="rounded p-1 text-subtle transition-colors hover:bg-sunken hover:text-cyan-300"
           title="Edit"
         >
           <Edit3 size={11} />
@@ -234,7 +234,7 @@ export function CommandListItem({
             e.stopPropagation();
             if (confirm("Delete this command?")) deletePlaybookItem(containerId, item.id);
           }}
-          className="rounded p-1 text-slate-500 transition-colors hover:bg-red-500/15 hover:text-red-300"
+          className="rounded p-1 text-subtle transition-colors hover:bg-red-500/15 hover:text-red-300"
           title="Delete"
         >
           <Trash2 size={11} />

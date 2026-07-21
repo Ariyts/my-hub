@@ -126,13 +126,13 @@ export function MarkdownView({ playbook }: Props) {
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-900/40 px-6 py-2">
+      <div className="flex items-center gap-2 border-b border-border bg-surface/40 px-6 py-2">
         <button
           onClick={() => setIsEditing(!isEditing)}
           className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
             isEditing
               ? "border border-cyan-500/40 bg-cyan-500/20 text-cyan-300"
-              : "border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
+              : "border border-border-subtle bg-sunken text-muted hover:bg-sunken"
           }`}
         >
           {isEditing ? <Edit3 size={12} /> : <Eye size={12} />}
@@ -150,7 +150,7 @@ export function MarkdownView({ playbook }: Props) {
 
         <button
           onClick={handleReset}
-          className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700"
+          className="flex items-center gap-1.5 rounded-md border border-border-subtle bg-sunken px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-sunken"
         >
           <RotateCcw size={12} />
           Reset
@@ -168,7 +168,7 @@ export function MarkdownView({ playbook }: Props) {
 
         <div className="flex-1" />
 
-        <span className="text-[10px] text-slate-500">
+        <span className="text-[10px] text-subtle">
           Edit directly in markdown. Save to sync back to the playbook.
         </span>
       </div>
@@ -180,7 +180,7 @@ export function MarkdownView({ playbook }: Props) {
             value={markdown}
             onChange={(e) => handleChange(e.target.value)}
             spellCheck={false}
-            className="h-full w-full resize-none bg-slate-950 p-6 font-mono text-xs leading-relaxed text-slate-200 outline-none"
+            className="h-full w-full resize-none bg-background p-6 font-mono text-xs leading-relaxed text-foreground outline-none"
           />
         ) : (
           <div className="max-w-4xl p-6">
@@ -208,12 +208,12 @@ function MarkdownPreview({ content }: { content: string }) {
         elements.push(
           <pre
             key={key++}
-            className="my-2 overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3"
+            className="my-2 overflow-x-auto rounded-lg border border-border bg-surface p-3"
           >
-            <div className="mb-1 text-[10px] tracking-wider text-slate-500 uppercase">
+            <div className="mb-1 text-[10px] tracking-wider text-subtle uppercase">
               {codeLang}
             </div>
-            <code className="font-mono text-xs whitespace-pre text-slate-200">
+            <code className="font-mono text-xs whitespace-pre text-foreground">
               {codeBuffer.join("\n")}
             </code>
           </pre>,
@@ -237,7 +237,7 @@ function MarkdownPreview({ content }: { content: string }) {
     // Headings
     if (line.startsWith("# ")) {
       elements.push(
-        <h1 key={key++} className="mt-6 mb-3 text-2xl font-bold text-slate-100 first:mt-0">
+        <h1 key={key++} className="mt-6 mb-3 text-2xl font-bold text-foreground first:mt-0">
           {line.slice(2)}
         </h1>,
       );
@@ -245,7 +245,7 @@ function MarkdownPreview({ content }: { content: string }) {
       elements.push(
         <h2
           key={key++}
-          className="mt-5 mb-2 border-b border-slate-800 pb-1 text-lg font-bold text-slate-100"
+          className="mt-5 mb-2 border-b border-border pb-1 text-lg font-bold text-foreground"
         >
           {line.slice(3)}
         </h2>,
@@ -254,7 +254,7 @@ function MarkdownPreview({ content }: { content: string }) {
       // Skip HTML comments
     } else if (line.trim()) {
       elements.push(
-        <p key={key++} className="my-1.5 text-sm leading-relaxed text-slate-300">
+        <p key={key++} className="my-1.5 text-sm leading-relaxed text-muted">
           {line}
         </p>,
       );
