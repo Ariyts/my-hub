@@ -261,12 +261,14 @@ export function Sidebar() {
         }`}
         style={asideStyle}
       >
-        {/* Workspace Switcher with compact toggle */}
+        {/* Workspace Switcher with compact toggle.
+            В compact ширина всего 56px — воркспейс и переключатель не помещаются
+            в один ряд, поэтому стек по вертикали (каждому вся ширина). */}
         <div
-          className="flex items-center border-b"
+          className={`border-b ${compact ? "flex flex-col-reverse items-stretch" : "flex items-center"}`}
           style={{ borderColor: isDarkTheme ? "#1e293b" : "#0f172a" }}
         >
-          <div className="flex-1 overflow-hidden">
+          <div className={compact ? "w-full" : "flex-1 overflow-hidden"}>
             <WorkspaceSwitcher compact={compact} />
           </div>
           {isMobile ? (
@@ -281,7 +283,9 @@ export function Sidebar() {
           ) : (
             <button
               onClick={toggleSidebarCompact}
-              className="shrink-0 p-2 transition-colors hover:bg-slate-700/50"
+              className={`shrink-0 p-2 transition-colors hover:bg-slate-700/50 ${
+                compact ? "flex w-full justify-center" : ""
+              }`}
               title={compact ? "Expand sidebar" : "Collapse sidebar"}
             >
               {compact ? (
