@@ -4,7 +4,7 @@ title: "Links+"
 tags: []
 order: "4"
 createdAt: "2026-05-25T19:30:31.757Z"
-updatedAt: "2026-05-25T19:38:32.436Z"
+updatedAt: "2026-07-29T13:18:10.287Z"
 ---
 
 ## Cheat Sheets & Wikis
@@ -47,6 +47,7 @@ updatedAt: "2026-05-25T19:38:32.436Z"
 
 - [NetsecExplained](https://www.youtube.com/@NetsecExplained/videos) <!-- link: {"id":"bbib5jdj8mpllq8vp","order":0,"favicon":"https://www.google.com/s2/favicons?domain=www.youtube.com&sz=32","tags":["youtube","network","education"],"sectionId":"497q0g9ojmpllq8q5","description":"Канал с разборами уязвимостей и сетевой безопасности"} -->
 - [HackerSploit](https://www.youtube.com/@HackerSploit/featured) <!-- link: {"id":"lhc2j2znrmpllq8vu","order":1,"favicon":"https://www.google.com/s2/favicons?domain=www.youtube.com&sz=32","tags":["youtube","tutorials","pentest"],"sectionId":"497q0g9ojmpllq8q5","description":"Отличные туториалы по пентесту, Linux и Red Team"} -->
+- [@ippsec](https://www.youtube.com/@ippsec) <!-- link: {"id":"zcfh5bp1sms6419pr","order":2,"favicon":"https://www.google.com/s2/favicons?domain=www.youtube.com&sz=32","sectionId":"497q0g9ojmpllq8q5"} -->
 
 ## Profiles & Personal
 <!-- section: {"id":"xqpzgo09impllq8qb","order":5,"collapsed":false,"color":"#f97316"} -->
