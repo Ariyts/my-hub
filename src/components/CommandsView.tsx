@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import { useAutoSync } from "../hooks/useAutoSync";
 
+// Акцент типа «Commands». Зеркалит токен --accent-commands (hex — конкатенируется
+// с альфой в тинтах `${…}15`).
+const COMMANDS_ACCENT = "#58a6ff";
+
 const LANG_COLORS: Record<string, string> = {
   bash: "#4CAF50",
   zsh: "#4CAF50",
@@ -70,28 +74,28 @@ function highlightSyntax(code: string): React.ReactElement {
       {parts.map((part, i) => {
         if (keywords.includes(part)) {
           return (
-            <span key={i} style={{ color: "#c792ea" }}>
+            <span key={i} style={{ color: "var(--hl-keyword)" }}>
               {part}
             </span>
           );
         }
         if (part.startsWith("#")) {
           return (
-            <span key={i} style={{ color: "#546e7a" }}>
+            <span key={i} style={{ color: "var(--hl-comment)" }}>
               {part}
             </span>
           );
         }
         if (/^['"].*['"]$/.test(part)) {
           return (
-            <span key={i} style={{ color: "#c3e88d" }}>
+            <span key={i} style={{ color: "var(--hl-string)" }}>
               {part}
             </span>
           );
         }
         if (/^--?[a-zA-Z]/.test(part)) {
           return (
-            <span key={i} style={{ color: "#ffcb6b" }}>
+            <span key={i} style={{ color: "var(--hl-attr)" }}>
               {part}
             </span>
           );
@@ -105,11 +109,10 @@ function highlightSyntax(code: string): React.ReactElement {
 interface CommandRowProps {
   item: CommandItem;
   containerId: string;
-  isDark: boolean;
   index: number;
 }
 
-function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
+function CommandRow({ item, containerId, index }: CommandRowProps) {
   const { updateCommandItem, deleteCommandItem } = useStore();
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -126,22 +129,22 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
     setEditing(false);
   };
 
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const codeBg = isDark ? "#0f172a" : "#f1f5f9";
+  const border = "var(--border)";
+  const codeBg = "var(--bg-sunken)";
   const langColor = LANG_COLORS[item.language] || "#64748b";
 
   if (editing) {
     return (
-      <tr style={{ background: isDark ? "#1e293b30" : "#f8fafc" }}>
+      <tr style={{ background: "var(--bg-sunken)" }}>
         <td colSpan={5} className="p-3">
           <div className="space-y-2">
             <div className="flex gap-2">
               <select
                 className="rounded border px-2 py-1 text-xs outline-none"
                 style={{
-                  background: isDark ? "#0f172a" : "#fff",
+                  background: "var(--bg-sunken)",
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 value={editData.language}
                 onChange={(e) =>
@@ -159,7 +162,7 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
                 style={{
                   background: codeBg,
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 value={editData.command}
                 onChange={(e) => setEditData({ ...editData, command: e.target.value })}
@@ -170,9 +173,9 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
               <input
                 className="flex-1 rounded-lg border px-3 py-1.5 text-sm outline-none"
                 style={{
-                  background: isDark ? "#0f172a" : "#fff",
+                  background: "var(--bg-sunken)",
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 value={editData.description}
                 onChange={(e) => setEditData({ ...editData, description: e.target.value })}
@@ -181,9 +184,9 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
               <input
                 className="w-48 rounded-lg border px-2 py-1.5 text-xs outline-none"
                 style={{
-                  background: isDark ? "#0f172a" : "#fff",
+                  background: "var(--bg-sunken)",
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 value={editData.tags.join(", ")}
                 onChange={(e) =>
@@ -200,14 +203,14 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
               <button
                 onClick={handleSave}
                 className="rounded px-3 py-1.5 text-xs font-medium"
-                style={{ background: "#4CAF5020", color: "#4CAF50" }}
+                style={{ background: "color-mix(in srgb, var(--success) 12%, transparent)", color: "var(--success)" }}
               >
                 Save
               </button>
               <button
                 onClick={() => setEditing(false)}
                 className="rounded px-3 py-1.5 text-xs"
-                style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+                style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
               >
                 Cancel
               </button>
@@ -225,7 +228,7 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
     >
       {/* Number */}
       <td className="cell-index w-8 px-2 py-2 text-center">
-        <span className="font-mono text-xs" style={{ color: isDark ? "#475569" : "#94a3b8" }}>
+        <span className="font-mono text-xs" style={{ color: "var(--text-subtle)" }}>
           {index + 1}
         </span>
       </td>
@@ -255,7 +258,7 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
       {/* Description & Tags */}
       <td className="min-w-[150px] px-2 py-2">
         {item.description && (
-          <p className="mb-1 truncate text-xs" style={{ color: isDark ? "#94a3b8" : "#6b7280" }}>
+          <p className="mb-1 truncate text-xs" style={{ color: "var(--text-muted)" }}>
             {item.description}
           </p>
         )}
@@ -264,7 +267,7 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
             <span
               key={tag}
               className="rounded px-1.5 py-0.5 text-[10px]"
-              style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+              style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
             >
               {tag}
             </span>
@@ -282,27 +285,27 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
           >
             <Star
               size={12}
-              className={item.isFavorite ? "fill-amber-400 text-amber-400" : "text-slate-400"}
+              className={item.isFavorite ? "fill-amber-400 text-amber-400" : "text-subtle"}
             />
           </button>
           <button
             onClick={handleCopy}
             className="flex items-center gap-1 rounded px-2 py-1 text-xs"
             style={{
-              background: copied ? "#4CAF5020" : "transparent",
-              color: copied ? "#4CAF50" : "#64748b",
+              background: copied ? "color-mix(in srgb, var(--success) 12%, transparent)" : "transparent",
+              color: copied ? "var(--success)" : "var(--text-muted)",
             }}
           >
             {copied ? <Check size={11} /> : <Copy size={11} />}
           </button>
           <button onClick={() => setEditing(true)} className="rounded p-1 hover:bg-slate-500/20">
-            <Edit3 size={11} className="text-slate-400" />
+            <Edit3 size={11} className="text-subtle" />
           </button>
           <button
             onClick={() => deleteCommandItem(containerId, item.id)}
-            className="rounded p-1 hover:bg-red-500/20"
+            className="rounded p-1 hover:bg-danger/15"
           >
-            <Trash2 size={11} className="text-red-400" />
+            <Trash2 size={11} className="text-danger" />
           </button>
         </div>
       </td>
@@ -312,10 +315,9 @@ function CommandRow({ item, containerId, isDark, index }: CommandRowProps) {
 
 interface ContainerCardProps {
   container: CommandContainer;
-  isDark: boolean;
 }
 
-function ContainerCard({ container, isDark }: ContainerCardProps) {
+function ContainerCard({ container }: ContainerCardProps) {
   const { deleteCommandContainer, addCommandItem } = useStore();
   const [localExpanded, setLocalExpanded] = useState(container.isExpanded !== false);
   const [searchQ, setSearchQ] = useState("");
@@ -334,9 +336,9 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
       i.description.toLowerCase().includes(searchQ.toLowerCase()),
   );
 
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const bg = isDark ? "#111827" : "#ffffff";
-  const headBg = isDark ? "#1e293b" : "#f8fafc";
+  const border = "var(--border)";
+  const bg = "var(--bg-elevated)";
+  const headBg = "var(--bg-sunken)";
 
   const handleAddItem = () => {
     if (newCmd.command.trim()) {
@@ -348,7 +350,7 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
 
   return (
     <div
-      className="overflow-hidden rounded-xl border"
+      className="overflow-hidden rounded-lg border"
       style={{ background: bg, borderColor: border }}
     >
       {/* Header */}
@@ -358,22 +360,22 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
         onClick={() => setLocalExpanded(!localExpanded)}
       >
         {localExpanded ? (
-          <ChevronDown size={14} style={{ color: "#2196F3" }} />
+          <ChevronDown size={14} style={{ color: COMMANDS_ACCENT }} />
         ) : (
-          <ChevronRight size={14} style={{ color: "#2196F3" }} />
+          <ChevronRight size={14} style={{ color: COMMANDS_ACCENT }} />
         )}
-        <Terminal size={14} style={{ color: "#2196F3" }} />
-        <span className="text-sm font-medium" style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}>
+        <Terminal size={14} style={{ color: COMMANDS_ACCENT }} />
+        <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
           {container.title}
         </span>
         {container.description && (
-          <span className="hidden text-xs sm:block" style={{ color: "#64748b" }}>
+          <span className="hidden text-xs sm:block" style={{ color: "var(--text-muted)" }}>
             {container.description}
           </span>
         )}
         <span
           className="ml-auto rounded-full px-2 py-0.5 text-xs font-medium"
-          style={{ background: "#2196F315", color: "#2196F3" }}
+          style={{ background: `${COMMANDS_ACCENT}15`, color: COMMANDS_ACCENT }}
         >
           {container.subItems.length}
         </span>
@@ -382,9 +384,9 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
             e.stopPropagation();
             if (confirm("Delete collection?")) deleteCommandContainer(container.id);
           }}
-          className="rounded p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500/20"
+          className="rounded p-1 opacity-0 group-hover:opacity-100 hover:bg-danger/15"
         >
-          <Trash2 size={12} className="text-red-400" />
+          <Trash2 size={12} className="text-danger" />
         </button>
       </div>
 
@@ -395,14 +397,14 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
             <div className="relative flex-1">
               <Search
                 size={12}
-                className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400"
+                className="absolute top-1/2 left-2.5 -translate-y-1/2 text-subtle"
               />
               <input
                 className="w-full rounded-lg border py-1.5 pr-3 pl-7 text-xs outline-none"
                 style={{
-                  background: isDark ? "#0f172a" : "#f8fafc",
+                  background: "var(--bg-sunken)",
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 placeholder="Search..."
                 inputMode="search"
@@ -414,7 +416,7 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
             <button
               onClick={() => setAddingItem(true)}
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium"
-              style={{ background: "#2196F315", color: "#2196F3" }}
+              style={{ background: `${COMMANDS_ACCENT}15`, color: COMMANDS_ACCENT }}
             >
               <Plus size={12} /> Add
             </button>
@@ -424,15 +426,15 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
           {addingItem && (
             <div
               className="border-b p-3"
-              style={{ borderColor: "#2196F350", background: "#2196F308" }}
+              style={{ borderColor: `${COMMANDS_ACCENT}50`, background: `${COMMANDS_ACCENT}08` }}
             >
               <div className="mb-2 flex gap-2">
                 <select
                   className="rounded border px-2 py-1.5 text-xs outline-none"
                   style={{
-                    background: isDark ? "#0f172a" : "#fff",
+                    background: "var(--bg-sunken)",
                     borderColor: border,
-                    color: isDark ? "#e2e8f0" : "#1e293b",
+                    color: "var(--text)",
                   }}
                   value={newCmd.language}
                   onChange={(e) =>
@@ -448,9 +450,9 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
                 <input
                   className="flex-1 rounded-lg border px-3 py-1.5 font-mono text-xs outline-none"
                   style={{
-                    background: isDark ? "#0f172a" : "#f8fafc",
+                    background: "var(--bg-sunken)",
                     borderColor: border,
-                    color: isDark ? "#e2e8f0" : "#1e293b",
+                    color: "var(--text)",
                   }}
                   placeholder="command..."
                   value={newCmd.command}
@@ -466,9 +468,9 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
                 <input
                   className="flex-1 rounded-lg border px-3 py-1.5 text-xs outline-none"
                   style={{
-                    background: isDark ? "#0f172a" : "#f8fafc",
+                    background: "var(--bg-sunken)",
                     borderColor: border,
-                    color: isDark ? "#e2e8f0" : "#1e293b",
+                    color: "var(--text)",
                   }}
                   placeholder="description..."
                   value={newCmd.description}
@@ -477,14 +479,14 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
                 <button
                   onClick={handleAddItem}
                   className="rounded px-3 py-1 text-xs font-medium"
-                  style={{ background: "#2196F315", color: "#2196F3" }}
+                  style={{ background: `${COMMANDS_ACCENT}15`, color: COMMANDS_ACCENT }}
                 >
                   Add
                 </button>
                 <button
                   onClick={() => setAddingItem(false)}
                   className="rounded px-3 py-1 text-xs"
-                  style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+                  style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
                 >
                   Cancel
                 </button>
@@ -501,16 +503,15 @@ function ContainerCard({ container, isDark }: ContainerCardProps) {
                     key={item.id}
                     item={item}
                     containerId={container.id}
-                    isDark={isDark}
                     index={idx}
                   />
                 ))}
               </tbody>
             </table>
           ) : (
-            <div className="py-8 text-center text-xs" style={{ color: "#94a3b8" }}>
+            <div className="py-8 text-center text-xs" style={{ color: "var(--text-subtle)" }}>
               No commands.{" "}
-              <button onClick={() => setAddingItem(true)} className="text-blue-400 hover:underline">
+              <button onClick={() => setAddingItem(true)} className="text-commands hover:underline">
                 Add one
               </button>
             </div>
@@ -526,7 +527,6 @@ interface Props {
 }
 
 export function CommandsView({ container }: Props) {
-  const { isDarkTheme } = useStore();
   const [search, setSearch] = useState("");
 
   // Единый автосинк, управляемый тумблером settings.autoSave (Задача 0.E.3)
@@ -538,33 +538,33 @@ export function CommandsView({ container }: Props) {
       i.description.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const bg = isDarkTheme ? "#0f172a" : "#f1f5f9";
-  const border = isDarkTheme ? "#1e293b" : "#e2e8f0";
+  const bg = "var(--bg)";
+  const border = "var(--border)";
 
   return (
     <div className="flex h-full flex-col" style={{ background: bg }}>
       {/* Header */}
       <div
         className="flex items-center gap-3 border-b px-6 py-4"
-        style={{ background: isDarkTheme ? "#111827" : "#fff", borderColor: border }}
+        style={{ background: "var(--bg-elevated)", borderColor: border }}
       >
-        <Terminal size={20} style={{ color: "#2196F3" }} />
+        <Terminal size={20} style={{ color: COMMANDS_ACCENT }} />
         <div className="flex-1">
-          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}>
+          <h1 className="text-lg font-bold" style={{ color: "var(--text)" }}>
             {container.title}
           </h1>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
+          <p className="text-xs" style={{ color: "var(--text-subtle)" }}>
             {filtered.length} commands
           </p>
         </div>
         <div className="relative">
-          <Search size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-subtle" />
           <input
             className="w-48 rounded-lg border py-1.5 pr-3 pl-8 text-sm outline-none"
             style={{
-              background: isDarkTheme ? "#1e293b" : "#f8fafc",
+              background: "var(--bg-sunken)",
               borderColor: border,
-              color: isDarkTheme ? "#e2e8f0" : "#1e293b",
+              color: "var(--text)",
             }}
             placeholder="Search commands..."
             inputMode="search"
@@ -580,14 +580,14 @@ export function CommandsView({ container }: Props) {
         {filtered.length === 0 ? (
           <div
             className="flex h-64 flex-col items-center justify-center gap-3"
-            style={{ color: "#94a3b8" }}
+            style={{ color: "var(--text-subtle)" }}
           >
             <Terminal size={48} className="opacity-20" />
             <p className="text-lg font-medium">No commands yet</p>
             <p className="text-sm">Add your first command using the panel below</p>
           </div>
         ) : (
-          <ContainerCard container={{ ...container, subItems: filtered }} isDark={isDarkTheme} />
+          <ContainerCard container={{ ...container, subItems: filtered }} />
         )}
       </div>
     </div>

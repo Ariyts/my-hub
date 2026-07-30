@@ -51,8 +51,9 @@ export const SECTION_COLORS = [
   "#64748b",
 ];
 
-// Brand accent
-export const BRAND = "#00BCD4";
+// Brand accent — зеркалит токен --accent-playbooks (hex, а не var(): значение
+// конкатенируется с альфой в тинтах `${BRAND}20`)
+export const BRAND = "#39c5cf";
 
 // Map service/playbook name → emoji icon for hero header
 export function getServiceIcon(title: string): string {

@@ -52,12 +52,12 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
   };
 
   return (
-    <div className="animate-in space-y-2 rounded-xl border-2 border-dashed border-cyan-400/50 bg-cyan-500/5 p-3 backdrop-blur-sm">
+    <div className="animate-in space-y-2 rounded-lg border-2 border-dashed border-playbooks/50 bg-playbooks/5 p-3 backdrop-blur-sm">
       <div className="flex items-center gap-2">
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as PlaybookLanguage)}
-          className="rounded-lg border border-border bg-background px-2.5 py-2 text-[11px] font-semibold text-foreground outline-none focus:border-cyan-400"
+          className="rounded-lg border border-border bg-background px-2.5 py-2 text-[11px] font-semibold text-foreground outline-none focus:border-playbooks"
         >
           {PLAYBOOK_LANGUAGES.map((l) => (
             <option key={l} value={l}>
@@ -71,7 +71,7 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
           onChange={(e) => setCommand(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="nmap -sV -sC <target> ..."
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-foreground placeholder-subtle outline-none focus:border-cyan-400"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs text-foreground placeholder-subtle outline-none focus:border-playbooks"
         />
       </div>
 
@@ -81,14 +81,14 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
           onChange={(e) => setDescription(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Description — what does this command do?"
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder-subtle outline-none focus:border-cyan-400"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder-subtle outline-none focus:border-playbooks"
         />
         <input
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="tags (comma sep.)"
-          className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder-subtle outline-none focus:border-cyan-400"
+          className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder-subtle outline-none focus:border-playbooks"
         />
       </div>
 
@@ -106,7 +106,7 @@ export function InlineAddCommand({ onAdd, onClose, sectionId }: Props) {
         <button
           onClick={handleAdd}
           disabled={!command.trim()}
-          className="flex items-center gap-1.5 rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-lg bg-playbooks px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Check size={13} strokeWidth={2.5} />
           Add Command

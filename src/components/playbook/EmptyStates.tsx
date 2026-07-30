@@ -12,7 +12,7 @@ export function EmptyState({ hasSections, isFiltered, onAddSection, onClearFilte
   if (isFiltered) {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-20">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-border-subtle bg-sunken">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl border border-border-subtle bg-sunken">
           <SearchIcon size={26} className="text-subtle" />
         </div>
         <h3 className="mb-1 text-base font-semibold text-foreground">No matches found</h3>
@@ -36,23 +36,23 @@ export function EmptyState({ hasSections, isFiltered, onAddSection, onClearFilte
     return (
       <div className="flex flex-col items-center justify-center px-6 py-24">
         <div className="relative mb-6">
-          <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-2xl" />
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-border-subtle bg-gradient-to-br from-cyan-500/30 to-violet-500/30 backdrop-blur-sm">
-            <Target size={34} className="text-cyan-300" />
+          <div className="absolute inset-0 rounded-full bg-playbooks/20 blur-2xl" />
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-xl border border-border-subtle bg-gradient-to-br from-playbooks/30 to-primary/30 backdrop-blur-sm">
+            <Target size={34} className="text-playbooks" />
           </div>
         </div>
         <h3 className="mb-2 text-xl font-bold text-foreground">Build your pentest playbook</h3>
         <p className="mb-6 max-w-md text-center text-sm leading-relaxed text-muted">
-          Organize commands into phases — <span className="font-medium text-blue-400">Recon</span>,{" "}
-          <span className="font-medium text-orange-400">Fuzzing</span>,{" "}
-          <span className="font-medium text-red-400">Exploitation</span>,{" "}
-          <span className="font-medium text-green-400">Post-Exploitation</span> — and have a
+          Organize commands into phases — <span className="font-medium text-commands">Recon</span>,{" "}
+          <span className="font-medium text-warning">Fuzzing</span>,{" "}
+          <span className="font-medium text-danger">Exploitation</span>,{" "}
+          <span className="font-medium text-success">Post-Exploitation</span> — and have a
           one-click reference during engagements.
         </p>
         <div className="flex items-center gap-3">
           <button
             onClick={onAddSection}
-            className="flex items-center gap-2 rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-medium text-slate-950 shadow-lg shadow-cyan-500/20 transition-colors hover:bg-cyan-400"
+            className="flex items-center gap-2 rounded-lg bg-playbooks px-5 py-2.5 text-sm font-medium text-slate-950 shadow-lg transition-colors hover:opacity-90"
           >
             <FolderPlus size={15} strokeWidth={2.5} />
             Create first section

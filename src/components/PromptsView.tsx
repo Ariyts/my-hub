@@ -19,6 +19,10 @@ import {
   Palette,
 } from "lucide-react";
 
+// Акцент типа «Prompts». Зеркалит токен --accent-prompts (тема-независим), но
+// hex-константой: значение конкатенируется с альфой в тинтах `${…}15`.
+const PROMPTS_ACCENT = "#bc8cff";
+
 // Predefined color palette for sections
 const SECTION_COLORS = [
   "#ef4444",
@@ -45,12 +49,11 @@ function stripMdMetadata(text: string): string {
 // INLINE ADD SECTION COMPONENT
 // ============================================
 interface InlineAddSectionProps {
-  isDark: boolean;
   onAdd: (title: string) => void;
   onClose: () => void;
 }
 
-function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
+function InlineAddSection({ onAdd, onClose }: InlineAddSectionProps) {
   const [title, setTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -72,19 +75,19 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
     } else if (e.key === "Escape") onClose();
   };
 
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  const inputBg = isDark ? "#0f172a" : "#ffffff";
+  const borderColor = "var(--border)";
+  const inputBg = "var(--bg-sunken)";
 
   return (
     <div
-      className="animate-in fade-in flex items-center gap-2 rounded-xl border-2 border-dashed px-4 py-2 duration-150"
-      style={{ background: isDark ? "#1e293b" : "#f8fafc", borderColor: "#9C27B0" }}
+      className="animate-in fade-in flex items-center gap-2 rounded-lg border-2 border-dashed px-4 py-2 duration-150"
+      style={{ background: "var(--bg-sunken)", borderColor: PROMPTS_ACCENT }}
       tabIndex={-1}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget) && !title.trim()) onClose();
       }}
     >
-      <MessageSquare size={14} style={{ color: "#9C27B0" }} />
+      <MessageSquare size={14} style={{ color: PROMPTS_ACCENT }} />
       <input
         ref={inputRef}
         type="text"
@@ -92,26 +95,26 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Section title..."
-        className="flex-1 rounded border px-2 py-1 text-sm outline-none focus:border-purple-400"
-        style={{ background: inputBg, borderColor, color: isDark ? "#e2e8f0" : "#1e293b" }}
+        className="flex-1 rounded border px-2 py-1 text-sm outline-none focus:border-prompts"
+        style={{ background: inputBg, borderColor, color: "var(--text)" }}
       />
       <div className="flex items-center gap-1">
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleAdd}
           disabled={!title.trim()}
-          className="rounded p-1 transition-colors hover:bg-green-500/20 disabled:opacity-50"
+          className="rounded p-1 transition-colors hover:bg-success/15 disabled:opacity-50"
           title="Create section (Enter)"
         >
-          <Check size={14} className="text-green-400" />
+          <Check size={14} className="text-success" />
         </button>
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          className="rounded p-1 transition-colors hover:bg-red-500/20"
+          className="rounded p-1 transition-colors hover:bg-danger/15"
           title="Cancel (Esc)"
         >
-          <X size={14} className="text-red-400" />
+          <X size={14} className="text-danger" />
         </button>
       </div>
     </div>
@@ -124,11 +127,10 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
 interface PromptRowProps {
   item: PromptItem;
   containerId: string;
-  isDark: boolean;
   index: number;
 }
 
-function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
+function PromptRow({ item, containerId, index }: PromptRowProps) {
   const { updatePromptItem, deletePromptItem } = useStore();
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -165,13 +167,13 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
     setEditing(false);
   };
 
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const bg = isDark ? "#0f172a" : "#f8fafc";
-  const codeBg = isDark ? "#1e1e2e" : "#f0f4f8";
+  const border = "var(--border)";
+  const bg = "var(--bg-sunken)";
+  const codeBg = "var(--bg-sunken)";
 
   if (editing) {
     return (
-      <tr style={{ background: isDark ? "#1e293b30" : "#f8fafc" }}>
+      <tr style={{ background: "var(--bg-sunken)" }}>
         <td colSpan={6} className="p-3">
           <div className="space-y-2">
             <div className="flex gap-2">
@@ -180,7 +182,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
                 style={{
                   background: bg,
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 value={editData.title}
                 onChange={(e) => setEditData({ ...editData, title: e.target.value })}
@@ -192,7 +194,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
                 style={{
                   background: bg,
                   borderColor: border,
-                  color: isDark ? "#e2e8f0" : "#1e293b",
+                  color: "var(--text)",
                 }}
                 value={editData.description || ""}
                 onChange={(e) => setEditData({ ...editData, description: e.target.value })}
@@ -204,7 +206,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
               style={{
                 background: codeBg,
                 borderColor: border,
-                color: isDark ? "#c4b5fd" : "#6b21a8",
+                color: "var(--text)",
                 minHeight: "80px",
               }}
               value={editData.prompt}
@@ -215,14 +217,14 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
               <button
                 onClick={handleSave}
                 className="rounded px-3 py-1 text-xs font-medium"
-                style={{ background: "#9C27B015", color: "#9C27B0" }}
+                style={{ background: `${PROMPTS_ACCENT}15`, color: PROMPTS_ACCENT }}
               >
                 Save
               </button>
               <button
                 onClick={() => setEditing(false)}
                 className="rounded px-3 py-1 text-xs"
-                style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+                style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
               >
                 Cancel
               </button>
@@ -236,11 +238,11 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
   return (
     <>
       <tr
-        className="group transition-colors hover:bg-purple-500/5"
+        className="group transition-colors hover:bg-prompts/5"
         style={{ borderBottom: `1px solid ${border}` }}
       >
         <td className="cell-index w-8 px-2 py-2 text-center">
-          <span className="font-mono text-xs" style={{ color: isDark ? "#475569" : "#94a3b8" }}>
+          <span className="font-mono text-xs" style={{ color: "var(--text-subtle)" }}>
             {index + 1}
           </span>
         </td>
@@ -248,7 +250,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
           <div className="flex items-center gap-2">
             <span
               className="truncate text-sm font-medium"
-              style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+              style={{ color: "var(--text)" }}
             >
               {item.title}
             </span>
@@ -257,15 +259,15 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
             )}
           </div>
           {displayDescription && (
-            <p className="mt-0.5 truncate text-[11px]" style={{ color: "#94a3b8" }}>
+            <p className="mt-0.5 truncate text-[11px]" style={{ color: "var(--text-subtle)" }}>
               {displayDescription}
             </p>
           )}
         </td>
         <td className="min-w-[250px] px-2 py-2">
           <div
-            className="cursor-pointer truncate rounded px-3 py-1.5 font-mono text-xs hover:bg-purple-500/10"
-            style={{ background: codeBg, color: isDark ? "#c4b5fd" : "#7c3aed", maxWidth: "300px" }}
+            className="cursor-pointer truncate rounded px-3 py-1.5 font-mono text-xs hover:bg-prompts/10"
+            style={{ background: codeBg, color: "var(--text)", maxWidth: "300px" }}
             onClick={handleCopy}
             title="Click to copy"
           >
@@ -279,19 +281,19 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
                 <span
                   key={v}
                   className="rounded px-1.5 py-0.5 font-mono text-[10px]"
-                  style={{ background: "#9C27B015", color: "#9C27B0" }}
+                  style={{ background: `${PROMPTS_ACCENT}15`, color: PROMPTS_ACCENT }}
                 >
                   {v.replace(/\{\{|\}\}/g, "")}
                 </span>
               ))}
               {variables.length > 3 && (
-                <span className="text-[10px]" style={{ color: "#94a3b8" }}>
+                <span className="text-[10px]" style={{ color: "var(--text-subtle)" }}>
                   +{variables.length - 3}
                 </span>
               )}
             </div>
           ) : (
-            <span className="text-[10px]" style={{ color: "#64748b" }}>
+            <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
               &mdash;
             </span>
           )}
@@ -302,7 +304,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
               <span
                 key={tag}
                 className="rounded px-1.5 py-0.5 text-[10px]"
-                style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+                style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
               >
                 #{tag}
               </span>
@@ -315,39 +317,39 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
               <button
                 onClick={() => setShowVars(!showVars)}
                 className="rounded p-1"
-                style={{ background: showVars ? "#9C27B020" : "transparent" }}
+                style={{ background: showVars ? `${PROMPTS_ACCENT}20` : "transparent" }}
               >
-                <Variable size={11} style={{ color: showVars ? "#9C27B0" : "#64748b" }} />
+                <Variable size={11} style={{ color: showVars ? PROMPTS_ACCENT : "var(--text-muted)" }} />
               </button>
             )}
             <button
               onClick={handleCopy}
               className="flex items-center gap-1 rounded px-2 py-1 text-xs"
               style={{
-                background: copied ? "#4CAF5020" : "#9C27B015",
-                color: copied ? "#4CAF50" : "#9C27B0",
+                background: copied ? "color-mix(in srgb, var(--success) 12%, transparent)" : `${PROMPTS_ACCENT}15`,
+                color: copied ? "var(--success)" : PROMPTS_ACCENT,
               }}
             >
               {copied ? <Check size={10} /> : <Copy size={10} />}
             </button>
             <button onClick={() => setEditing(true)} className="rounded p-1 hover:bg-slate-500/20">
-              <Edit3 size={11} className="text-slate-400" />
+              <Edit3 size={11} className="text-subtle" />
             </button>
             <button
               onClick={() => deletePromptItem(containerId, item.id)}
-              className="rounded p-1 hover:bg-red-500/20"
+              className="rounded p-1 hover:bg-danger/15"
             >
-              <Trash2 size={11} className="text-red-400" />
+              <Trash2 size={11} className="text-danger" />
             </button>
           </div>
         </td>
       </tr>
       {showVars && variables.length > 0 && (
-        <tr style={{ background: isDark ? "#1e1b4b30" : "#faf5ff" }}>
+        <tr style={{ background: "color-mix(in srgb, var(--accent-prompts) 8%, transparent)" }}>
           <td colSpan={6} className="px-4 py-3">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
-                <span className="text-xs font-medium" style={{ color: "#9C27B0" }}>
+                <span className="text-xs font-medium" style={{ color: PROMPTS_ACCENT }}>
                   Variables:
                 </span>
               </div>
@@ -358,16 +360,16 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
                     <div key={v} className="flex items-center gap-2">
                       <span
                         className="w-16 truncate font-mono text-[10px]"
-                        style={{ color: "#9C27B0" }}
+                        style={{ color: PROMPTS_ACCENT }}
                       >
                         {key}
                       </span>
                       <input
                         className="flex-1 rounded border px-2 py-1 text-xs outline-none"
                         style={{
-                          background: isDark ? "#0f172a" : "#fff",
-                          borderColor: "#9C27B050",
-                          color: isDark ? "#e2e8f0" : "#1e293b",
+                          background: "var(--bg-sunken)",
+                          borderColor: `${PROMPTS_ACCENT}50`,
+                          color: "var(--text)",
                         }}
                         value={varValues[key] || ""}
                         onChange={(e) => setVarValues({ ...varValues, [key]: e.target.value })}
@@ -378,7 +380,7 @@ function PromptRow({ item, containerId, isDark, index }: PromptRowProps) {
                 })}
               </div>
               <button onClick={() => setShowVars(false)} className="p-1">
-                <X size={12} className="text-slate-400" />
+                <X size={12} className="text-subtle" />
               </button>
             </div>
           </td>
@@ -395,7 +397,6 @@ interface PromptSectionCardProps {
   section: PromptSection;
   items: PromptItem[];
   containerId: string;
-  isDark: boolean;
   onToggleCollapse: (sectionId: string) => void;
   onEditSection: (sectionId: string) => void;
   onDeleteSection: (sectionId: string) => void;
@@ -407,7 +408,6 @@ function PromptSectionCard({
   section,
   items,
   containerId,
-  isDark,
   onToggleCollapse,
   onEditSection,
   onDeleteSection,
@@ -415,13 +415,13 @@ function PromptSectionCard({
   onAddItem,
 }: PromptSectionCardProps) {
   const isCollapsed = section.collapsed ?? false;
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const bg = isDark ? "#111827" : "#ffffff";
-  const headerBg = isDark ? "#1e293b" : "#f8fafc";
+  const border = "var(--border)";
+  const bg = "var(--bg-elevated)";
+  const headerBg = "var(--bg-sunken)";
 
   return (
     <div
-      className="group overflow-hidden rounded-xl border transition-all duration-200"
+      className="group overflow-hidden rounded-lg border transition-all duration-200"
       style={{ borderColor: border }}
     >
       {/* Section Header */}
@@ -438,9 +438,9 @@ function PromptSectionCard({
           }}
         >
           {isCollapsed ? (
-            <ChevronRight size={14} style={{ color: section.color || "#9C27B0" }} />
+            <ChevronRight size={14} style={{ color: section.color || PROMPTS_ACCENT }} />
           ) : (
-            <ChevronDown size={14} style={{ color: section.color || "#9C27B0" }} />
+            <ChevronDown size={14} style={{ color: section.color || PROMPTS_ACCENT }} />
           )}
         </button>
         {section.color && (
@@ -449,18 +449,18 @@ function PromptSectionCard({
             style={{ background: section.color }}
           />
         )}
-        <MessageSquare size={14} style={{ color: section.color || "#9C27B0" }} />
+        <MessageSquare size={14} style={{ color: section.color || PROMPTS_ACCENT }} />
         <span
           className="flex-1 text-sm font-medium"
-          style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+          style={{ color: "var(--text)" }}
         >
           {section.title}
         </span>
         <span
           className="rounded-full px-2 py-0.5 text-xs font-medium"
           style={{
-            background: section.color ? `${section.color}20` : "#9C27B015",
-            color: section.color || "#9C27B0",
+            background: section.color ? `${section.color}20` : `${PROMPTS_ACCENT}15`,
+            color: section.color || PROMPTS_ACCENT,
           }}
         >
           {items.length}
@@ -474,27 +474,27 @@ function PromptSectionCard({
             className="rounded-lg p-1.5 transition-colors hover:bg-slate-500/20"
             title="Change color"
           >
-            <Palette size={14} style={{ color: section.color || "#64748b" }} />
+            <Palette size={14} style={{ color: section.color || "var(--text-muted)" }} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEditSection(section.id);
             }}
-            className="rounded-lg p-1.5 transition-colors hover:bg-purple-500/20"
+            className="rounded-lg p-1.5 transition-colors hover:bg-prompts/20"
             title="Rename section"
           >
-            <Edit3 size={14} style={{ color: "#9C27B0" }} />
+            <Edit3 size={14} style={{ color: PROMPTS_ACCENT }} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDeleteSection(section.id);
             }}
-            className="rounded-lg p-1.5 transition-colors hover:bg-red-500/20"
+            className="rounded-lg p-1.5 transition-colors hover:bg-danger/15"
             title="Delete section"
           >
-            <Trash2 size={14} className="text-red-400" />
+            <Trash2 size={14} className="text-danger" />
           </button>
         </div>
         <button
@@ -502,10 +502,10 @@ function PromptSectionCard({
             e.stopPropagation();
             onAddItem(section.id);
           }}
-          className="rounded p-1 hover:bg-purple-500/20"
+          className="rounded p-1 hover:bg-prompts/20"
           title="Add prompt to this section"
         >
-          <Plus size={14} style={{ color: "#9C27B0" }} />
+          <Plus size={14} style={{ color: PROMPTS_ACCENT }} />
         </button>
       </div>
 
@@ -517,7 +517,7 @@ function PromptSectionCard({
               <thead>
                 <tr
                   className="text-[10px] tracking-wider uppercase"
-                  style={{ color: "#64748b", background: isDark ? "#1e293b50" : "#f8fafc" }}
+                  style={{ color: "var(--text-muted)", background: "var(--bg-sunken)" }}
                 >
                   <th className="w-8 px-2 py-1.5 text-center">#</th>
                   <th className="px-2 py-1.5 text-left">Title</th>
@@ -533,7 +533,6 @@ function PromptSectionCard({
                     key={item.id}
                     item={item}
                     containerId={containerId}
-                    isDark={isDark}
                     index={idx}
                   />
                 ))}
@@ -541,8 +540,8 @@ function PromptSectionCard({
             </table>
           ) : (
             <div
-              className="m-3 cursor-pointer rounded-lg border-2 border-dashed py-6 text-center text-xs transition-colors hover:border-purple-400"
-              style={{ color: "#94a3b8", borderColor: "transparent" }}
+              className="m-3 cursor-pointer rounded-lg border-2 border-dashed py-6 text-center text-xs transition-colors hover:border-prompts"
+              style={{ color: "var(--text-subtle)", borderColor: "transparent" }}
               onClick={() => onAddItem(section.id)}
             >
               Click to add a prompt
@@ -558,7 +557,6 @@ function PromptSectionCard({
 // INLINE ADD PROMPT FORM (for specific section)
 // ============================================
 interface InlineAddPromptProps {
-  isDark: boolean;
   onAdd: (data: {
     title: string;
     prompt: string;
@@ -572,7 +570,7 @@ interface InlineAddPromptProps {
   sectionId?: string;
 }
 
-function InlineAddPrompt({ isDark, onAdd, onClose, sectionId }: InlineAddPromptProps) {
+function InlineAddPrompt({ onAdd, onClose, sectionId }: InlineAddPromptProps) {
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   const [description, setDescription] = useState("");
@@ -605,14 +603,14 @@ function InlineAddPrompt({ isDark, onAdd, onClose, sectionId }: InlineAddPromptP
     } else if (e.key === "Escape") onClose();
   };
 
-  const border = isDark ? "#374151" : "#e5e7eb";
-  const bg = isDark ? "#0f172a" : "#ffffff";
-  const codeBg = isDark ? "#1e1e2e" : "#f0f4f8";
+  const border = "var(--border)";
+  const bg = "var(--bg-sunken)";
+  const codeBg = "var(--bg-sunken)";
 
   return (
     <div
-      className="animate-in fade-in space-y-2 rounded-xl border-2 border-dashed p-4 duration-150"
-      style={{ borderColor: "#9C27B0", background: "#9C27B008" }}
+      className="animate-in fade-in space-y-2 rounded-lg border-2 border-dashed p-4 duration-150"
+      style={{ borderColor: PROMPTS_ACCENT, background: `${PROMPTS_ACCENT}08` }}
       tabIndex={-1}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget) && !title.trim() && !prompt.trim())
@@ -623,7 +621,7 @@ function InlineAddPrompt({ isDark, onAdd, onClose, sectionId }: InlineAddPromptP
         <input
           ref={inputRef}
           className="flex-1 rounded-lg border px-3 py-1.5 text-sm outline-none"
-          style={{ background: bg, borderColor: border, color: isDark ? "#e2e8f0" : "#1e293b" }}
+          style={{ background: bg, borderColor: border, color: "var(--text)" }}
           placeholder="Prompt title..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -631,7 +629,7 @@ function InlineAddPrompt({ isDark, onAdd, onClose, sectionId }: InlineAddPromptP
         />
         <input
           className="w-48 rounded-lg border px-3 py-1.5 text-xs outline-none"
-          style={{ background: bg, borderColor: border, color: isDark ? "#e2e8f0" : "#1e293b" }}
+          style={{ background: bg, borderColor: border, color: "var(--text)" }}
           placeholder="Description..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -643,7 +641,7 @@ function InlineAddPrompt({ isDark, onAdd, onClose, sectionId }: InlineAddPromptP
         style={{
           background: codeBg,
           borderColor: border,
-          color: isDark ? "#c4b5fd" : "#6b21a8",
+          color: "var(--text)",
           minHeight: "60px",
         }}
         placeholder="Prompt text... Use {{variable}} for dynamic values. Ctrl+Enter to add."
@@ -656,14 +654,14 @@ function InlineAddPrompt({ isDark, onAdd, onClose, sectionId }: InlineAddPromptP
           onClick={handleAdd}
           disabled={!title.trim() || !prompt.trim()}
           className="rounded px-3 py-1 text-xs font-medium disabled:opacity-50"
-          style={{ background: "#9C27B015", color: "#9C27B0" }}
+          style={{ background: `${PROMPTS_ACCENT}15`, color: PROMPTS_ACCENT }}
         >
           Add
         </button>
         <button
           onClick={onClose}
           className="rounded px-3 py-1 text-xs"
-          style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+          style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
         >
           Cancel
         </button>
@@ -680,8 +678,7 @@ interface Props {
 }
 
 export function PromptsView({ container }: Props) {
-  const { isDarkTheme, addPromptItem, addPromptSection, updatePromptSection, deletePromptSection } =
-    useStore();
+  const { addPromptItem, addPromptSection, updatePromptSection, deletePromptSection } = useStore();
 
   // Единый автосинк, управляемый тумблером settings.autoSave (Задача 0.E.3)
   useAutoSync(container.id, container.updatedAt);
@@ -718,8 +715,8 @@ export function PromptsView({ container }: Props) {
     );
   }, [uncategorizedItems, search]);
 
-  const bg = isDarkTheme ? "#0f172a" : "#f1f5f9";
-  const border = isDarkTheme ? "#1e293b" : "#e2e8f0";
+  const bg = "var(--bg)";
+  const border = "var(--border)";
 
   // Section handlers
   const handleToggleCollapse = (sectionId: string) => {
@@ -789,26 +786,26 @@ export function PromptsView({ container }: Props) {
       {/* Header */}
       <div
         className="flex items-center gap-3 border-b px-6 py-4"
-        style={{ background: isDarkTheme ? "#111827" : "#fff", borderColor: border }}
+        style={{ background: "var(--bg-elevated)", borderColor: border }}
       >
-        <MessageSquare size={20} style={{ color: "#9C27B0" }} />
+        <MessageSquare size={20} style={{ color: PROMPTS_ACCENT }} />
         <div className="flex-1">
-          <h1 className="text-lg font-bold" style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}>
+          <h1 className="text-lg font-bold" style={{ color: "var(--text)" }}>
             {container.title}
           </h1>
-          <p className="text-xs" style={{ color: "#94a3b8" }}>
+          <p className="text-xs" style={{ color: "var(--text-subtle)" }}>
             {container.subItems.length} prompts in {sections.length || "no"} section
             {sections.length !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="relative">
-          <Search size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-subtle" />
           <input
             className="w-48 rounded-lg border py-1.5 pr-3 pl-8 text-sm outline-none"
             style={{
-              background: isDarkTheme ? "#1e293b" : "#f8fafc",
+              background: "var(--bg-sunken)",
               borderColor: border,
-              color: isDarkTheme ? "#e2e8f0" : "#1e293b",
+              color: "var(--text)",
             }}
             placeholder="Search prompts..."
             inputMode="search"
@@ -822,11 +819,11 @@ export function PromptsView({ container }: Props) {
           onClick={() => setAddingSection(true)}
           className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
           style={{
-            background: isDarkTheme ? "#1e293b" : "#f1f5f9",
-            color: isDarkTheme ? "#e2e8f0" : "#1e293b",
+            background: "var(--bg-sunken)",
+            color: "var(--text)",
           }}
         >
-          <FolderPlus size={14} style={{ color: "#9C27B0" }} />
+          <FolderPlus size={14} style={{ color: PROMPTS_ACCENT }} />
           <span className="hidden sm:inline">Section</span>
         </button>
       </div>
@@ -836,7 +833,6 @@ export function PromptsView({ container }: Props) {
         {/* Inline Add Section */}
         {addingSection && (
           <InlineAddSection
-            isDark={isDarkTheme}
             onAdd={handleAddSection}
             onClose={() => setAddingSection(false)}
           />
@@ -845,20 +841,20 @@ export function PromptsView({ container }: Props) {
         {/* No sections & no items state */}
         {sections.length === 0 && container.subItems.length === 0 && !addingSection && (
           <div className="py-12 text-center">
-            <FolderPlus size={48} className="mx-auto mb-4" style={{ color: "#64748b" }} />
+            <FolderPlus size={48} className="mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
             <h3
               className="mb-2 text-lg font-medium"
-              style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+              style={{ color: "var(--text)" }}
             >
               No sections yet
             </h3>
-            <p className="mb-4 text-sm" style={{ color: "#64748b" }}>
+            <p className="mb-4 text-sm" style={{ color: "var(--text-muted)" }}>
               Create a section to start organizing your prompts
             </p>
             <button
               onClick={() => setAddingSection(true)}
               className="rounded-lg px-4 py-2 text-sm font-medium"
-              style={{ background: "#9C27B0", color: "white" }}
+              style={{ background: PROMPTS_ACCENT, color: "white" }}
             >
               Create Section
             </button>
@@ -884,7 +880,6 @@ export function PromptsView({ container }: Props) {
                 section={section}
                 items={filteredItems}
                 containerId={container.id}
-                isDark={isDarkTheme}
                 onToggleCollapse={handleToggleCollapse}
                 onEditSection={handleEditSection}
                 onDeleteSection={handleDeleteSection}
@@ -895,7 +890,6 @@ export function PromptsView({ container }: Props) {
               {addingToSection === section.id && (
                 <div className="mt-2">
                   <InlineAddPrompt
-                    isDark={isDarkTheme}
                     onAdd={handleAddItem}
                     onClose={() => setAddingToSection(undefined)}
                     sectionId={section.id}
@@ -909,23 +903,23 @@ export function PromptsView({ container }: Props) {
         {/* Uncategorized prompts (no sectionId) */}
         {uncategorizedItems.length > 0 && (
           <div
-            className="overflow-hidden rounded-xl border"
-            style={{ borderColor: border, background: isDarkTheme ? "#111827" : "#ffffff" }}
+            className="overflow-hidden rounded-lg border"
+            style={{ borderColor: border, background: "var(--bg-elevated)" }}
           >
             <div
               className="flex items-center gap-2 px-4 py-2"
-              style={{ background: isDarkTheme ? "#1e293b" : "#f8fafc" }}
+              style={{ background: "var(--bg-sunken)" }}
             >
-              <MessageSquare size={14} style={{ color: "#64748b" }} />
+              <MessageSquare size={14} style={{ color: "var(--text-muted)" }} />
               <span
                 className="text-sm font-medium"
-                style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                style={{ color: "var(--text)" }}
               >
                 Uncategorized
               </span>
               <span
                 className="rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{ background: "#64748b20", color: "#64748b" }}
+                style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
               >
                 {filteredUncategorized.length}
               </span>
@@ -956,17 +950,17 @@ export function PromptsView({ container }: Props) {
                       });
                     }
                   }}
-                  className="rounded p-1 hover:bg-purple-500/20"
+                  className="rounded p-1 hover:bg-prompts/20"
                   title="Convert to named section"
                 >
-                  <Edit3 size={14} style={{ color: "#9C27B0" }} />
+                  <Edit3 size={14} style={{ color: PROMPTS_ACCENT }} />
                 </button>
                 <button
                   onClick={() => setAddingToSection("__uncategorized__")}
-                  className="rounded p-1 hover:bg-purple-500/20"
+                  className="rounded p-1 hover:bg-prompts/20"
                   title="Add prompt"
                 >
-                  <Plus size={14} style={{ color: "#9C27B0" }} />
+                  <Plus size={14} style={{ color: PROMPTS_ACCENT }} />
                 </button>
               </div>
             </div>
@@ -977,8 +971,8 @@ export function PromptsView({ container }: Props) {
                     <tr
                       className="text-[10px] tracking-wider uppercase"
                       style={{
-                        color: "#64748b",
-                        background: isDarkTheme ? "#1e293b50" : "#f8fafc",
+                        color: "var(--text-muted)",
+                        background: "var(--bg-sunken)",
                       }}
                     >
                       <th className="w-8 px-2 py-1.5 text-center">#</th>
@@ -995,14 +989,13 @@ export function PromptsView({ container }: Props) {
                         key={item.id}
                         item={item}
                         containerId={container.id}
-                        isDark={isDarkTheme}
                         index={idx}
                       />
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <div className="py-6 text-center text-xs" style={{ color: "#94a3b8" }}>
+                <div className="py-6 text-center text-xs" style={{ color: "var(--text-subtle)" }}>
                   No prompts found
                 </div>
               )}
@@ -1013,7 +1006,6 @@ export function PromptsView({ container }: Props) {
         {/* Inline add prompt to uncategorized */}
         {addingToSection === "__uncategorized__" && (
           <InlineAddPrompt
-            isDark={isDarkTheme}
             onAdd={handleAddItem}
             onClose={() => setAddingToSection(undefined)}
           />

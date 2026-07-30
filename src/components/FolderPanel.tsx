@@ -63,7 +63,6 @@ function FolderItem({
     toggleFolderExpanded,
     updateFolder,
     deleteFolder,
-    isDarkTheme,
     updateNote,
     deleteNote,
     updateCommandContainer,
@@ -267,26 +266,23 @@ function FolderItem({
       onDragOver={(e) => handleDragOver(e, folder.id)}
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, folder.id)}
-      className={dropTarget === folder.id ? "mx-1 rounded-lg bg-indigo-500/10" : ""}
+      className={dropTarget === folder.id ? "mx-1 rounded-lg bg-primary/10" : ""}
     >
       {/* Context Menu */}
       {contextMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setContextMenu(null)} />
           <div
-            className="fixed z-50 min-w-[140px] rounded-lg border py-1 shadow-xl"
+            className="fixed z-50 min-w-[140px] rounded-lg border border-border bg-surface py-1 shadow-xl"
             style={{
               left: contextMenu.x,
               top: contextMenu.y,
-              background: isDarkTheme ? "#1e293b" : "#fff",
-              borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
             }}
           >
             {contextMenu.type === "folder" ? (
               <>
                 <button
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-foreground hover:bg-sunken"
                   onClick={() => {
                     setNewName(folder.name);
                     setRenaming({ type: "folder" });
@@ -296,8 +292,7 @@ function FolderItem({
                   <Edit2 size={12} /> Rename
                 </button>
                 <button
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-foreground hover:bg-sunken"
                   onClick={() => {
                     onAddSubfolder(folder.id);
                     setContextMenu(null);
@@ -306,8 +301,7 @@ function FolderItem({
                   <Plus size={12} /> Add Subfolder
                 </button>
                 <button
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
-                  style={{ color: "#ef4444" }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-danger/10"
                   onClick={() => {
                     deleteFolder(folder.id);
                     setContextMenu(null);
@@ -319,8 +313,7 @@ function FolderItem({
             ) : (
               <>
                 <button
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-foreground hover:bg-sunken"
                   onClick={() => {
                     const file = files.find((f) => f.id === contextMenu.itemId);
                     if (file) startRenameFile(file.id, file.title);
@@ -332,41 +325,30 @@ function FolderItem({
                 {/* Перенос в другую папку: пальцем файл не перетащишь */}
                 {otherFolders.length > 0 && (
                   <>
-                    <div
-                      className="mt-1 border-t px-3 pt-1.5 pb-1 text-[10px] tracking-wider uppercase"
-                      style={{
-                        color: "#64748b",
-                        borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
-                      }}
-                    >
+                    <div className="mt-1 border-t border-border px-3 pt-1.5 pb-1 text-[10px] tracking-wider text-subtle uppercase">
                       Move to folder
                     </div>
                     <div className="max-h-40 overflow-y-auto">
                       {otherFolders.map((target) => (
                         <button
                           key={target.id}
-                          className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                          style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                          className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-foreground hover:bg-sunken"
                           onClick={() => {
                             if (contextMenu.itemId) moveFileToFolder(contextMenu.itemId, target.id);
                             setContextMenu(null);
                           }}
                         >
-                          <FolderOpen size={12} className="shrink-0 text-slate-400" />
+                          <FolderOpen size={12} className="shrink-0 text-subtle" />
                           <span className="truncate">{target.name}</span>
                         </button>
                       ))}
                     </div>
-                    <div
-                      className="mt-1 border-t"
-                      style={{ borderColor: isDarkTheme ? "#334155" : "#e2e8f0" }}
-                    />
+                    <div className="mt-1 border-t border-border" />
                   </>
                 )}
 
                 <button
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-red-900/30"
-                  style={{ color: "#ef4444" }}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-danger hover:bg-danger/10"
                   onClick={() => contextMenu.itemId && handleDeleteFile(contextMenu.itemId)}
                 >
                   <Trash2 size={12} /> Delete
@@ -379,11 +361,9 @@ function FolderItem({
 
       {/* Folder row - КЛИК ТОЛЬКО РАСКРЫВАЕТ/СВОРАЧИВАЕТ */}
       <div
-        className="group mx-1 flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 transition-all duration-150"
+        className="group mx-1 flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 transition-all duration-150"
         style={{
           paddingLeft: `${10 + depth * 14}px`,
-          background: "transparent",
-          border: "1px solid transparent",
         }}
         onClick={() => toggleFolderExpanded(folder.id)} // ИЗМЕНЕНО: только toggle
         onContextMenu={(e) => handleContextMenu(e, "folder")}
@@ -394,19 +374,19 @@ function FolderItem({
             e.stopPropagation();
             toggleFolderExpanded(folder.id);
           }}
-          className="flex-shrink-0 rounded p-0.5 hover:bg-slate-700"
+          className="flex-shrink-0 rounded p-0.5 hover:bg-sunken"
         >
           {folder.isExpanded ? (
-            <ChevronDown size={12} className="text-slate-400" />
+            <ChevronDown size={12} className="text-subtle" />
           ) : (
-            <ChevronRight size={12} className="text-slate-400" />
+            <ChevronRight size={12} className="text-subtle" />
           )}
         </button>
         <span className="text-sm">{folder.icon || (folder.isExpanded ? "📂" : "📁")}</span>
 
         {renaming?.type === "folder" ? (
           <input
-            className="flex-1 border-b bg-transparent text-sm outline-none"
+            className="flex-1 border-b border-border bg-transparent text-sm text-foreground outline-none"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onBlur={handleRenameFolder}
@@ -418,24 +398,16 @@ function FolderItem({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span
-            className="flex-1 truncate text-sm font-medium"
-            style={{ color: isDarkTheme ? "#cbd5e1" : "#374151" }}
-          >
-            {folder.name}
-          </span>
+          <span className="flex-1 truncate text-sm font-medium text-foreground">{folder.name}</span>
         )}
 
-        <span
-          className="rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-          style={{ background: isDarkTheme ? "#334155" : "#f1f5f9", color: "#64748b" }}
-        >
+        <span className="rounded-full bg-sunken px-1.5 py-0.5 text-[10px] font-medium text-subtle">
           {files.length}
         </span>
 
         {/* Add file button */}
         <button
-          className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+          className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-sunken"
           onClick={(e) => {
             e.stopPropagation();
             onAddFileToFolder(folder.id);
@@ -448,13 +420,13 @@ function FolderItem({
 
         {/* More options */}
         <button
-          className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+          className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-sunken"
           onClick={(e) => {
             e.stopPropagation();
             handleContextMenu(e, "folder");
           }}
         >
-          <MoreVertical size={12} className="text-slate-400" />
+          <MoreVertical size={12} className="text-subtle" />
         </button>
       </div>
 
@@ -502,14 +474,14 @@ function FolderItem({
             >
               {/* Drag handle */}
               <div className="cursor-grab opacity-0 group-hover/file:opacity-30">
-                <GripVertical size={10} className="text-slate-400" />
+                <GripVertical size={10} className="text-subtle" />
               </div>
 
               <TypeIcon size={11} style={{ color: typeColor, flexShrink: 0 }} />
 
               {isRenamingThis ? (
                 <input
-                  className="flex-1 border-b bg-transparent text-xs outline-none"
+                  className="flex-1 border-b border-border bg-transparent text-xs text-foreground outline-none"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onBlur={() => handleRenameFile(file.id)}
@@ -523,7 +495,7 @@ function FolderItem({
               ) : (
                 <span
                   className="flex-1 truncate text-xs"
-                  style={{ color: isFileActive ? typeColor : isDarkTheme ? "#94a3b8" : "#6b7280" }}
+                  style={{ color: isFileActive ? typeColor : "var(--text-muted)" }}
                 >
                   {file.title}
                 </span>
@@ -535,7 +507,7 @@ function FolderItem({
 
               {/* Edit/Delete buttons */}
               <button
-                className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-slate-700"
+                className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-sunken"
                 onClick={(e) => {
                   e.stopPropagation();
                   startRenameFile(file.id, file.title);
@@ -543,10 +515,10 @@ function FolderItem({
                 title="Rename"
                 aria-label="Rename file"
               >
-                <Edit2 size={10} className="text-slate-400 hover:text-slate-200" />
+                <Edit2 size={10} className="text-subtle hover:text-foreground" />
               </button>
               <button
-                className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-red-900/30"
+                className="tap-target rounded p-0.5 opacity-0 transition-opacity group-hover/file:opacity-100 hover:bg-danger/10"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteFile(file.id);
@@ -554,7 +526,7 @@ function FolderItem({
                 title="Delete"
                 aria-label="Delete file"
               >
-                <Trash2 size={10} className="text-slate-400 hover:text-red-400" />
+                <Trash2 size={10} className="text-subtle hover:text-danger" />
               </button>
             </div>
           );
@@ -578,7 +550,6 @@ export function FolderPanel() {
     addLinkContainer,
     addPromptContainer,
     addPlaybookContainer,
-    isDarkTheme,
     isFolderPanelOpen,
     closeMobilePanels,
   } = useStore();
@@ -700,23 +671,22 @@ export function FolderPanel() {
     if (isMobile) return null;
     return (
       <div
-        className="flex h-full flex-col items-center justify-center border-r"
+        className="flex h-full flex-col items-center justify-center border-r border-border bg-surface"
         style={{
           width: "260px",
           minWidth: "260px",
-          background: isDarkTheme ? "#111827" : "#f8fafc",
-          borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
         }}
       >
         <div className="mb-3 text-4xl">👈</div>
-        <p className="text-sm text-slate-400">Select a category</p>
+        <p className="text-sm text-muted">Select a category</p>
       </div>
     );
   }
 
   // На десктопе — обычная колонка в потоке.
   // На мобильном — выдвижная панель поверх контента (анимация через transform: она
-  // идёт на GPU и не дёргается на слабых телефонах, в отличие от анимации width)
+  // идёт на GPU и не дёргается на слабых телефонах, в отличие от анимации width).
+  // Цвет фона/границы — через токены (bg-surface / border-border на элементе).
   const panelStyle: React.CSSProperties = isMobile
     ? {
         position: "fixed",
@@ -730,14 +700,10 @@ export function FolderPanel() {
         transform: isFolderPanelOpen ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 0.25s ease-out",
         boxShadow: isFolderPanelOpen ? "0 0 24px rgba(0, 0, 0, 0.35)" : "none",
-        background: isDarkTheme ? "#111827" : "#f8fafc",
-        borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
       }
     : {
         width: "260px",
         minWidth: "260px",
-        background: isDarkTheme ? "#111827" : "#f8fafc",
-        borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0",
       };
 
   const isHidden = isMobile && !isFolderPanelOpen;
@@ -749,8 +715,7 @@ export function FolderPanel() {
         <div
           onClick={closeMobilePanels}
           aria-hidden="true"
-          className="fixed inset-0 z-30"
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
+          className="fixed inset-0 z-30 bg-black/50"
         />
       )}
 
@@ -762,14 +727,11 @@ export function FolderPanel() {
         aria-label={isMobile ? "Folders" : undefined}
         aria-hidden={isHidden || undefined}
         {...swipeHandlers}
-        className={`flex h-full flex-col border-r outline-none ${isHidden ? "pointer-events-none" : ""}`}
+        className={`flex h-full flex-col border-r border-border bg-surface outline-none ${isHidden ? "pointer-events-none" : ""}`}
         style={panelStyle}
       >
         {/* Header */}
-        <div
-          className="border-b px-4 pt-4 pb-2"
-          style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
-        >
+        <div className="border-b border-border px-4 pt-4 pb-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-bold tracking-wider uppercase" style={{ color: typeColor }}>
               {categoryName}
@@ -782,7 +744,7 @@ export function FolderPanel() {
                   }
                 }}
                 title="New File"
-                className="rounded-lg p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="rounded-lg p-1.5 transition-colors hover:bg-sunken"
                 style={{ background: `${typeColor}15` }}
               >
                 <Plus size={16} style={{ color: typeColor }} />
@@ -792,9 +754,9 @@ export function FolderPanel() {
                   onClick={closeMobilePanels}
                   title="Close"
                   aria-label="Close folders panel"
-                  className="rounded-lg p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+                  className="rounded-lg p-1.5 transition-colors hover:bg-sunken"
                 >
-                  <X size={18} className="text-slate-400" />
+                  <X size={18} className="text-subtle" />
                 </button>
               )}
             </div>
@@ -802,7 +764,7 @@ export function FolderPanel() {
           <div className="relative">
             <Search
               size={14}
-              className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400"
+              className="absolute top-1/2 left-2.5 -translate-y-1/2 text-subtle"
             />
             <input
               type="text"
@@ -811,12 +773,7 @@ export function FolderPanel() {
               enterKeyHint="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border py-1.5 pr-3 pl-8 text-sm transition-all outline-none"
-              style={{
-                background: isDarkTheme ? "#1e293b" : "#fff",
-                borderColor: isDarkTheme ? "#334155" : "#e2e8f0",
-                color: isDarkTheme ? "#e2e8f0" : "#1e293b",
-              }}
+              className="w-full rounded-lg border border-border bg-background py-1.5 pr-3 pl-8 text-sm text-foreground transition-all outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -824,12 +781,12 @@ export function FolderPanel() {
         {/* Folder tree */}
         <div className="flex-1 space-y-0.5 overflow-y-auto py-2">
           {filteredFolders.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-slate-400">
+            <div className="px-4 py-6 text-center text-sm text-muted">
               No folders yet.
               <br />
               <button
                 onClick={() => setShowNewFolder(true)}
-                className="mt-1 text-blue-400 hover:underline"
+                className="mt-1 text-primary hover:underline"
               >
                 Create one
               </button>
@@ -861,11 +818,9 @@ export function FolderPanel() {
           <div className="px-3 pb-2">
             <input
               autoFocus
-              className="w-full rounded-lg border px-3 py-1.5 text-sm outline-none"
+              className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm text-foreground outline-none"
               style={{
-                background: isDarkTheme ? "#1e293b" : "#fff",
                 borderColor: typeColor,
-                color: isDarkTheme ? "#e2e8f0" : "#1e293b",
               }}
               placeholder="Folder name..."
               value={newFolderName}
@@ -880,17 +835,10 @@ export function FolderPanel() {
         )}
 
         {/* Footer */}
-        <div
-          className="flex gap-2 border-t p-2"
-          style={{ borderColor: isDarkTheme ? "#1e293b" : "#e2e8f0" }}
-        >
+        <div className="flex gap-2 border-t border-border p-2">
           <button
             onClick={() => setShowNewFolder(true)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors hover:opacity-80"
-            style={{
-              background: isDarkTheme ? "#1e293b" : "#f1f5f9",
-              color: isDarkTheme ? "#94a3b8" : "#6b7280",
-            }}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-sunken py-1.5 text-xs font-medium text-muted transition-colors hover:opacity-80"
           >
             <FolderOpen size={13} />
             New Folder

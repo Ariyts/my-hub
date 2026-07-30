@@ -52,6 +52,11 @@ function getDomain(url: string) {
   }
 }
 
+// Акцент типа «Links». Зеркалит токен --accent-links (тема-независим), но задан
+// hex-константой: shell-компоненты (ResourceCard/List/Board) строят тинты
+// конкатенацией `${accent}20`, куда var(--…) подставить нельзя.
+const LINKS_ACCENT = "#f0883e";
+
 // Уровень сложности ссылки (Задача 2.8) — необязательный
 const LINK_LEVELS = ["L1", "L2", "L3"] as const;
 const LEVEL_PICK_COLORS: Record<string, string> = {
@@ -82,7 +87,11 @@ function LevelPicker({
             style={
               active
                 ? { background: `${color}30`, color }
-                : { background: "transparent", color: "#94a3b8", border: "1px solid #94a3b840" }
+                : {
+                    background: "transparent",
+                    color: "var(--text-subtle)",
+                    border: "1px solid var(--border)",
+                  }
             }
           >
             {lvl}
@@ -100,7 +109,6 @@ interface LinkCardProps {
   item: LinkItem;
   containerId: string;
   sectionId: string;
-  isDark: boolean;
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
   onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -119,7 +127,6 @@ function LinkCard({
   item,
   containerId,
   sectionId,
-  isDark,
   onDragStart,
   onDragOver,
   onDrop,
@@ -151,24 +158,20 @@ function LinkCard({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const bg = isDark ? "#1e293b" : "#ffffff";
+  const border = "var(--border)";
+  const bg = "var(--bg-elevated)";
   const isCurrentDropTarget = isDropTarget && dropIndex === index && dropSectionId === sectionId;
 
   if (editing) {
     return (
       <div
-        className="col-span-1 rounded-xl border-2 p-3 transition-all"
-        style={{ background: bg, borderColor: "#FF9800" }}
+        className="col-span-1 rounded-lg border-2 p-3 transition-all"
+        style={{ background: bg, borderColor: LINKS_ACCENT }}
       >
         <div className="space-y-2">
           <input
-            className="w-full rounded-lg border px-2 py-1.5 text-sm outline-none"
-            style={{
-              background: isDark ? "#0f172a" : "#f8fafc",
-              borderColor: border,
-              color: isDark ? "#e2e8f0" : "#1e293b",
-            }}
+            className="w-full rounded-lg border bg-sunken px-2 py-1.5 text-sm text-foreground outline-none"
+            style={{ borderColor: border }}
             value={editData.url}
             onChange={(e) => setEditData({ ...editData, url: e.target.value })}
             placeholder="URL..."
@@ -182,30 +185,22 @@ function LinkCard({
             autoFocus
           />
           <input
-            className="w-full rounded-lg border px-2 py-1.5 text-sm outline-none"
-            style={{
-              background: isDark ? "#0f172a" : "#f8fafc",
-              borderColor: border,
-              color: isDark ? "#e2e8f0" : "#1e293b",
-            }}
+            className="w-full rounded-lg border bg-sunken px-2 py-1.5 text-sm text-foreground outline-none"
+            style={{ borderColor: border }}
             value={editData.title}
             onChange={(e) => setEditData({ ...editData, title: e.target.value })}
             placeholder="Title..."
           />
           <input
-            className="w-full rounded-lg border px-2 py-1.5 text-sm outline-none"
-            style={{
-              background: isDark ? "#0f172a" : "#f8fafc",
-              borderColor: border,
-              color: isDark ? "#e2e8f0" : "#1e293b",
-            }}
+            className="w-full rounded-lg border bg-sunken px-2 py-1.5 text-sm text-foreground outline-none"
+            style={{ borderColor: border }}
             value={editData.description || ""}
             onChange={(e) => setEditData({ ...editData, description: e.target.value })}
             placeholder="Description..."
           />
           {/* Уровень сложности (Задача 2.8) */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-500">Level:</span>
+            <span className="text-[10px] text-subtle">Level:</span>
             <LevelPicker
               value={editData.level}
               onChange={(level) => setEditData({ ...editData, level })}
@@ -215,14 +210,13 @@ function LinkCard({
             <button
               onClick={handleSave}
               className="flex-1 rounded-lg px-3 py-1.5 text-xs font-medium"
-              style={{ background: "#FF980020", color: "#FF9800" }}
+              style={{ background: `${LINKS_ACCENT}20`, color: LINKS_ACCENT }}
             >
               Save
             </button>
             <button
               onClick={() => setEditing(false)}
-              className="flex-1 rounded-lg px-3 py-1.5 text-xs"
-              style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+              className="flex-1 rounded-lg bg-sunken px-3 py-1.5 text-xs text-muted"
             >
               Cancel
             </button>
@@ -239,23 +233,23 @@ function LinkCard({
       onDragOver={(e) => onDragOver(e, index, sectionId)}
       onDrop={onDrop}
       onClick={selectable ? () => onToggleSelect?.() : undefined}
-      className={`group relative rounded-xl border transition-all duration-200 ${
+      className={`group relative rounded-lg border transition-all duration-200 ${
         selectable ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
       } ${isDragging ? "scale-95 opacity-50" : ""}`}
       style={{
         background: bg,
-        borderColor: selected ? "#FF9800" : isCurrentDropTarget ? "#FF9800" : border,
+        borderColor: selected ? LINKS_ACCENT : isCurrentDropTarget ? LINKS_ACCENT : border,
         boxShadow: selected
-          ? "0 0 0 2px #FF9800"
+          ? `0 0 0 2px ${LINKS_ACCENT}`
           : isCurrentDropTarget
-            ? "0 0 0 2px #FF980040"
+            ? `0 0 0 2px ${LINKS_ACCENT}40`
             : "none",
       }}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       {isCurrentDropTarget && (
-        <div className="absolute -top-1 right-2 left-2 z-10 h-0.5 rounded bg-orange-400" />
+        <div className="absolute -top-1 right-2 left-2 z-10 h-0.5 rounded bg-links" />
       )}
 
       {/* Чекбокс выбора (Задача 2.4) — вместо ручки перетаскивания */}
@@ -268,7 +262,7 @@ function LinkCard({
           className="absolute top-2 left-2 rounded bg-slate-500/20 p-1 opacity-0 transition-opacity group-hover:opacity-100"
           style={{ cursor: "grab" }}
         >
-          <GripVertical size={10} style={{ color: isDark ? "#64748b" : "#94a3b8" }} />
+          <GripVertical size={10} className="text-subtle" />
         </div>
       )}
 
@@ -290,14 +284,11 @@ function LinkCard({
                 description={item.description}
                 favicon={item.favicon}
                 tags={item.tags}
-                accent="#FF9800"
+                accent={LINKS_ACCENT}
               />
             }
           >
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg"
-              style={{ background: isDark ? "#0f172a" : "#f1f5f9" }}
-            >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sunken">
               {item.favicon && !faviconError ? (
                 <img
                   src={item.favicon}
@@ -306,31 +297,24 @@ function LinkCard({
                   onError={() => setFaviconError(true)}
                 />
               ) : (
-                <Globe size={16} className="text-slate-400" />
+                <Globe size={16} className="text-subtle" />
               )}
             </div>
           </HoverPreview>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <h3
-                className="min-w-0 flex-1 truncate text-sm font-medium transition-colors hover:text-orange-400"
-                style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
-              >
+              <h3 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground transition-colors hover:text-links">
                 {item.title}
               </h3>
               {/* Бейдж уровня (Задача 2.8) — только если задан */}
               {item.level && <LevelBadge level={item.level} />}
             </div>
-            <p className="truncate text-[10px]" style={{ color: "#94a3b8" }}>
-              {getDomain(item.url)}
-            </p>
+            <p className="truncate text-[10px] text-subtle">{getDomain(item.url)}</p>
           </div>
         </div>
 
         {item.description && (
-          <p className="mb-2 line-clamp-2 text-xs" style={{ color: "#64748b" }}>
-            {item.description}
-          </p>
+          <p className="mb-2 line-clamp-2 text-xs text-muted">{item.description}</p>
         )}
 
         {item.tags.length > 0 && (
@@ -338,8 +322,7 @@ function LinkCard({
             {item.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="rounded px-1.5 py-0.5 text-[9px]"
-                style={{ background: isDark ? "#334155" : "#f1f5f9", color: "#64748b" }}
+                className="rounded bg-sunken px-1.5 py-0.5 text-[9px] text-muted"
               >
                 {tag}
               </span>
@@ -361,7 +344,7 @@ function LinkCard({
           >
             <Star
               size={12}
-              className={item.isFavorite ? "fill-amber-400 text-amber-400" : "text-slate-400"}
+              className={item.isFavorite ? "fill-amber-400 text-amber-400" : "text-subtle"}
             />
           </button>
           {/* Color picker (Задача 2.3) */}
@@ -374,9 +357,9 @@ function LinkCard({
           </div>
           <button onClick={handleCopy} className="rounded p-1 hover:bg-slate-500/20">
             {copied ? (
-              <Check size={12} className="text-green-400" />
+              <Check size={12} className="text-success" />
             ) : (
-              <Copy size={12} className="text-slate-400" />
+              <Copy size={12} className="text-subtle" />
             )}
           </button>
           <a
@@ -384,9 +367,9 @@ function LinkCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="rounded p-1 hover:bg-blue-500/20"
+            className="rounded p-1 hover:bg-commands/15"
           >
-            <ExternalLink size={12} className="text-blue-400" />
+            <ExternalLink size={12} className="text-commands" />
           </a>
           <button
             onClick={(e) => {
@@ -396,7 +379,7 @@ function LinkCard({
             }}
             className="rounded p-1 hover:bg-slate-500/20"
           >
-            <Edit3 size={12} className="text-slate-400" />
+            <Edit3 size={12} className="text-subtle" />
           </button>
           <button
             onClick={(e) => {
@@ -404,9 +387,9 @@ function LinkCard({
               e.stopPropagation();
               if (confirm("Delete?")) deleteLinkItem(containerId, item.id);
             }}
-            className="rounded p-1 hover:bg-red-500/20"
+            className="rounded p-1 hover:bg-danger/15"
           >
-            <Trash2 size={12} className="text-red-400" />
+            <Trash2 size={12} className="text-danger" />
           </button>
         </div>
       </a>
@@ -421,7 +404,6 @@ function LinkCard({
 interface CompactLinkItemProps {
   item: LinkItem;
   sectionColor?: string;
-  isDark: boolean;
   sectionId: string;
   isDragging: boolean;
   isDropTarget: boolean;
@@ -439,7 +421,6 @@ interface CompactLinkItemProps {
 function CompactLinkItem({
   item,
   sectionColor,
-  isDark,
   sectionId,
   isDragging,
   isDropTarget,
@@ -461,10 +442,10 @@ function CompactLinkItem({
   const [editLevel, setEditLevel] = useState(item.level);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Google Drive style colors
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  const hoverBg = isDark ? "#1f2937" : "#f3f4f6";
-  const normalBg = isDark ? "#111827" : "#ffffff";
+  // Google Drive style colors (на токенах)
+  const borderColor = "var(--border)";
+  const hoverBg = "var(--bg-sunken)";
+  const normalBg = "var(--bg-elevated)";
 
   // Priority: item color > section color > default
   const activeColor = item.color || sectionColor;
@@ -545,7 +526,7 @@ function CompactLinkItem({
         className="flex items-center gap-2 rounded-lg border-2 px-2.5 py-2 transition-all"
         style={{
           background: hoverBg,
-          borderColor: "#FF9800",
+          borderColor: LINKS_ACCENT,
           minWidth: 0,
         }}
         onBlur={(e) => {
@@ -569,11 +550,11 @@ function CompactLinkItem({
             onChange={(e) => setEditTitle(e.target.value)}
             onKeyDown={handleEditKeyDown}
             placeholder="Title"
-            className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-orange-400"
+            className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-links"
             style={{
-              background: isDark ? "#0f172a" : "#ffffff",
+              background: "var(--bg-sunken)",
               borderColor: borderColor,
-              color: isDark ? "#e5e7eb" : "#1f2937",
+              color: "var(--text)",
             }}
           />
           <input
@@ -586,11 +567,11 @@ function CompactLinkItem({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full rounded border px-2 py-0.5 text-[10px] outline-none focus:border-orange-400"
+            className="w-full rounded border px-2 py-0.5 text-[10px] outline-none focus:border-links"
             style={{
-              background: isDark ? "#0f172a" : "#ffffff",
+              background: "var(--bg-sunken)",
               borderColor: borderColor,
-              color: isDark ? "#9ca3af" : "#6b7280",
+              color: "var(--text-muted)",
             }}
           />
         </div>
@@ -606,18 +587,18 @@ function CompactLinkItem({
           <button
             onMouseDown={(e) => e.preventDefault()} // Prevent onBlur
             onClick={handleSaveEdit}
-            className="rounded p-1 transition-colors hover:bg-green-500/20"
+            className="rounded p-1 transition-colors hover:bg-success/15"
             title="Save (Enter)"
           >
-            <Check size={14} className="text-green-400" />
+            <Check size={14} className="text-success" />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()} // Prevent onBlur
             onClick={handleCancelEdit}
-            className="rounded p-1 transition-colors hover:bg-red-500/20"
+            className="rounded p-1 transition-colors hover:bg-danger/15"
             title="Cancel (Esc)"
           >
-            <X size={14} className="text-red-400" />
+            <X size={14} className="text-danger" />
           </button>
         </div>
       </div>
@@ -630,17 +611,13 @@ function CompactLinkItem({
   return (
     <div
       onClick={selectable ? () => onToggleSelect?.() : undefined}
-      className={`group relative flex items-center gap-1 rounded-lg border px-2 py-1.5 transition-colors transition-opacity duration-150 ${isDragging ? "scale-95 opacity-50 ring-2 ring-orange-400" : ""} ${isDropTarget ? "bg-blue-500/10 ring-2 ring-blue-400" : ""} ${selected ? "ring-2 ring-orange-400" : ""} ${selectable ? "cursor-pointer" : ""}`}
+      className={`group relative flex items-center gap-1 rounded-lg border px-2 py-1.5 transition-colors transition-opacity duration-150 ${isDragging ? "scale-95 opacity-50 ring-2 ring-links" : ""} ${isDropTarget ? "bg-primary/10 ring-2 ring-primary" : ""} ${selected ? "ring-2 ring-links" : ""} ${selectable ? "cursor-pointer" : ""}`}
       style={{
         background: isDropTarget ? undefined : getTintedBg(),
         borderColor: isDropTarget
-          ? "#3b82f6"
+          ? "var(--primary)"
           : selected
-            ? "#FF9800"
-            : isHovered
-            ? isDark
-              ? "#4b5563"
-              : "#d1d5db"
+            ? LINKS_ACCENT
             : borderColor,
         minWidth: 0,
       }}
@@ -654,7 +631,7 @@ function CompactLinkItem({
     >
       {/* Drop indicator line */}
       {isDropTarget && (
-        <div className="absolute -top-0.5 right-0 left-0 z-10 h-0.5 rounded bg-blue-400" />
+        <div className="absolute -top-0.5 right-0 left-0 z-10 h-0.5 rounded bg-primary" />
       )}
 
       {/* Color indicator bar (left) */}
@@ -675,7 +652,7 @@ function CompactLinkItem({
           className="flex-shrink-0 cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-500/20 active:cursor-grabbing"
           title="Drag to move"
         >
-          <GripVertical size={12} style={{ color: isDark ? "#6b7280" : "#9ca3af" }} />
+          <GripVertical size={12} className="text-subtle" />
         </div>
       )}
 
@@ -689,7 +666,7 @@ function CompactLinkItem({
             description={item.description}
             favicon={item.favicon}
             tags={item.tags}
-            accent={item.color || sectionColor || "#FF9800"}
+            accent={item.color || sectionColor || LINKS_ACCENT}
           />
         }
       >
@@ -702,7 +679,7 @@ function CompactLinkItem({
               onError={() => setFaviconError(true)}
             />
           ) : (
-            <Globe size={12} style={{ color: isDark ? "#6b7280" : "#9ca3af" }} />
+            <Globe size={12} className="text-subtle" />
           )}
         </div>
       </HoverPreview>
@@ -713,8 +690,7 @@ function CompactLinkItem({
         target="_blank"
         rel="noopener noreferrer"
         onClick={selectable ? (e) => e.preventDefault() : undefined}
-        className="flex-1 truncate text-xs font-medium transition-colors hover:text-orange-400"
-        style={{ color: isDark ? "#e5e7eb" : "#1f2937" }}
+        className="flex-1 truncate text-xs font-medium text-foreground transition-colors hover:text-links"
         title={`${item.title}\n${item.url}`}
       >
         {item.title}
@@ -747,19 +723,19 @@ function CompactLinkItem({
         {/* Edit button */}
         <button
           onClick={handleStartEdit}
-          className="rounded p-1 transition-colors hover:bg-blue-500/20"
+          className="rounded p-1 transition-colors hover:bg-commands/15"
           title="Edit"
         >
-          <Edit3 size={12} style={{ color: isDark ? "#60a5fa" : "#3b82f6" }} />
+          <Edit3 size={12} className="text-commands" />
         </button>
 
         {/* Delete button */}
         <button
           onClick={handleDelete}
-          className="rounded p-1 transition-colors hover:bg-red-500/20"
+          className="rounded p-1 transition-colors hover:bg-danger/15"
           title="Delete"
         >
-          <Trash2 size={12} className="text-red-400" />
+          <Trash2 size={12} className="text-danger" />
         </button>
       </div>
     </div>
@@ -770,12 +746,11 @@ function CompactLinkItem({
 // INLINE ADD LINK COMPONENT
 // ============================================
 interface InlineAddLinkProps {
-  isDark: boolean;
   onCreateLink: (url: string, title?: string) => Promise<void>;
   onClose: () => void;
 }
 
-function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
+function InlineAddLink({ onCreateLink, onClose }: InlineAddLinkProps) {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -801,15 +776,15 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
     }
   };
 
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  const inputBg = isDark ? "#0f172a" : "#ffffff";
+  const borderColor = "var(--border)";
+  const inputBg = "var(--bg-sunken)";
 
   return (
     <div
       className="animate-in fade-in flex items-center gap-2 rounded-lg border-2 border-dashed px-2.5 py-2 duration-150"
       style={{
-        background: isDark ? "#111827" : "#fafafa",
-        borderColor: "#FF9800",
+        background: "var(--bg-elevated)",
+        borderColor: LINKS_ACCENT,
       }}
       tabIndex={-1}
       onBlur={(e) => {
@@ -832,11 +807,11 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
         autoCorrect="off"
         spellCheck={false}
         enterKeyHint="done"
-        className="flex-1 rounded border px-2 py-1 text-xs outline-none focus:border-orange-400"
+        className="flex-1 rounded border px-2 py-1 text-xs outline-none focus:border-links"
         style={{
           background: inputBg,
           borderColor: borderColor,
-          color: isDark ? "#e5e7eb" : "#1f2937",
+          color: "var(--text)",
         }}
       />
 
@@ -847,11 +822,11 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Title (auto)"
-        className="w-32 rounded border px-2 py-1 text-xs outline-none focus:border-orange-400"
+        className="w-32 rounded border px-2 py-1 text-xs outline-none focus:border-links"
         style={{
           background: inputBg,
           borderColor: borderColor,
-          color: isDark ? "#e5e7eb" : "#1f2937",
+          color: "var(--text)",
         }}
       />
 
@@ -861,18 +836,18 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleAdd}
           disabled={!url.trim()}
-          className="rounded p-1 transition-colors hover:bg-green-500/20 disabled:opacity-50"
+          className="rounded p-1 transition-colors hover:bg-success/15 disabled:opacity-50"
           title="Add link (Enter)"
         >
-          <Check size={14} className="text-green-400" />
+          <Check size={14} className="text-success" />
         </button>
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          className="rounded p-1 transition-colors hover:bg-red-500/20"
+          className="rounded p-1 transition-colors hover:bg-danger/15"
           title="Cancel (Esc)"
         >
-          <X size={14} className="text-red-400" />
+          <X size={14} className="text-danger" />
         </button>
       </div>
     </div>
@@ -883,12 +858,11 @@ function InlineAddLink({ isDark, onCreateLink, onClose }: InlineAddLinkProps) {
 // INLINE ADD SECTION COMPONENT
 // ============================================
 interface InlineAddSectionProps {
-  isDark: boolean;
   onAdd: (title: string) => void;
   onClose: () => void;
 }
 
-function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
+function InlineAddSection({ onAdd, onClose }: InlineAddSectionProps) {
   const [title, setTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -912,15 +886,15 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
     }
   };
 
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  const inputBg = isDark ? "#0f172a" : "#ffffff";
+  const borderColor = "var(--border)";
+  const inputBg = "var(--bg-sunken)";
 
   return (
     <div
-      className="animate-in fade-in flex items-center gap-2 rounded-xl border-2 border-dashed px-4 py-2 duration-150"
+      className="animate-in fade-in flex items-center gap-2 rounded-lg border-2 border-dashed px-4 py-2 duration-150"
       style={{
-        background: isDark ? "#1e293b" : "#f8fafc",
-        borderColor: "#FF9800",
+        background: "var(--bg-elevated)",
+        borderColor: LINKS_ACCENT,
       }}
       tabIndex={-1}
       onBlur={(e) => {
@@ -929,7 +903,7 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
         }
       }}
     >
-      <Link2 size={14} style={{ color: "#FF9800" }} />
+      <Link2 size={14} className="text-links" />
 
       <input
         ref={inputRef}
@@ -938,11 +912,11 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Section title..."
-        className="flex-1 rounded border px-2 py-1 text-sm outline-none focus:border-orange-400"
+        className="flex-1 rounded border px-2 py-1 text-sm outline-none focus:border-links"
         style={{
           background: inputBg,
           borderColor: borderColor,
-          color: isDark ? "#e2e8f0" : "#1e293b",
+          color: "var(--text)",
         }}
       />
 
@@ -951,18 +925,18 @@ function InlineAddSection({ isDark, onAdd, onClose }: InlineAddSectionProps) {
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleAdd}
           disabled={!title.trim()}
-          className="rounded p-1 transition-colors hover:bg-green-500/20 disabled:opacity-50"
+          className="rounded p-1 transition-colors hover:bg-success/15 disabled:opacity-50"
           title="Create section (Enter)"
         >
-          <Check size={14} className="text-green-400" />
+          <Check size={14} className="text-success" />
         </button>
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          className="rounded p-1 transition-colors hover:bg-red-500/20"
+          className="rounded p-1 transition-colors hover:bg-danger/15"
           title="Cancel (Esc)"
         >
-          <X size={14} className="text-red-400" />
+          <X size={14} className="text-danger" />
         </button>
       </div>
     </div>
@@ -978,7 +952,6 @@ interface SectionProps {
   section: LinkSection; // Always a real section now
   links: LinkItem[];
   containerId: string;
-  isDark: boolean;
   viewMode: LinksViewMode;
   onDragStart: (e: React.DragEvent, itemId: string, sectionId: string) => void;
   onDragOver: (e: React.DragEvent, target: number | string, sectionId: string) => void;
@@ -1034,7 +1007,6 @@ function Section({
   section,
   links,
   containerId,
-  isDark,
   viewMode,
   onDragStart,
   onDragOver,
@@ -1065,17 +1037,19 @@ function Section({
   const sectionId = section.id;
   const isCollapsed = section.collapsed ?? false;
 
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const bg = isDark ? "#111827" : "#ffffff";
-  const headerBg = isDark ? "#1e293b" : "#f8fafc";
+  const border = "var(--border)";
+  const bg = "var(--bg-elevated)";
+  const headerBg = "var(--bg-sunken)";
 
   return (
     <div
-      className="group overflow-hidden rounded-xl border transition-all duration-200"
+      className="group overflow-hidden rounded-lg border transition-all duration-200"
       style={{
-        borderColor: isDraggingSection ? "#FF9800" : isDropTargetSection ? "#3b82f6" : border,
+        borderColor: isDraggingSection ? LINKS_ACCENT : isDropTargetSection ? "var(--primary)" : border,
         opacity: isDraggingSection ? 0.5 : 1,
-        boxShadow: isDropTargetSection ? "0 0 0 2px #3b82f640" : "none",
+        boxShadow: isDropTargetSection
+          ? "0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent)"
+          : "none",
       }}
       onDragOver={(e) => {
         e.preventDefault();
@@ -1084,7 +1058,7 @@ function Section({
       onDrop={onSectionDrop}
     >
       {/* Drop indicator above section */}
-      {isDropTargetSection && <div className="h-1 rounded-t-xl bg-blue-400" />}
+      {isDropTargetSection && <div className="h-1 rounded-t-xl bg-primary" />}
 
       {/* Section Header */}
       <div
@@ -1102,7 +1076,7 @@ function Section({
           className="cursor-grab rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-500/20 active:cursor-grabbing"
           title="Drag to reorder section"
         >
-          <GripVertical size={14} style={{ color: isDark ? "#64748b" : "#94a3b8" }} />
+          <GripVertical size={14} className="text-subtle" />
         </div>
         <button
           className="rounded p-0.5 hover:bg-slate-500/20"
@@ -1112,9 +1086,9 @@ function Section({
           }}
         >
           {isCollapsed ? (
-            <ChevronRight size={14} style={{ color: section.color || "#FF9800" }} />
+            <ChevronRight size={14} style={{ color: section.color || LINKS_ACCENT }} />
           ) : (
-            <ChevronDown size={14} style={{ color: section.color || "#FF9800" }} />
+            <ChevronDown size={14} style={{ color: section.color || LINKS_ACCENT }} />
           )}
         </button>
         {section.color && (
@@ -1123,18 +1097,18 @@ function Section({
             style={{ background: section.color }}
           />
         )}
-        <Link2 size={14} style={{ color: section.color || "#FF9800" }} />
+        <Link2 size={14} style={{ color: section.color || LINKS_ACCENT }} />
         <span
           className="flex-1 text-sm font-medium"
-          style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+          style={{ color: "var(--text)" }}
         >
           {section.title}
         </span>
         <span
           className="rounded-full px-2 py-0.5 text-xs font-medium"
           style={{
-            background: section.color ? `${section.color}20` : "#FF980015",
-            color: section.color || "#FF9800",
+            background: section.color ? `${section.color}20` : `${LINKS_ACCENT}15`,
+            color: section.color || LINKS_ACCENT,
           }}
         >
           {links.length}
@@ -1148,27 +1122,27 @@ function Section({
             className="rounded-lg p-1.5 transition-colors hover:bg-slate-500/20"
             title="Change color"
           >
-            <Palette size={14} style={{ color: section.color || "#64748b" }} />
+            <Palette size={14} style={{ color: section.color || "var(--text-muted)" }} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEditSection(section.id);
             }}
-            className="rounded-lg p-1.5 transition-colors hover:bg-orange-500/20"
+            className="rounded-lg p-1.5 transition-colors hover:bg-links/15"
             title="Rename section"
           >
-            <Edit3 size={14} style={{ color: "#FF9800" }} />
+            <Edit3 size={14} className="text-links" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDeleteSection(section.id);
             }}
-            className="rounded-lg p-1.5 transition-colors hover:bg-red-500/20"
+            className="rounded-lg p-1.5 transition-colors hover:bg-danger/15"
             title="Delete section"
           >
-            <Trash2 size={14} className="text-red-400" />
+            <Trash2 size={14} className="text-danger" />
           </button>
         </div>
         <button
@@ -1176,10 +1150,10 @@ function Section({
             e.stopPropagation();
             onStartAddLink(sectionId);
           }}
-          className="rounded p-1 hover:bg-orange-500/20"
+          className="rounded p-1 hover:bg-links/15"
           title="Add link to this section"
         >
-          <Plus size={14} style={{ color: "#FF9800" }} />
+          <Plus size={14} className="text-links" />
         </button>
       </div>
 
@@ -1218,7 +1192,6 @@ function Section({
                   key={item.id}
                   item={item}
                   sectionColor={section?.color}
-                  isDark={isDark}
                   sectionId={sectionId}
                   isDragging={dragState.draggingItemId === item.id}
                   isDropTarget={
@@ -1242,7 +1215,6 @@ function Section({
               {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
                 <div style={{ columnSpan: "all" }}>
                   <InlineAddLink
-                    isDark={isDark}
                     onCreateLink={async (url, title) => {
                       await onCreateLink(sectionId, url, title);
                     }}
@@ -1262,7 +1234,7 @@ function Section({
                   url={item.url}
                   description={item.description}
                   favicon={item.favicon}
-                  accent={section.color || "#FF9800"}
+                  accent={section.color || LINKS_ACCENT}
                   tags={item.tags}
                   starred={item.isFavorite}
                   activeTags={activeTags}
@@ -1279,7 +1251,6 @@ function Section({
 
               {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
                 <InlineAddLink
-                  isDark={isDark}
                   onCreateLink={async (url, title) => {
                     await onCreateLink(sectionId, url, title);
                   }}
@@ -1296,7 +1267,6 @@ function Section({
                   item={item}
                   containerId={containerId}
                   sectionId={sectionId}
-                  isDark={isDark}
                   onDragStart={onDragStart}
                   onDragOver={onDragOver}
                   onDrop={onDrop}
@@ -1314,7 +1284,6 @@ function Section({
               {/* Inline Add Link for Grid view - только при клике на + */}
               {addingLinkToSection !== undefined && addingLinkToSection === sectionId && (
                 <InlineAddLink
-                  isDark={isDark}
                   onCreateLink={async (url, title) => {
                     await onCreateLink(sectionId, url, title);
                   }}
@@ -1327,11 +1296,12 @@ function Section({
           {links.length === 0 &&
             (addingLinkToSection === undefined || addingLinkToSection !== sectionId) && (
               <div
-                className="cursor-pointer rounded-lg border-2 border-dashed py-6 text-center text-xs transition-colors hover:border-orange-400"
+                className="cursor-pointer rounded-lg border-2 border-dashed py-6 text-center text-xs transition-colors hover:border-links"
                 style={{
-                  color: "#94a3b8",
-                  borderColor: dragState.dropSectionId === sectionId ? "#FF9800" : "transparent",
-                  background: dragState.dropSectionId === sectionId ? "#FF980010" : "transparent",
+                  color: "var(--text-subtle)",
+                  borderColor: dragState.dropSectionId === sectionId ? LINKS_ACCENT : "transparent",
+                  background:
+                    dragState.dropSectionId === sectionId ? `${LINKS_ACCENT}10` : "transparent",
                 }}
                 onClick={() => onStartAddLink(sectionId)}
               >
@@ -1365,7 +1335,6 @@ export function LinksView({ containerId }: Props) {
     deleteLinkItem,
     addLinkItem,
     reorderLinkSections,
-    isDarkTheme,
   } = useStore();
 
   // Auto-sync hook - triggers debounced sync after changes
@@ -1954,12 +1923,10 @@ export function LinksView({ containerId }: Props) {
   if (!container) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p style={{ color: "#64748b" }}>Links container not found</p>
+        <p className="text-muted">Links container not found</p>
       </div>
     );
   }
-
-  const isDark = isDarkTheme;
 
   return (
     <div className="relative flex h-full flex-col">
@@ -1968,7 +1935,7 @@ export function LinksView({ containerId }: Props) {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search links, tags, urls..."
-        accent="#FF9800"
+        accent={LINKS_ACCENT}
         filters={[
           {
             key: "starred",
@@ -2036,7 +2003,7 @@ export function LinksView({ containerId }: Props) {
             : undefined
         }
         icon={<Link2 size={22} />}
-        accent="#FF9800"
+        accent={LINKS_ACCENT}
         count={container.subItems.length}
         countLabel="links"
       />
@@ -2073,7 +2040,6 @@ export function LinksView({ containerId }: Props) {
         {/* Inline Add Section */}
         {addingSection && (
           <InlineAddSection
-            isDark={isDark}
             onAdd={handleAddSection}
             onClose={() => setAddingSection(false)}
           />
@@ -2082,20 +2048,20 @@ export function LinksView({ containerId }: Props) {
         {/* No sections state - prompt to create one */}
         {sections.length === 0 && !addingSection && (
           <div className="py-12 text-center">
-            <FolderPlus size={48} className="mx-auto mb-4" style={{ color: "#64748b" }} />
+            <FolderPlus size={48} className="mx-auto mb-4 text-muted" />
             <h3
               className="mb-2 text-lg font-medium"
-              style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+              style={{ color: "var(--text)" }}
             >
               No sections yet
             </h3>
-            <p className="mb-4 text-sm" style={{ color: "#64748b" }}>
+            <p className="mb-4 text-sm text-muted">
               Create a section to start organizing your links
             </p>
             <button
               onClick={() => setAddingSection(true)}
-              className="rounded-lg px-4 py-2 text-sm font-medium"
-              style={{ background: "#FF9800", color: "white" }}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-white"
+              style={{ background: LINKS_ACCENT }}
             >
               Create Section
             </button>
@@ -2113,11 +2079,11 @@ export function LinksView({ containerId }: Props) {
                 title: link.title,
                 url: link.url,
                 favicon: link.favicon,
-                accent: section.color || "#FF9800",
+                accent: section.color || LINKS_ACCENT,
                 tags: link.tags,
                 starred: link.isFavorite,
                 categoryLabel: section.title,
-                categoryColor: section.color || "#FF9800",
+                categoryColor: section.color || LINKS_ACCENT,
                 level: link.level,
                 onToggleStar: () => handleUpdateItem(link.id, { isFavorite: !link.isFavorite }),
                 onOpen: () => window.open(link.url, "_blank", "noopener,noreferrer"),
@@ -2144,14 +2110,14 @@ export function LinksView({ containerId }: Props) {
               .map(({ section, links }) => ({
                 id: section.id,
                 title: section.title,
-                accent: section.color || "#FF9800",
+                accent: section.color || LINKS_ACCENT,
                 items: links.map((link) => ({
                   id: link.id,
                   title: link.title,
                   url: link.url,
                   description: link.description,
                   favicon: link.favicon,
-                  accent: section.color || "#FF9800",
+                  accent: section.color || LINKS_ACCENT,
                   tags: link.tags,
                   starred: link.isFavorite,
                   level: link.level,
@@ -2180,7 +2146,6 @@ export function LinksView({ containerId }: Props) {
               section={section}
               links={sectionLinks}
               containerId={container.id}
-              isDark={isDark}
               viewMode={viewMode}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
@@ -2215,14 +2180,14 @@ export function LinksView({ containerId }: Props) {
         {/* Empty state - when sections exist but no links */}
         {sections.length > 0 && container.subItems.length === 0 && (
           <div className="py-12 text-center">
-            <Link2 size={48} className="mx-auto mb-4" style={{ color: "#64748b" }} />
+            <Link2 size={48} className="mx-auto mb-4 text-muted" />
             <h3
               className="mb-2 text-lg font-medium"
-              style={{ color: isDark ? "#e2e8f0" : "#1e293b" }}
+              style={{ color: "var(--text)" }}
             >
               No links yet
             </h3>
-            <p className="mb-4 text-sm" style={{ color: "#64748b" }}>
+            <p className="mb-4 text-sm text-muted">
               Add your first link to a section
             </p>
           </div>
@@ -2272,7 +2237,7 @@ export function LinksView({ containerId }: Props) {
                       >
                         <span
                           className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ background: s.color || "#FF9800" }}
+                          style={{ background: s.color || LINKS_ACCENT }}
                         />
                         <span className="truncate">{s.title}</span>
                       </button>

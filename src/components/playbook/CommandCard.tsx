@@ -105,12 +105,12 @@ export function CommandCard({
   return (
     <div
       className={cn(
-        "group relative rounded-xl border bg-surface backdrop-blur-sm",
+        "group relative rounded-lg border bg-surface backdrop-blur-sm",
         "overflow-hidden transition-all duration-200",
         "hover:bg-sunken hover:shadow-lg hover:shadow-black/20",
         dimmed ? "border-border opacity-60" : "border-border hover:border-border-subtle",
-        copiedFlash && "ring-2 ring-emerald-400/60",
-        isDone && "border-emerald-500/30",
+        copiedFlash && "ring-2 ring-success/60",
+        isDone && "border-success/30",
         isSkipped && "border-border-subtle",
       )}
     >
@@ -122,7 +122,7 @@ export function CommandCard({
             className={cn(
               "flex w-12 flex-shrink-0 items-center justify-center border-r transition-colors",
               isDone
-                ? "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20"
+                ? "border-success/30 bg-success/10 hover:bg-success/20"
                 : isSkipped
                   ? "border-border-subtle bg-sunken hover:bg-sunken"
                   : "border-border bg-surface hover:bg-sunken",
@@ -136,7 +136,7 @@ export function CommandCard({
             }`}
           >
             {isDone ? (
-              <CheckCircle2 size={20} className="text-emerald-400" />
+              <CheckCircle2 size={20} className="text-success" />
             ) : isSkipped ? (
               <XCircle size={20} className="text-subtle" />
             ) : (
@@ -178,7 +178,7 @@ export function CommandCard({
             </div>
 
             {mode === "engagement" && variables.length > 0 && (
-              <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 text-[9px] font-medium text-cyan-300">
+              <span className="rounded border border-playbooks/30 bg-playbooks/10 px-1.5 py-0.5 text-[9px] font-medium text-playbooks">
                 RESOLVED
               </span>
             )}
@@ -226,11 +226,11 @@ export function CommandCard({
             </div>
 
             {copied && (
-              <div className="animate-in absolute inset-0 flex items-center justify-center bg-emerald-500/10 backdrop-blur-[1px]">
-                <div className="flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5">
-                  <Check size={14} className="text-emerald-300" />
-                  <span className="text-xs font-medium text-emerald-200">Copied</span>
-                  <span className="text-[10px] text-emerald-300/70">
+              <div className="animate-in absolute inset-0 flex items-center justify-center bg-success/10 backdrop-blur-[1px]">
+                <div className="flex items-center gap-1.5 rounded-lg border border-success/40 bg-success/20 px-3 py-1.5">
+                  <Check size={14} className="text-success" />
+                  <span className="text-xs font-medium text-success">Copied</span>
+                  <span className="text-[10px] text-success/70">
                     ({mode === "engagement" ? "rendered" : "template"})
                   </span>
                 </div>
@@ -277,7 +277,7 @@ export function CommandCard({
             {mode !== "engagement" && renderedText !== template && (
               <button
                 onClick={() => handleCopy(renderedText)}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-cyan-400 transition-colors hover:bg-cyan-500/15 hover:text-cyan-300"
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-playbooks transition-colors hover:bg-playbooks/15 hover:text-playbooks"
                 title={`Copy with variables substituted:\n${renderedText}`}
               >
                 <Copy size={11} />
@@ -289,7 +289,7 @@ export function CommandCard({
               className={cn(
                 "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors",
                 copied
-                  ? "bg-emerald-500/15 text-emerald-300"
+                  ? "bg-success/15 text-success"
                   : "text-muted hover:bg-sunken hover:text-foreground",
               )}
             >
@@ -315,7 +315,7 @@ export function CommandCard({
               onClick={() => {
                 if (confirm("Delete this command?")) deletePlaybookItem(containerId, item.id);
               }}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted transition-colors hover:bg-danger/15 hover:text-danger"
             >
               <Trash2 size={11} />
               Delete

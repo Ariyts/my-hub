@@ -79,7 +79,6 @@ export function Sidebar() {
     activeCategoryId,
     setActiveCategoryId,
     setShowSettings,
-    isDarkTheme,
     addCategory,
     updateCategory,
     deleteCategory,
@@ -210,7 +209,8 @@ export function Sidebar() {
     }
   };
 
-  // На десктопе — колонка в потоке. На мобильном — выдвижная панель поверх контента
+  // На десктопе — колонка в потоке. На мобильном — выдвижная панель поверх контента.
+  // Цвет фона/границы — через токены (bg-background / border-border на элементе).
   const asideStyle: React.CSSProperties = isMobile
     ? {
         position: "fixed",
@@ -224,14 +224,10 @@ export function Sidebar() {
         transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 0.25s ease-out",
         boxShadow: isSidebarOpen ? "0 0 24px rgba(0, 0, 0, 0.35)" : "none",
-        background: isDarkTheme ? "#0f172a" : "#1e293b",
-        borderColor: isDarkTheme ? "#1e293b" : "#0f172a",
       }
     : {
         width: compact ? "56px" : "200px",
         minWidth: compact ? "56px" : "200px",
-        background: isDarkTheme ? "#0f172a" : "#1e293b",
-        borderColor: isDarkTheme ? "#1e293b" : "#0f172a",
       };
 
   const isHidden = isMobile && !isSidebarOpen;
@@ -243,8 +239,7 @@ export function Sidebar() {
         <div
           onClick={closeMobilePanels}
           aria-hidden="true"
-          className="fixed inset-0 z-30"
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
+          className="fixed inset-0 z-30 bg-black/50"
         />
       )}
 
@@ -256,7 +251,7 @@ export function Sidebar() {
         aria-label={isMobile ? "Categories" : undefined}
         aria-hidden={isHidden || undefined}
         {...swipeHandlers}
-        className={`relative z-20 flex flex-col overflow-hidden border-r transition-all duration-300 ease-in-out outline-none ${
+        className={`relative z-20 flex flex-col overflow-hidden border-r border-border bg-background transition-all duration-300 ease-in-out outline-none ${
           isHidden ? "pointer-events-none" : ""
         }`}
         style={asideStyle}
@@ -265,8 +260,7 @@ export function Sidebar() {
             В compact ширина всего 56px — воркспейс и переключатель не помещаются
             в один ряд, поэтому стек по вертикали (каждому вся ширина). */}
         <div
-          className={`border-b ${compact ? "flex flex-col-reverse items-stretch" : "flex items-center"}`}
-          style={{ borderColor: isDarkTheme ? "#1e293b" : "#0f172a" }}
+          className={`border-b border-border ${compact ? "flex flex-col-reverse items-stretch" : "flex items-center"}`}
         >
           <div className={compact ? "w-full" : "flex-1 overflow-hidden"}>
             <WorkspaceSwitcher compact={compact} />
@@ -276,22 +270,22 @@ export function Sidebar() {
               onClick={closeMobilePanels}
               aria-label="Close categories panel"
               title="Close"
-              className="flex h-11 w-11 shrink-0 items-center justify-center transition-colors hover:bg-slate-700/50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center transition-colors hover:bg-sunken"
             >
-              <X size={20} style={{ color: isDarkTheme ? "#64748b" : "#94a3b8" }} />
+              <X size={20} className="text-subtle" />
             </button>
           ) : (
             <button
               onClick={toggleSidebarCompact}
-              className={`shrink-0 p-2 transition-colors hover:bg-slate-700/50 ${
+              className={`shrink-0 p-2 transition-colors hover:bg-sunken ${
                 compact ? "flex w-full justify-center" : ""
               }`}
               title={compact ? "Expand sidebar" : "Collapse sidebar"}
             >
               {compact ? (
-                <PanelLeft size={16} style={{ color: isDarkTheme ? "#64748b" : "#94a3b8" }} />
+                <PanelLeft size={16} className="text-subtle" />
               ) : (
-                <PanelLeftClose size={16} style={{ color: isDarkTheme ? "#64748b" : "#94a3b8" }} />
+                <PanelLeftClose size={16} className="text-subtle" />
               )}
             </button>
           )}
@@ -301,7 +295,7 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto py-2">
           {!compact && (
             <div className="mb-2 px-3">
-              <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
+              <span className="text-[10px] font-semibold tracking-wider text-subtle uppercase">
                 Categories
               </span>
             </div>
@@ -359,7 +353,7 @@ export function Sidebar() {
                 {/* Drop indicator line */}
                 {isDropTarget && !isDragging && (
                   <div
-                    className="absolute right-0 left-0 z-10 h-0.5 rounded bg-indigo-500"
+                    className="absolute right-0 left-0 z-10 h-0.5 rounded bg-primary"
                     style={{ top: index === 0 ? "0" : "50%" }}
                   />
                 )}
@@ -388,12 +382,12 @@ export function Sidebar() {
                     background: isActive
                       ? `${category.color}22`
                       : isDropTarget
-                        ? "#6366f120"
+                        ? "color-mix(in srgb, var(--primary) 12%, transparent)"
                         : "transparent",
                     border: isActive
                       ? `1px solid ${category.color}40`
                       : isDropTarget
-                        ? "1px solid #6366f1"
+                        ? "1px solid var(--primary)"
                         : "1px solid transparent",
                     justifyContent: compact ? "center" : "flex-start",
                   }}
@@ -404,10 +398,7 @@ export function Sidebar() {
                       className="cursor-grab opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
                       onMouseDown={(e) => e.stopPropagation()}
                     >
-                      <GripVertical
-                        size={12}
-                        style={{ color: isDarkTheme ? "#64748b" : "#94a3b8" }}
-                      />
+                      <GripVertical size={12} className="text-subtle" />
                     </div>
                   )}
                   <span className="text-base">{category.icon}</span>
@@ -416,18 +407,12 @@ export function Sidebar() {
                       <span
                         className="flex-1 truncate text-left text-sm font-medium"
                         style={{
-                          color: isActive ? category.color : isDarkTheme ? "#cbd5e1" : "#94a3b8",
+                          color: isActive ? category.color : "var(--text-muted)",
                         }}
                       >
                         {category.name}
                       </span>
-                      <span
-                        className="rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                        style={{
-                          background: isDarkTheme ? "#334155" : "#f1f5f9",
-                          color: "#64748b",
-                        }}
-                      >
+                      <span className="rounded-full bg-sunken px-1.5 py-0.5 text-[10px] font-medium text-subtle">
                         {itemCount}
                       </span>
                     </>
@@ -442,9 +427,9 @@ export function Sidebar() {
                       setContextMenu({ id: category.id, x: e.clientX, y: e.clientY });
                     }}
                     aria-label="Category options"
-                    className="tap-target absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-700"
+                    className="tap-target absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-sunken"
                   >
-                    <MoreHorizontal size={12} className="text-slate-400" />
+                    <MoreHorizontal size={12} className="text-muted" />
                   </button>
                 )}
               </div>
@@ -456,9 +441,8 @@ export function Sidebar() {
             <button
               onClick={() => setShowAddMenu(!showAddMenu)}
               title={compact ? "Add Category" : undefined}
-              className="flex w-full items-center gap-2 rounded-lg border border-dashed border-slate-600 px-3 py-2 text-sm transition-all hover:bg-slate-700"
+              className="flex w-full items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted transition-all hover:bg-sunken"
               style={{
-                color: isDarkTheme ? "#94a3b8" : "#64748b",
                 justifyContent: compact ? "center" : "flex-start",
               }}
             >
@@ -472,19 +456,15 @@ export function Sidebar() {
         {showAddMenu && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowAddMenu(false)} />
-            <div
-              className="absolute bottom-16 left-2 z-50 min-w-[160px] rounded-xl p-2 shadow-xl"
-              style={{ background: isDarkTheme ? "#1e293b" : "#fff", border: "1px solid #334155" }}
-            >
-              <div className="mb-1 px-2 py-1 text-[10px] tracking-wider text-slate-400 uppercase">
+            <div className="absolute bottom-16 left-2 z-50 min-w-[160px] rounded-xl border border-border bg-surface p-2 shadow-xl">
+              <div className="mb-1 px-2 py-1 text-[10px] tracking-wider text-muted uppercase">
                 Choose base type:
               </div>
               {BASE_TYPE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleAddCategory(option.value)}
-                  className="w-full rounded-lg px-2 py-2 text-left text-xs transition-colors hover:bg-slate-700"
-                  style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                  className="w-full rounded-lg px-2 py-2 text-left text-xs text-foreground transition-colors hover:bg-sunken"
                 >
                   {option.label}
                 </button>
@@ -498,12 +478,10 @@ export function Sidebar() {
           <>
             <div className="fixed inset-0 z-40" onClick={() => setContextMenu(null)} />
             <div
-              className="fixed z-50 min-w-[120px] rounded-xl p-1 shadow-xl"
+              className="fixed z-50 min-w-[120px] rounded-xl border border-border bg-surface p-1 shadow-xl"
               style={{
                 left: contextMenu.x + 10,
                 top: contextMenu.y,
-                background: isDarkTheme ? "#1e293b" : "#fff",
-                border: "1px solid #334155",
               }}
             >
               <button
@@ -511,8 +489,7 @@ export function Sidebar() {
                   const category = workspaceCategories.find((c) => c.id === contextMenu.id);
                   if (category) openEditModal(category);
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-slate-700"
-                style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground transition-colors hover:bg-sunken"
               >
                 <Edit2 size={12} /> Edit
               </button>
@@ -521,16 +498,14 @@ export function Sidebar() {
               <button
                 onClick={() => moveCategory(contextMenu.id, -1)}
                 disabled={!canMoveCategory(contextMenu.id, -1)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ArrowUp size={12} /> Move up
               </button>
               <button
                 onClick={() => moveCategory(contextMenu.id, 1)}
                 disabled={!canMoveCategory(contextMenu.id, 1)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ArrowDown size={12} /> Move down
               </button>
@@ -539,7 +514,7 @@ export function Sidebar() {
                 return category && !category.isDefault ? (
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-400 transition-colors hover:bg-red-900/30"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-danger transition-colors hover:bg-danger/10"
                   >
                     <Trash2 size={12} /> Delete
                   </button>
@@ -552,52 +527,39 @@ export function Sidebar() {
         {/* Edit Modal */}
         {showEditModal && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.5)" }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={() => setShowEditModal(null)}
           >
             <div
-              className="w-full max-w-xs rounded-2xl p-5"
-              style={{ background: isDarkTheme ? "#1e293b" : "#fff", border: "1px solid #334155" }}
+              className="w-full max-w-xs rounded-xl border border-border bg-surface p-5"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3
-                className="mb-1 text-sm font-semibold"
-                style={{ color: isDarkTheme ? "#e2e8f0" : "#1e293b" }}
-              >
-                Edit Category
-              </h3>
+              <h3 className="mb-1 text-sm font-semibold text-foreground">Edit Category</h3>
               {showEditModal?.isDefault && (
-                <p className="mb-3 text-[10px] text-slate-400">Default category - cannot delete</p>
+                <p className="mb-3 text-[10px] text-subtle">Default category - cannot delete</p>
               )}
 
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">Name</label>
+                  <label className="mb-1 block text-xs text-muted">Name</label>
                   <input
                     type="text"
                     value={editingCategory.name || ""}
                     onChange={(e) =>
                       setEditingCategory({ ...editingCategory, name: e.target.value })
                     }
-                    className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                    style={{
-                      background: isDarkTheme ? "#0f172a" : "#f1f5f9",
-                      color: isDarkTheme ? "#e2e8f0" : "#1e293b",
-                      border: "1px solid #334155",
-                    }}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">Icon</label>
+                  <label className="mb-1 block text-xs text-muted">Icon</label>
                   <div className="flex flex-wrap gap-1">
                     {EMOJI_OPTIONS.map((emoji) => (
                       <button
                         key={emoji}
                         onClick={() => setEditingCategory({ ...editingCategory, icon: emoji })}
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg transition-all ${editingCategory.icon === emoji ? "ring-2 ring-indigo-500" : ""}`}
-                        style={{ background: isDarkTheme ? "#0f172a" : "#f1f5f9" }}
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg bg-background text-lg transition-all ${editingCategory.icon === emoji ? "ring-2 ring-primary" : ""}`}
                       >
                         {emoji}
                       </button>
@@ -606,13 +568,13 @@ export function Sidebar() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">Color</label>
+                  <label className="mb-1 block text-xs text-muted">Color</label>
                   <div className="flex flex-wrap gap-1">
                     {COLOR_OPTIONS.map((color) => (
                       <button
                         key={color}
                         onClick={() => setEditingCategory({ ...editingCategory, color })}
-                        className={`h-6 w-6 rounded-full transition-all ${editingCategory.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900" : ""}`}
+                        className={`h-6 w-6 rounded-full transition-all ${editingCategory.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-background" : ""}`}
                         style={{ background: color }}
                       />
                     ))}
@@ -623,14 +585,13 @@ export function Sidebar() {
               <div className="mt-5 flex gap-2">
                 <button
                   onClick={() => setShowEditModal(null)}
-                  className="flex-1 rounded-lg px-4 py-2 text-sm font-medium"
-                  style={{ background: isDarkTheme ? "#0f172a" : "#f1f5f9", color: "#94a3b8" }}
+                  className="flex-1 rounded-lg bg-sunken px-4 py-2 text-sm font-medium text-muted"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => showEditModal && handleEditCategory(showEditModal)}
-                  className="flex-1 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white"
+                  className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white"
                 >
                   Save
                 </button>
@@ -640,14 +601,13 @@ export function Sidebar() {
         )}
 
         {/* Bottom - Trash & Settings */}
-        <div className="border-t p-2" style={{ borderColor: isDarkTheme ? "#1e293b" : "#0f172a" }}>
+        <div className="border-t border-border p-2">
           {/* Trash button */}
           <button
             onClick={() => setShowTrash(true)}
             title={compact ? "Trash" : undefined}
-            className="mb-1 flex w-full items-center rounded-lg px-3 py-2 text-sm transition-all hover:bg-slate-700"
+            className="mb-1 flex w-full items-center rounded-lg px-3 py-2 text-sm text-muted transition-all hover:bg-sunken"
             style={{
-              color: isDarkTheme ? "#94a3b8" : "#64748b",
               justifyContent: compact ? "center" : "space-between",
             }}
           >
@@ -656,7 +616,7 @@ export function Sidebar() {
               {!compact && <span>Trash</span>}
             </div>
             {!compact && trash.length > 0 && (
-              <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
+              <span className="rounded-full bg-danger/15 px-1.5 py-0.5 text-[10px] font-medium text-danger">
                 {trash.length}
               </span>
             )}
@@ -666,9 +626,8 @@ export function Sidebar() {
           <button
             onClick={() => setShowSettings(true)}
             title={compact ? "Settings" : undefined}
-            className="mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all hover:bg-slate-700"
+            className="mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-all hover:bg-sunken"
             style={{
-              color: isDarkTheme ? "#94a3b8" : "#64748b",
               justifyContent: compact ? "center" : "flex-start",
             }}
           >
@@ -685,9 +644,8 @@ export function Sidebar() {
               }
             }}
             title={compact ? "Reset" : undefined}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all hover:bg-orange-900/30"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-warning transition-all hover:bg-warning/10"
             style={{
-              color: "#f97316",
               justifyContent: compact ? "center" : "flex-start",
             }}
           >

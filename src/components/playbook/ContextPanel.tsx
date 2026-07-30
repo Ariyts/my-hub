@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Settings2, Plus, Check, Edit3, Trash2 } from "lucide-react";
 import { useStore } from "../../store";
 import type { PlaybookVariable } from "../../types";
+import { BRAND } from "./constants";
 
 interface Props {
   containerId: string;
@@ -47,7 +48,7 @@ export function ContextPanel({ containerId, variables }: Props) {
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-2 px-4 py-2 transition-colors hover:bg-sunken"
       >
-        <Settings2 size={13} className="text-cyan-400" />
+        <Settings2 size={13} className="text-playbooks" />
         <span className="text-xs font-semibold text-muted">Context Variables</span>
         <span className="text-[10px] text-subtle">({variables.length})</span>
         <div className="flex-1" />
@@ -58,9 +59,9 @@ export function ContextPanel({ containerId, variables }: Props) {
                 key={v.id}
                 className="rounded border px-1.5 py-0.5 font-mono text-[9px]"
                 style={{
-                  color: v.color || "#00BCD4",
-                  background: `${v.color || "#00BCD4"}15`,
-                  borderColor: `${v.color || "#00BCD4"}40`,
+                  color: v.color || BRAND,
+                  background: `${v.color || BRAND}15`,
+                  borderColor: `${v.color || BRAND}40`,
                 }}
               >
                 ${v.name}
@@ -96,7 +97,7 @@ export function ContextPanel({ containerId, variables }: Props) {
 
           {/* Add form */}
           {adding ? (
-            <div className="space-y-1.5 rounded-lg border border-cyan-400/40 bg-cyan-500/5 p-2">
+            <div className="space-y-1.5 rounded-lg border border-playbooks/40 bg-playbooks/5 p-2">
               <div className="flex items-center gap-2">
                 <input
                   autoFocus
@@ -106,14 +107,14 @@ export function ContextPanel({ containerId, variables }: Props) {
                   }
                   onKeyDown={handleKeyDown}
                   placeholder="NAME (e.g. TARGET)"
-                  className="flex-1 rounded border border-border bg-background px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-cyan-400"
+                  className="flex-1 rounded border border-border bg-background px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-playbooks"
                 />
                 <input
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="value (e.g. 10.10.10.5)"
-                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
+                  className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-playbooks"
                 />
               </div>
               <input
@@ -121,7 +122,7 @@ export function ContextPanel({ containerId, variables }: Props) {
                 onChange={(e) => setNewDesc(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="description (optional)"
-                className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
+                className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-playbooks"
               />
               <div className="flex items-center justify-end gap-1">
                 <button
@@ -133,7 +134,7 @@ export function ContextPanel({ containerId, variables }: Props) {
                 <button
                   onClick={handleAdd}
                   disabled={!newName.trim()}
-                  className="flex items-center gap-1 rounded bg-cyan-500/20 px-2 py-1 text-[11px] font-medium text-cyan-300 transition-colors hover:bg-cyan-500/30 disabled:opacity-40"
+                  className="flex items-center gap-1 rounded bg-playbooks/20 px-2 py-1 text-[11px] font-medium text-playbooks transition-colors hover:bg-playbooks/30 disabled:opacity-40"
                 >
                   <Check size={11} />
                   Add
@@ -151,8 +152,8 @@ export function ContextPanel({ containerId, variables }: Props) {
           )}
 
           <p className="text-[10px] leading-relaxed text-subtle">
-            Use <code className="text-cyan-400">$NAME</code> or{" "}
-            <code className="text-cyan-400">{"${NAME}"}</code> in commands. Values will be
+            Use <code className="text-playbooks">$NAME</code> or{" "}
+            <code className="text-playbooks">{"${NAME}"}</code> in commands. Values will be
             auto-substituted in Engagement mode.
           </p>
         </div>
@@ -211,13 +212,13 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
             value={editName}
             onChange={(e) => setEditName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "_"))}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-border bg-surface px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-cyan-400"
+            className="flex-1 rounded border border-border bg-surface px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-playbooks"
           />
           <input
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
+            className="flex-1 rounded border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-playbooks"
           />
         </div>
         <input
@@ -225,7 +226,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
           onChange={(e) => setEditDesc(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="description"
-          className="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-cyan-400"
+          className="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-playbooks"
         />
         <div className="flex items-center justify-end gap-1">
           <button
@@ -237,7 +238,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
           <button
             onClick={handleSave}
             disabled={!editName.trim()}
-            className="flex items-center gap-1 rounded bg-emerald-500/20 px-2 py-1 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/30 disabled:opacity-40"
+            className="flex items-center gap-1 rounded bg-success/20 px-2 py-1 text-[11px] font-medium text-success transition-colors hover:bg-success/30 disabled:opacity-40"
           >
             <Check size={11} />
             Save
@@ -251,11 +252,11 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
     <div className="group flex items-center gap-2 rounded-lg border border-border bg-background/40 px-2 py-1.5 transition-colors hover:border-border-subtle">
       <div
         className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
-        style={{ background: variable.color || "#00BCD4" }}
+        style={{ background: variable.color || BRAND }}
       />
       <code
         className="font-mono text-xs font-semibold"
-        style={{ color: variable.color || "#00BCD4" }}
+        style={{ color: variable.color || BRAND }}
       >
         ${variable.name}
       </code>
@@ -274,7 +275,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
       <div className="flex flex-shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
         <button
           onClick={() => setEditing(true)}
-          className="rounded p-1 text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
+          className="rounded p-1 text-muted transition-colors hover:bg-sunken hover:text-playbooks"
         >
           <Edit3 size={11} />
         </button>
@@ -282,7 +283,7 @@ function VariableRow({ variable, onUpdate, onDelete }: VarRowProps) {
           onClick={() => {
             if (confirm(`Delete variable $${variable.name}?`)) onDelete();
           }}
-          className="rounded p-1 text-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
+          className="rounded p-1 text-muted transition-colors hover:bg-danger/15 hover:text-danger"
         >
           <Trash2 size={11} />
         </button>

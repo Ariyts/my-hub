@@ -39,6 +39,10 @@ interface Props {
   note: NoteItem;
 }
 
+// Акцент типа «Notes». Зеркалит токен --accent-notes (hex — конкатенируется с
+// альфой в тинтах `${…}20`).
+const NOTES_ACCENT = "#3fb950";
+
 // Сжимает изображение (уменьшает до maxDim, JPEG) и возвращает data-URL.
 // base64 хранится прямо в markdown — сжатие держит размер в разумных пределах.
 function fileToCompressedDataUrl(file: File, maxDim = 1600, quality = 0.82): Promise<string> {
@@ -78,7 +82,6 @@ export function NoteEditor({ note }: Props) {
     updateNote,
     deleteNote,
     addNote,
-    isDarkTheme,
     notes,
     folders,
     categories,
@@ -201,11 +204,11 @@ export function NoteEditor({ note }: Props) {
     { icon: <Minus size={14} />, action: () => insertText("\n---\n"), title: "Divider" },
   ];
 
-  const bg = isDarkTheme ? "#0f172a" : "#ffffff";
-  const border = isDarkTheme ? "#1e293b" : "#e2e8f0";
-  const textColor = isDarkTheme ? "#e2e8f0" : "#1e293b";
-  const mutedColor = isDarkTheme ? "#64748b" : "#94a3b8";
-  const toolbarBg = isDarkTheme ? "#1e293b" : "#f8fafc";
+  const bg = "var(--bg)";
+  const border = "var(--border)";
+  const textColor = "var(--text)";
+  const mutedColor = "var(--text-subtle)";
+  const toolbarBg = "var(--bg-sunken)";
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
 
@@ -324,7 +327,7 @@ export function NoteEditor({ note }: Props) {
           <div className="mt-1 flex shrink-0 items-center gap-2">
             <button
               onClick={() => updateNote(note.id, { isFavorite: !note.isFavorite })}
-              className="rounded-lg p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-lg p-1.5 transition-colors hover:bg-sunken"
               title={note.isFavorite ? "Remove from favorites" : "Add to favorites"}
             >
               {note.isFavorite ? (
@@ -337,8 +340,8 @@ export function NoteEditor({ note }: Props) {
               onClick={handleSave}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all"
               style={{
-                background: saved ? "#4CAF5020" : "#4CAF5015",
-                color: saved ? "#4CAF50" : "#6b7280",
+                background: saved ? `${NOTES_ACCENT}20` : `${NOTES_ACCENT}15`,
+                color: saved ? NOTES_ACCENT : "var(--text-muted)",
               }}
             >
               <Save size={14} />
@@ -346,7 +349,7 @@ export function NoteEditor({ note }: Props) {
             </button>
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="rounded-lg p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-lg p-1.5 transition-colors hover:bg-sunken"
             >
               {isFullscreen ? (
                 <Minimize2 size={16} style={{ color: mutedColor }} />
@@ -358,9 +361,9 @@ export function NoteEditor({ note }: Props) {
               onClick={() => {
                 if (confirm("Delete this note?")) deleteNote(note.id);
               }}
-              className="rounded-lg p-1.5 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="rounded-lg p-1.5 transition-colors hover:bg-danger/10"
             >
-              <Trash2 size={16} className="text-red-400" />
+              <Trash2 size={16} className="text-danger" />
             </button>
           </div>
         </div>
@@ -375,8 +378,8 @@ export function NoteEditor({ note }: Props) {
             {note.tags.map((tag) => (
               <span
                 key={tag}
-                className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium hover:bg-red-50"
-                style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9", color: "#64748b" }}
+                className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium hover:bg-danger/10"
+                style={{ background: "var(--bg-sunken)", color: "var(--text-muted)" }}
                 onClick={() => removeTag(tag)}
                 title="Remove tag"
               >
@@ -387,7 +390,7 @@ export function NoteEditor({ note }: Props) {
               <input
                 autoFocus
                 className="w-24 rounded-full border px-2 py-0.5 text-xs outline-none"
-                style={{ borderColor: "#4CAF50", background: "transparent", color: textColor }}
+                style={{ borderColor: NOTES_ACCENT, background: "transparent", color: textColor }}
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={(e) => {
@@ -403,7 +406,7 @@ export function NoteEditor({ note }: Props) {
             ) : (
               <button
                 onClick={() => setShowTagInput(true)}
-                className="rounded-full border border-dashed px-2 py-0.5 text-xs transition-colors hover:border-green-400"
+                className="rounded-full border border-dashed px-2 py-0.5 text-xs transition-colors hover:border-notes"
                 style={{ borderColor: mutedColor, color: mutedColor }}
               >
                 + tag
@@ -422,7 +425,7 @@ export function NoteEditor({ note }: Props) {
               key={sp.id}
               onClick={() => navigateToNote(sp)}
               className="rounded-full px-2 py-0.5 text-xs hover:underline"
-              style={{ background: isDarkTheme ? "#1e293b" : "#f1f5f9", color: "#4CAF50" }}
+              style={{ background: "var(--bg-sunken)", color: NOTES_ACCENT }}
               title={sp.title || "(untitled)"}
             >
               {sp.title || "(untitled)"}
@@ -430,7 +433,7 @@ export function NoteEditor({ note }: Props) {
           ))}
           <button
             onClick={addSubpage}
-            className="rounded-full border border-dashed px-2 py-0.5 text-xs transition-colors hover:border-green-400"
+            className="rounded-full border border-dashed px-2 py-0.5 text-xs transition-colors hover:border-notes"
             style={{ borderColor: mutedColor, color: mutedColor }}
           >
             + subpage
@@ -448,7 +451,7 @@ export function NoteEditor({ note }: Props) {
             key={i}
             onClick={btn.action}
             title={btn.title}
-            className="rounded p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+            className="rounded p-1.5 transition-colors hover:bg-sunken"
             style={{ color: mutedColor }}
           >
             {btn.icon}
@@ -458,7 +461,7 @@ export function NoteEditor({ note }: Props) {
         <button
           onClick={() => fileInputRef.current?.click()}
           title="Insert image (drag & drop or paste also work)"
-          className="rounded p-1.5 transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+          className="rounded p-1.5 transition-colors hover:bg-sunken"
           style={{ color: mutedColor }}
         >
           <ImageIcon size={14} />
@@ -479,8 +482,8 @@ export function NoteEditor({ note }: Props) {
           onClick={() => setShowToc((v) => !v)}
           title="Table of contents"
           disabled={headings.length === 0}
-          className="mr-1 rounded p-1.5 transition-colors hover:bg-slate-200 disabled:opacity-40 dark:hover:bg-slate-700"
-          style={{ color: showToc && headings.length ? "#4CAF50" : mutedColor }}
+          className="mr-1 rounded p-1.5 transition-colors hover:bg-sunken disabled:opacity-40"
+          style={{ color: showToc && headings.length ? NOTES_ACCENT : mutedColor }}
         >
           <ListTree size={14} />
         </button>
@@ -514,8 +517,8 @@ export function NoteEditor({ note }: Props) {
                 onClick={() => setPreviewMode(mode)}
                 className="flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors"
                 style={{
-                  background: viewMode === mode ? "#4CAF5020" : "transparent",
-                  color: viewMode === mode ? "#4CAF50" : mutedColor,
+                  background: viewMode === mode ? `${NOTES_ACCENT}20` : "transparent",
+                  color: viewMode === mode ? NOTES_ACCENT : mutedColor,
                 }}
                 title={label}
               >
@@ -675,8 +678,8 @@ export function NoteEditor({ note }: Props) {
                       <code
                         className="rounded px-1.5 py-0.5 font-mono text-sm"
                         style={{
-                          background: isDarkTheme ? "#1e293b" : "#f1f5f9",
-                          color: "#ef4444",
+                          background: "var(--bg-sunken)",
+                          color: "var(--danger)",
                         }}
                       >
                         {children}
@@ -698,7 +701,7 @@ export function NoteEditor({ note }: Props) {
                   blockquote: ({ children }) => (
                     <blockquote
                       className="my-3 border-l-4 pl-4 italic"
-                      style={{ borderColor: "#4CAF50", color: mutedColor }}
+                      style={{ borderColor: NOTES_ACCENT, color: mutedColor }}
                     >
                       {children}
                     </blockquote>
@@ -715,7 +718,7 @@ export function NoteEditor({ note }: Props) {
                           disabled={!exists}
                           className="rounded px-0.5 font-medium"
                           style={{
-                            color: exists ? "#4CAF50" : mutedColor,
+                            color: exists ? NOTES_ACCENT : mutedColor,
                             textDecoration: exists ? "none" : "underline dotted",
                             cursor: exists ? "pointer" : "default",
                           }}
@@ -728,7 +731,7 @@ export function NoteEditor({ note }: Props) {
                     return (
                       <a
                         href={href}
-                        className="text-blue-400 hover:underline"
+                        className="text-commands hover:underline"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -797,7 +800,7 @@ export function NoteEditor({ note }: Props) {
                         <button
                           onClick={() => navigateToNote(n)}
                           className="text-sm hover:underline"
-                          style={{ color: "#4CAF50" }}
+                          style={{ color: NOTES_ACCENT }}
                         >
                           ← {n.title || "(untitled)"}
                         </button>

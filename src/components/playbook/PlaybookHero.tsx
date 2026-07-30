@@ -47,21 +47,21 @@ export function PlaybookHero({
   return (
     <div className="relative overflow-hidden border-b border-border">
       {/* Decorative gradient backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-background to-violet-500/10" />
-      <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
-      <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-playbooks/10 via-background to-primary/10" />
+      <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-playbooks/10 blur-3xl" />
+      <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="relative px-3 py-4 sm:px-6 sm:py-6">
         {/* На мобильном кнопки действий переносятся на свою строку */}
         <div className="flex flex-wrap items-start gap-3 sm:gap-4">
           {/* Icon tile */}
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border-subtle bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-2xl shadow-xl shadow-black/20 backdrop-blur-sm sm:h-16 sm:w-16 sm:text-3xl">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border-subtle bg-gradient-to-br from-playbooks/20 to-primary/20 text-2xl shadow-xl shadow-black/20 backdrop-blur-sm sm:h-16 sm:w-16 sm:text-3xl">
             {icon}
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center gap-2">
-              <span className="text-[10px] font-semibold tracking-[0.2em] text-cyan-400 uppercase">
+              <span className="text-[10px] font-semibold tracking-[0.2em] text-playbooks uppercase">
                 Playbook
               </span>
               <span className="text-subtle">·</span>
@@ -73,8 +73,8 @@ export function PlaybookHero({
 
             {/* Stats */}
             <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
-              <StatPill label="Commands" value={totalCount} color="#00BCD4" />
-              <StatPill label="Sections" value={sectionCount} color="#8b5cf6" />
+              <StatPill label="Commands" value={totalCount} color="var(--accent-playbooks)" />
+              <StatPill label="Sections" value={sectionCount} color="var(--primary)" />
               <StatPill label="Favorites" value={favoriteCount} color="#fbbf24" />
             </div>
           </div>
@@ -102,7 +102,7 @@ export function PlaybookHero({
                 className="flex items-center gap-1.5 rounded-lg border border-border-subtle bg-sunken px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-sunken"
                 title="Import/Export playbook"
               >
-                <ArrowUpDown size={13} className="text-cyan-400" />
+                <ArrowUpDown size={13} className="text-playbooks" />
                 I/O
               </button>
             )}
@@ -110,12 +110,12 @@ export function PlaybookHero({
               onClick={onAddSection}
               className="flex items-center gap-1.5 rounded-lg border border-border-subtle bg-sunken px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-sunken"
             >
-              <FolderPlus size={13} className="text-cyan-400" />
+              <FolderPlus size={13} className="text-playbooks" />
               Section
             </button>
             <button
               onClick={onAddCommand}
-              className="flex items-center gap-1.5 rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-lg shadow-cyan-500/20 transition-colors hover:bg-cyan-400"
+              className="flex items-center gap-1.5 rounded-lg bg-playbooks px-3 py-1.5 text-xs font-medium text-slate-950 shadow-lg transition-colors hover:opacity-90"
             >
               <Plus size={13} strokeWidth={2.5} />
               Command
@@ -205,7 +205,7 @@ export function PlaybookFilters({
               placeholder="Search commands, descriptions, tags…"
               inputMode="search"
               enterKeyHint="search"
-              className="w-full rounded-lg border border-border bg-surface py-2 pr-8 pl-9 text-sm text-foreground placeholder-subtle transition-colors outline-none focus:border-cyan-400/60 focus:bg-surface"
+              className="w-full rounded-lg border border-border bg-surface py-2 pr-8 pl-9 text-sm text-foreground placeholder-subtle transition-colors outline-none focus:border-playbooks/60 focus:bg-surface"
             />
             {search && (
               <button
@@ -240,7 +240,7 @@ export function PlaybookFilters({
               className={cn(
                 "rounded-md px-3 py-1 text-[11px] font-medium transition-all",
                 mode === "engagement"
-                  ? "border border-emerald-500/30 bg-emerald-500/20 text-emerald-300 shadow-sm"
+                  ? "border border-success/30 bg-success/20 text-success shadow-sm"
                   : "text-muted hover:text-foreground",
               )}
             >
@@ -255,7 +255,7 @@ export function PlaybookFilters({
               className={cn(
                 "rounded-md p-1.5 transition-all",
                 layout === "grid"
-                  ? "bg-sunken text-cyan-400 shadow-sm"
+                  ? "bg-sunken text-playbooks shadow-sm"
                   : "text-subtle hover:text-foreground",
               )}
               title="Card view"
@@ -267,7 +267,7 @@ export function PlaybookFilters({
               className={cn(
                 "rounded-md p-1.5 transition-all",
                 layout === "list"
-                  ? "bg-sunken text-cyan-400 shadow-sm"
+                  ? "bg-sunken text-playbooks shadow-sm"
                   : "text-subtle hover:text-foreground",
               )}
               title="List view (compact, ⌘/Ctrl+L)"
@@ -279,7 +279,7 @@ export function PlaybookFilters({
               className={cn(
                 "rounded-md px-2 py-1 font-mono text-[11px] font-bold transition-all",
                 layout === "markdown"
-                  ? "bg-sunken text-cyan-300 shadow-sm"
+                  ? "bg-sunken text-playbooks shadow-sm"
                   : "text-subtle hover:text-foreground",
               )}
               title="Markdown view (edit as markdown)"
@@ -344,7 +344,7 @@ export function PlaybookFilters({
                   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                   e.target.value = "";
                 }}
-                className="cursor-pointer rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted outline-none focus:border-cyan-400"
+                className="cursor-pointer rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted outline-none focus:border-playbooks"
               >
                 <option value="">Jump to section…</option>
                 {sections.map((s) => (
@@ -395,7 +395,7 @@ function FilterChip({
   active,
   onClick,
   label,
-  activeColor = "#00BCD4",
+  activeColor = "var(--accent-playbooks)",
 }: {
   active: boolean;
   onClick: () => void;

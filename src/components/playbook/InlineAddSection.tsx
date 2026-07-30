@@ -29,10 +29,10 @@ export function InlineAddSection({ onAdd, onClose }: Props) {
   };
 
   return (
-    <div className="animate-in rounded-xl border-2 border-dashed border-cyan-400/50 bg-cyan-500/5 p-3 backdrop-blur-sm">
+    <div className="animate-in rounded-lg border-2 border-dashed border-playbooks/50 bg-playbooks/5 p-3 backdrop-blur-sm">
       <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-cyan-500/20">
-          <FolderPlus size={15} className="text-cyan-300" />
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-playbooks/20">
+          <FolderPlus size={15} className="text-playbooks" />
         </div>
         <input
           ref={inputRef}
@@ -40,13 +40,13 @@ export function InlineAddSection({ onAdd, onClose }: Props) {
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="New section title (e.g., Recon, Exploitation, Post-Exploitation)..."
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-subtle outline-none focus:border-cyan-400"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-subtle outline-none focus:border-playbooks"
         />
         <button
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleAdd}
           disabled={!title.trim()}
-          className="rounded-lg bg-emerald-500/20 p-2 text-emerald-300 transition-colors hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-success/20 p-2 text-success transition-colors hover:bg-success/30 disabled:cursor-not-allowed disabled:opacity-40"
           title="Create (Enter)"
         >
           <Check size={14} />

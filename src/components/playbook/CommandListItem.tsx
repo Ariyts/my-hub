@@ -113,14 +113,14 @@ export function CommandListItem({
           className={cn(
             "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors",
             isDone
-              ? "border-emerald-500/50 bg-emerald-500/20"
+              ? "border-success/50 bg-success/20"
               : isSkipped
                 ? "border-border-subtle bg-sunken"
                 : "border-border-subtle hover:border-muted",
           )}
           title={`Status: ${checklistStatus}`}
         >
-          {isDone && <Check size={10} className="text-emerald-400" />}
+          {isDone && <Check size={10} className="text-success" />}
           {isSkipped && <span className="h-1.5 w-1.5 rounded-full bg-subtle" />}
         </button>
       )}
@@ -198,7 +198,7 @@ export function CommandListItem({
         {mode !== "engagement" && renderedText !== template && (
           <button
             onClick={(e) => handleCopy(e, renderedText)}
-            className="rounded p-1 text-cyan-500 transition-colors hover:bg-cyan-500/15 hover:text-cyan-300"
+            className="rounded p-1 text-playbooks transition-colors hover:bg-playbooks/15 hover:text-playbooks"
             title={`Copy with variables substituted:\n${renderedText}`}
           >
             <Braces size={11} />
@@ -212,7 +212,7 @@ export function CommandListItem({
           className={cn(
             "rounded p-1 transition-colors",
             copied
-              ? "bg-emerald-500/20 text-emerald-400"
+              ? "bg-success/20 text-success"
               : "text-subtle hover:bg-sunken hover:text-foreground",
           )}
           title="Copy"
@@ -224,7 +224,7 @@ export function CommandListItem({
             e.stopPropagation();
             setEditing(true);
           }}
-          className="rounded p-1 text-subtle transition-colors hover:bg-sunken hover:text-cyan-300"
+          className="rounded p-1 text-subtle transition-colors hover:bg-sunken hover:text-playbooks"
           title="Edit"
         >
           <Edit3 size={11} />
@@ -234,7 +234,7 @@ export function CommandListItem({
             e.stopPropagation();
             if (confirm("Delete this command?")) deletePlaybookItem(containerId, item.id);
           }}
-          className="rounded p-1 text-subtle transition-colors hover:bg-red-500/15 hover:text-red-300"
+          className="rounded p-1 text-subtle transition-colors hover:bg-danger/15 hover:text-danger"
           title="Delete"
         >
           <Trash2 size={11} />
@@ -243,7 +243,7 @@ export function CommandListItem({
 
       {/* Copied toast */}
       {copied && (
-        <div className="pointer-events-none absolute top-1/2 right-8 -translate-y-1/2 rounded border border-emerald-400/40 bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-300">
+        <div className="pointer-events-none absolute top-1/2 right-8 -translate-y-1/2 rounded border border-success/40 bg-success/20 px-2 py-0.5 text-[10px] text-success">
           Copied!
         </div>
       )}

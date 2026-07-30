@@ -201,7 +201,7 @@ export function WorkspaceSwitcher({ compact = false }: WorkspaceSwitcherProps) {
                               deleteWorkspace(ws.id);
                             }
                           }}
-                          className="rounded p-1 text-subtle transition-colors hover:bg-red-500/15 hover:text-red-400"
+                          className="rounded p-1 text-subtle transition-colors hover:bg-danger/15 hover:text-danger"
                           title="Delete workspace"
                         >
                           <Trash2 size={12} />
@@ -241,7 +241,7 @@ export function WorkspaceSwitcher({ compact = false }: WorkspaceSwitcherProps) {
           onClick={() => setShowCreateModal(false)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl border border-border bg-surface p-5"
+            className="w-full max-w-xs rounded-xl border border-border bg-surface p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="mb-4 text-sm font-semibold text-foreground">Create Workspace</h3>
@@ -320,7 +320,7 @@ export function WorkspaceSwitcher({ compact = false }: WorkspaceSwitcherProps) {
           onClick={() => setEditingWorkspace(null)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl border border-border bg-surface p-5"
+            className="w-full max-w-xs rounded-xl border border-border bg-surface p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="mb-4 text-sm font-semibold text-foreground">Edit Workspace</h3>

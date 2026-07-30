@@ -63,7 +63,7 @@ function MainArea() {
     // Показываем плейсхолдер когда нет выбранного файла
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-surface">
           <FileText size={36} style={{ color: typeColor, opacity: 0.6 }} />
         </div>
         <div className="text-center">
@@ -84,7 +84,7 @@ function MainArea() {
     }
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-surface">
           <FileText size={36} style={{ color: typeColor, opacity: 0.6 }} />
         </div>
         <div className="text-center">
@@ -106,7 +106,7 @@ function MainArea() {
     }
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-surface">
           <FileText size={36} className="text-links opacity-60" />
         </div>
         <div className="text-center">
@@ -127,7 +127,7 @@ function MainArea() {
     }
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-surface">
           <FileText size={36} className="text-prompts opacity-60" />
         </div>
         <div className="text-center">
@@ -148,7 +148,7 @@ function MainArea() {
     }
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-background">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface">
+        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-surface">
           <FileText size={36} className="text-playbooks opacity-60" />
         </div>
         <div className="text-center">
@@ -200,7 +200,7 @@ function MobileTopBar() {
 
   // 44×44 — минимальный размер тач-цели по рекомендациям Apple и Material Design
   const buttonClass =
-    "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-slate-200 dark:hover:bg-slate-700";
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-sunken";
 
   return (
     <div
@@ -262,10 +262,10 @@ export function App() {
   useEffect(() => {
     if (isDarkTheme) {
       document.documentElement.setAttribute("data-theme", "dark");
-      document.body.style.background = "#0f172a";
+      document.body.style.background = "#0b0e14";
     } else {
       document.documentElement.removeAttribute("data-theme");
-      document.body.style.background = "#ffffff";
+      document.body.style.background = "#fbfbfc";
     }
   }, [isDarkTheme]);
 
@@ -284,10 +284,7 @@ export function App() {
   // Show workspace selector if no workspace is active
   if (!activeWorkspaceId || workspaces.length === 0) {
     return (
-      <div
-        className="flex h-dvh items-center justify-center"
-        style={{ background: isDarkTheme ? "#0f172a" : "#f8fafc" }}
-      >
+      <div className="flex h-dvh items-center justify-center bg-background">
         <div className="text-center">
           <div className="mb-6 text-6xl">📚</div>
           <h1 className="mb-2 text-2xl font-bold text-foreground">Knowledge Hub</h1>
@@ -298,8 +295,8 @@ export function App() {
                 .getState()
                 .addWorkspace({ name: "My Workspace", icon: "🏠", color: "#6366f1" })
             }
-            className="rounded-xl px-6 py-3 font-medium transition-all hover:scale-105"
-            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white" }}
+            className="rounded-xl px-6 py-3 font-medium text-white transition-all hover:scale-105"
+            style={{ background: "linear-gradient(135deg, var(--primary), #a78bfa)" }}
           >
             <Plus size={18} className="mr-2 inline" />
             Create Workspace

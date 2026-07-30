@@ -344,17 +344,17 @@ export function PlaybookView({ container }: Props) {
 
       {/* Engagement mode banner */}
       {mode === "engagement" && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-emerald-500/20 bg-emerald-500/5 px-3 py-2 sm:px-6">
+        <div className="flex flex-wrap items-center gap-3 border-b border-success/20 bg-success/5 px-3 py-2 sm:px-6">
           <div className="flex items-center gap-2 text-[11px]">
-            <span className="font-semibold text-emerald-300">Engagement Mode</span>
+            <span className="font-semibold text-success">Engagement Mode</span>
             <span className="text-subtle">·</span>
             <span className="text-muted">
               Progress:{" "}
-              <span className="font-medium text-emerald-300">{checklist.counts.done}</span> done
+              <span className="font-medium text-success">{checklist.counts.done}</span> done
               {checklist.counts.skipped > 0 && (
                 <>
                   {" "}
-                  · <span className="font-medium text-amber-300">
+                  · <span className="font-medium text-warning">
                     {checklist.counts.skipped}
                   </span>{" "}
                   skipped
@@ -366,7 +366,7 @@ export function PlaybookView({ container }: Props) {
           <div className="h-1.5 max-w-xs flex-1 overflow-hidden rounded-full bg-sunken">
             <div className="flex h-full">
               <div
-                className="h-full bg-emerald-500"
+                className="h-full bg-success"
                 style={{
                   width:
                     checklist.counts.total > 0
@@ -375,7 +375,7 @@ export function PlaybookView({ container }: Props) {
                 }}
               />
               <div
-                className="h-full bg-amber-500/70"
+                className="h-full bg-warning/70"
                 style={{
                   width:
                     checklist.counts.total > 0
@@ -439,7 +439,7 @@ export function PlaybookView({ container }: Props) {
               >
                 {/* Индикатор места вставки */}
                 {sectionDrag.id && sectionDrag.id !== section.id && sectionDrag.overIndex === sectionIndex && (
-                  <div className="h-1 rounded-full bg-cyan-400" />
+                  <div className="h-1 rounded-full bg-playbooks" />
                 )}
                 <PlaybookSectionCard
                   onDragStartSection={

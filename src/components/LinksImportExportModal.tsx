@@ -122,26 +122,26 @@ export function LinksImportExportModal({ container, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="modal-sheet relative flex h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl"
+        className="modal-sheet relative flex h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3">
           <div className="flex items-center gap-2">
-            <FileText size={16} className="text-orange-400" />
-            <h2 className="text-base font-semibold text-slate-100">Import / Export</h2>
-            <span className="text-xs text-slate-500">{container.title}</span>
+            <FileText size={16} className="text-links" />
+            <h2 className="text-base font-semibold text-foreground">Import / Export</h2>
+            <span className="text-xs text-subtle">{container.title}</span>
           </div>
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+            className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-foreground"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-slate-800 bg-slate-950/40 px-5 py-2">
+        <div className="flex gap-1 border-b border-border-subtle bg-background/40 px-5 py-2">
           <TabButton
             active={activeTab === "template"}
             onClick={() => setActiveTab("template")}
@@ -167,12 +167,12 @@ export function LinksImportExportModal({ container, onClose }: Props) {
           {/* =========== TEMPLATE TAB =========== */}
           {activeTab === "template" && (
             <div className="flex-1 space-y-3 overflow-auto p-5">
-              <div className="space-y-1 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3 text-xs text-orange-200">
+              <div className="space-y-1 rounded-lg border border-links/30 bg-links/10 p-3 text-xs text-links">
                 <div className="flex items-center gap-1.5 font-semibold">
                   <CheckCircle2 size={13} />
                   How it works
                 </div>
-                <ol className="list-inside list-decimal space-y-1 text-orange-100/80">
+                <ol className="list-inside list-decimal space-y-1 text-links/80">
                   <li>
                     Click <b>"Copy Template"</b> below
                   </li>
@@ -190,14 +190,14 @@ export function LinksImportExportModal({ container, onClose }: Props) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleCopy(template)}
-                  className="flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:bg-orange-400"
+                  className="flex items-center gap-1.5 rounded-lg bg-links px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:opacity-90"
                 >
                   {copied ? <Check size={12} /> : <Copy size={12} />}
                   {copied ? "Copied!" : "Copy Template"}
                 </button>
                 <button
                   onClick={() => handleDownload(template, `${container.title}-template.md`)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-border"
                 >
                   <Download size={12} />
                   Download .md
@@ -207,7 +207,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
               <textarea
                 value={template}
                 readOnly
-                className="h-[45vh] w-full resize-none rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-200 outline-none"
+                className="h-[45vh] w-full resize-none rounded-lg border border-border-subtle bg-background p-3 font-mono text-xs text-foreground outline-none"
               />
             </div>
           )}
@@ -216,7 +216,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
           {activeTab === "import" && (
             <div className="flex-1 space-y-3 overflow-auto p-5">
               <div className="flex items-center gap-2">
-                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700">
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-border">
                   <Upload size={12} />
                   Upload file
                   <input
@@ -226,7 +226,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                     className="hidden"
                   />
                 </label>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-subtle">
                   Supports Markdown, JSON and browser bookmarks (.html)
                 </span>
               </div>
@@ -235,7 +235,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                 value={importText}
                 onChange={(e) => handleImportTextChange(e.target.value)}
                 placeholder={`Paste AI-generated markdown here...\n\nExample:\n# Links: Resources\n## Docs\n- [MDN](https://developer.mozilla.org/) Web docs\nTags: #docs, #web`}
-                className="h-[30vh] w-full resize-none rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-200 outline-none focus:border-orange-500/50"
+                className="h-[30vh] w-full resize-none rounded-lg border border-border-subtle bg-background p-3 font-mono text-xs text-foreground outline-none focus:border-links/50"
               />
 
               {/* Validation result */}
@@ -243,38 +243,38 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                 <div
                   className={`space-y-2 rounded-lg border p-3 ${
                     importResult.ok
-                      ? "border-emerald-500/30 bg-emerald-500/10"
-                      : "border-red-500/30 bg-red-500/10"
+                      ? "border-success/30 bg-success/10"
+                      : "border-danger/30 bg-danger/10"
                   }`}
                 >
                   <div className="flex items-center gap-2 text-xs font-semibold">
                     {importResult.ok ? (
                       <>
-                        <CheckCircle2 size={14} className="text-emerald-400" />
-                        <span className="text-emerald-300">Ready to import</span>
+                        <CheckCircle2 size={14} className="text-success" />
+                        <span className="text-success">Ready to import</span>
                       </>
                     ) : (
                       <>
-                        <AlertCircle size={14} className="text-red-400" />
-                        <span className="text-red-300">Cannot import</span>
+                        <AlertCircle size={14} className="text-danger" />
+                        <span className="text-danger">Cannot import</span>
                       </>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3 text-[11px] text-slate-300">
+                  <div className="flex items-center gap-3 text-[11px] text-muted">
                     <span>
-                      <b className="text-slate-100">{importResult.stats.sections}</b> sections
+                      <b className="text-foreground">{importResult.stats.sections}</b> sections
                     </span>
                     <span>
-                      <b className="text-slate-100">{importResult.stats.links}</b> links
+                      <b className="text-foreground">{importResult.stats.links}</b> links
                     </span>
                   </div>
 
                   {importResult.errors.length > 0 && (
                     <div className="space-y-1">
                       {importResult.errors.map((e, i) => (
-                        <div key={i} className="flex items-start gap-1.5 text-[11px] text-red-300">
-                          <span className="text-red-400">✕</span>
+                        <div key={i} className="flex items-start gap-1.5 text-[11px] text-danger">
+                          <span className="text-danger">✕</span>
                           {e}
                         </div>
                       ))}
@@ -286,9 +286,9 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                       {importResult.warnings.map((w, i) => (
                         <div
                           key={i}
-                          className="flex items-start gap-1.5 text-[11px] text-amber-300"
+                          className="flex items-start gap-1.5 text-[11px] text-warning"
                         >
-                          <span className="text-amber-400">!</span>
+                          <span className="text-warning">!</span>
                           {w}
                         </div>
                       ))}
@@ -300,29 +300,29 @@ export function LinksImportExportModal({ container, onClose }: Props) {
               {/* Merge mode */}
               {importResult?.ok && (
                 <div className="space-y-1.5">
-                  <div className="text-[11px] font-medium text-slate-400">Merge strategy:</div>
+                  <div className="text-[11px] font-medium text-muted">Merge strategy:</div>
                   <div className="flex gap-2">
-                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs transition-colors hover:bg-slate-700">
+                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs transition-colors hover:bg-border">
                       <input
                         type="radio"
                         name="merge-links"
                         checked={mergeMode === "append"}
                         onChange={() => setMergeMode("append")}
-                        className="accent-orange-500"
+                        className="accent-links"
                       />
-                      <span className="text-slate-200">Append</span>
-                      <span className="text-[10px] text-slate-500">(keep existing)</span>
+                      <span className="text-foreground">Append</span>
+                      <span className="text-[10px] text-subtle">(keep existing)</span>
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs transition-colors hover:bg-slate-700">
+                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs transition-colors hover:bg-border">
                       <input
                         type="radio"
                         name="merge-links"
                         checked={mergeMode === "replace"}
                         onChange={() => setMergeMode("replace")}
-                        className="accent-red-500"
+                        className="accent-danger"
                       />
-                      <span className="text-slate-200">Replace</span>
-                      <span className="text-[10px] text-slate-500">(overwrites)</span>
+                      <span className="text-foreground">Replace</span>
+                      <span className="text-[10px] text-subtle">(overwrites)</span>
                     </label>
                   </div>
                 </div>
@@ -333,7 +333,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                 <button
                   onClick={handleDoImport}
                   disabled={!importResult?.ok || imported}
-                  className="flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex items-center gap-1.5 rounded-lg bg-links px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {imported ? <CheckCircle2 size={12} /> : <Upload size={12} />}
                   {imported ? "Imported!" : "Import into Links"}
@@ -341,7 +341,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                 {imported && (
                   <button
                     onClick={onClose}
-                    className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                    className="rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs font-medium text-foreground hover:bg-border"
                   >
                     Done — Close
                   </button>
@@ -353,22 +353,22 @@ export function LinksImportExportModal({ container, onClose }: Props) {
           {/* =========== EXPORT TAB =========== */}
           {activeTab === "export" && (
             <div className="flex-1 space-y-3 overflow-auto p-5">
-              <div className="text-xs text-slate-400">
-                Full markdown export of <b className="text-slate-200">{container.title}</b> with all
+              <div className="text-xs text-muted">
+                Full markdown export of <b className="text-foreground">{container.title}</b> with all
                 sections and links.
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleCopy(fullExport)}
-                  className="flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:bg-orange-400"
+                  className="flex items-center gap-1.5 rounded-lg bg-links px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:opacity-90"
                 >
                   {copied ? <Check size={12} /> : <Copy size={12} />}
                   {copied ? "Copied!" : "Copy Markdown"}
                 </button>
                 <button
                   onClick={() => handleDownload(fullExport, `${container.title}.md`)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-border"
                 >
                   <Download size={12} />
                   Download .md
@@ -377,7 +377,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
                   onClick={() =>
                     handleDownload(JSON.stringify(container, null, 2), `${container.title}.json`)
                   }
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-700"
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-sunken px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-border"
                 >
                   <Download size={12} />
                   Download .json
@@ -387,7 +387,7 @@ export function LinksImportExportModal({ container, onClose }: Props) {
               <textarea
                 value={fullExport}
                 readOnly
-                className="h-[50vh] w-full resize-none rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-200 outline-none"
+                className="h-[50vh] w-full resize-none rounded-lg border border-border-subtle bg-background p-3 font-mono text-xs text-foreground outline-none"
               />
             </div>
           )}
@@ -413,8 +413,8 @@ function TabButton({
       onClick={onClick}
       className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
         active
-          ? "border border-slate-700 bg-slate-800 text-orange-300"
-          : "border border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+          ? "border border-border bg-sunken text-links"
+          : "border border-transparent text-muted hover:bg-sunken/50 hover:text-foreground"
       }`}
     >
       {icon}

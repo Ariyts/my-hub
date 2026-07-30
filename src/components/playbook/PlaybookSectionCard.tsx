@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { PlaybookSection, PlaybookItem, PlaybookVariable, ChecklistStatus } from "../../types";
-import { SECTION_COLORS, getPhaseTag, PHASE_COLORS } from "./constants";
+import { SECTION_COLORS, getPhaseTag, PHASE_COLORS, BRAND } from "./constants";
 import { CommandCard, type ViewMode } from "./CommandCard";
 import { CommandListItem } from "./CommandListItem";
 
@@ -109,7 +109,7 @@ export function PlaybookSectionCard({
       style={{ opacity: itemDrag.id === item.id ? 0.5 : 1 }}
     >
       {itemDrag.id && itemDrag.id !== item.id && itemDrag.overIndex === index && (
-        <div className="absolute -top-px right-0 left-0 z-10 h-0.5 rounded-full bg-cyan-400" />
+        <div className="absolute -top-px right-0 left-0 z-10 h-0.5 rounded-full bg-playbooks" />
       )}
       <div className="flex items-start gap-1">
         {onReorderItems && (
@@ -134,7 +134,7 @@ export function PlaybookSectionCard({
   // Явно выбранный цвет секции имеет приоритет.
   const phaseTag = getPhaseTag(section.title);
   const phaseColor = phaseTag ? PHASE_COLORS[phaseTag] : undefined;
-  const color = section.color || phaseColor || "#00BCD4";
+  const color = section.color || phaseColor || BRAND;
 
   // Checklist progress for this section
   const done = items.filter((i) => getChecklistStatus(i.id) === "done").length;
@@ -152,7 +152,7 @@ export function PlaybookSectionCard({
     <div
       id={`section-${section.id}`}
       className={cn(
-        "overflow-hidden rounded-xl border border-border bg-surface/30 backdrop-blur-sm",
+        "overflow-hidden rounded-lg border border-border bg-surface/30 backdrop-blur-sm",
         "transition-all duration-200",
         "hover:border-border-subtle",
       )}
@@ -222,11 +222,11 @@ export function PlaybookSectionCard({
                   setEditing(false);
                 }
               }}
-              className="flex-1 rounded-md border border-border-subtle bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-cyan-400"
+              className="flex-1 rounded-md border border-border-subtle bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-playbooks"
             />
             <button
               onClick={handleSaveTitle}
-              className="rounded p-1 text-emerald-400 hover:bg-emerald-500/20"
+              className="rounded p-1 text-success hover:bg-success/20"
             >
               <Check size={13} />
             </button>
@@ -235,7 +235,7 @@ export function PlaybookSectionCard({
                 setEditTitle(section.title);
                 setEditing(false);
               }}
-              className="rounded p-1 text-red-400 hover:bg-red-500/20"
+              className="rounded p-1 text-danger hover:bg-danger/20"
             >
               <X size={13} />
             </button>
@@ -273,13 +273,13 @@ export function PlaybookSectionCard({
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sunken">
                   <div className="flex h-full" style={{ width: `${progressPct}%` }}>
                     <div
-                      className="h-full bg-emerald-500"
+                      className="h-full bg-success"
                       style={{
                         width:
                           items.length > 0 ? `${(done / (done + skipped || 1)) * 100}%` : "100%",
                       }}
                     />
-                    <div className="h-full flex-1 bg-amber-500/70" />
+                    <div className="h-full flex-1 bg-warning/70" />
                   </div>
                 </div>
                 <span className="w-8 text-right text-[10px] font-medium text-muted tabular-nums">
@@ -334,7 +334,7 @@ export function PlaybookSectionCard({
               <div className="relative">
                 <button
                   onClick={() => setShowExport((v) => !v)}
-                  className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
+                  className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-playbooks"
                   title="Export section as markdown"
                 >
                   <Share2 size={13} />
@@ -348,7 +348,7 @@ export function PlaybookSectionCard({
                           onExportSection("copy");
                           setShowExport(false);
                         }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-muted transition-colors hover:bg-sunken hover:text-playbooks"
                       >
                         <Copy size={11} />
                         Copy markdown
@@ -358,7 +358,7 @@ export function PlaybookSectionCard({
                           onExportSection("download");
                           setShowExport(false);
                         }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-muted transition-colors hover:bg-sunken hover:text-playbooks"
                       >
                         <Download size={11} />
                         Download .md
@@ -374,7 +374,7 @@ export function PlaybookSectionCard({
                 setEditing(true);
                 setEditTitle(section.title);
               }}
-              className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-cyan-300"
+              className="rounded-md p-1.5 text-muted transition-colors hover:bg-sunken hover:text-playbooks"
               title="Rename section"
             >
               <Edit3 size={13} />
@@ -387,14 +387,14 @@ export function PlaybookSectionCard({
                 }
                 onDeleteSection();
               }}
-              className="rounded-md p-1.5 text-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
+              className="rounded-md p-1.5 text-muted transition-colors hover:bg-danger/15 hover:text-danger"
               title="Delete section"
             >
               <Trash2 size={13} />
             </button>
             <button
               onClick={onAddItem}
-              className="ml-1 flex items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[11px] font-medium text-cyan-300 transition-colors hover:bg-cyan-500/20"
+              className="ml-1 flex items-center gap-1 rounded-md border border-playbooks/30 bg-playbooks/10 px-2 py-1 text-[11px] font-medium text-playbooks transition-colors hover:bg-playbooks/20"
               title="Add command"
             >
               <Plus size={12} strokeWidth={2.5} />
@@ -447,10 +447,10 @@ export function PlaybookSectionCard({
             )
           ) : (
             <button onClick={onAddItem} className="group/empty w-full py-8 text-center">
-              <div className="inline-flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-subtle px-4 py-3 transition-colors group-hover/empty:border-cyan-400/60">
+              <div className="inline-flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-subtle px-4 py-3 transition-colors group-hover/empty:border-playbooks/60">
                 <Plus
                   size={18}
-                  className="text-subtle transition-colors group-hover/empty:text-cyan-400"
+                  className="text-subtle transition-colors group-hover/empty:text-playbooks"
                 />
                 <span className="text-xs text-muted transition-colors group-hover/empty:text-foreground">
                   Add your first command to this section

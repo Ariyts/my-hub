@@ -28,7 +28,7 @@ export function HeroCollapsed({
   return (
     <div className="flex h-10 items-center gap-3 border-b border-border bg-surface px-6">
       {/* Icon (small) */}
-      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-border-subtle bg-gradient-to-br from-cyan-500/20 to-violet-500/20 text-sm">
+      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border border-border-subtle bg-gradient-to-br from-playbooks/20 to-primary/20 text-sm">
         🎯
       </div>
 
@@ -64,7 +64,7 @@ export function HeroCollapsed({
           className="flex flex-shrink-0 items-center gap-1 rounded-md border border-border-subtle bg-sunken px-2 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-sunken"
           title="Import/Export playbook"
         >
-          <ArrowUpDown size={11} className="text-cyan-400" />
+          <ArrowUpDown size={11} className="text-playbooks" />
           <span>I/O</span>
         </button>
       )}
@@ -75,14 +75,14 @@ export function HeroCollapsed({
         className="flex flex-shrink-0 items-center gap-1 rounded-md border border-border-subtle bg-sunken px-2 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-sunken"
         title="Add new section"
       >
-        <FolderPlus size={11} className="text-cyan-400" />
+        <FolderPlus size={11} className="text-playbooks" />
         <span>Section</span>
       </button>
 
       {/* Add Command button */}
       <button
         onClick={onAddCommand}
-        className="flex flex-shrink-0 items-center gap-1 rounded-md bg-cyan-500 px-2 py-1 text-[11px] font-medium text-slate-950 shadow-lg shadow-cyan-500/20 transition-colors hover:bg-cyan-400"
+        className="flex flex-shrink-0 items-center gap-1 rounded-md bg-playbooks px-2 py-1 text-[11px] font-medium text-slate-950 shadow-lg transition-colors hover:opacity-90"
         title="Add new command"
       >
         <Plus size={11} strokeWidth={2.5} />

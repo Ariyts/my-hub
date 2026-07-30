@@ -31,14 +31,13 @@ interface TabProps {
 }
 
 function Tab({ active, onClick, children }: TabProps) {
-  const { isDarkTheme } = useStore();
   return (
     <button
       onClick={onClick}
       className="rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
       style={{
-        background: active ? "#6366f120" : "transparent",
-        color: active ? "#6366f1" : isDarkTheme ? "#94a3b8" : "#64748b",
+        background: active ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "transparent",
+        color: active ? "var(--primary)" : "var(--text-muted)",
       }}
     >
       {children}
@@ -195,14 +194,14 @@ export function SettingsModal() {
     input.click();
   };
 
-  const bg = isDarkTheme ? "#111827" : "#ffffff";
-  const bgSecondary = isDarkTheme ? "#1e293b" : "#f8fafc";
-  const border = isDarkTheme ? "#334155" : "#e2e8f0";
-  const textColor = isDarkTheme ? "#e2e8f0" : "#1e293b";
-  const mutedColor = isDarkTheme ? "#64748b" : "#94a3b8";
+  const bg = "var(--bg-elevated)";
+  const bgSecondary = "var(--bg-sunken)";
+  const border = "var(--border)";
+  const textColor = "var(--text)";
+  const mutedColor = "var(--text-subtle)";
 
   const inputStyle = {
-    background: isDarkTheme ? "#0f172a" : "#fff",
+    background: "var(--bg)",
     borderColor: border,
     color: textColor,
     border: `1px solid ${border}`,
@@ -225,7 +224,7 @@ export function SettingsModal() {
       style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
     >
       <div
-        className="modal-sheet flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl"
+        className="modal-sheet flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl shadow-2xl"
         style={{ background: bg, border: `1px solid ${border}` }}
       >
         <div
@@ -237,7 +236,7 @@ export function SettingsModal() {
           </h2>
           <button
             onClick={() => setShowSettings(false)}
-            className="rounded-lg p-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="rounded-lg p-1.5 transition-colors hover:bg-sunken"
           >
             <X size={18} style={{ color: mutedColor }} />
           </button>
@@ -266,7 +265,7 @@ export function SettingsModal() {
             <>
               {/* Data Summary */}
               <div
-                className="rounded-xl border p-4"
+                className="rounded-lg border p-4"
                 style={{ borderColor: border, background: bgSecondary }}
               >
                 <h4 className="mb-3 text-sm font-medium" style={{ color: textColor }}>
@@ -282,9 +281,9 @@ export function SettingsModal() {
                     <div
                       key={item.label}
                       className="rounded-lg p-2"
-                      style={{ background: isDarkTheme ? "#0f172a" : "#fff" }}
+                      style={{ background: "var(--bg)" }}
                     >
-                      <div className="text-lg font-bold" style={{ color: "#6366f1" }}>
+                      <div className="text-lg font-bold" style={{ color: "var(--primary)" }}>
                         {item.value}
                       </div>
                       <div className="text-[10px]" style={{ color: mutedColor }}>
@@ -307,12 +306,12 @@ export function SettingsModal() {
 
               {/* Info Banner */}
               <div
-                className="flex items-center gap-3 rounded-xl p-4"
-                style={{ background: "#6366f115", border: "1px solid #6366f140" }}
+                className="flex items-center gap-3 rounded-lg p-4"
+                style={{ background: "color-mix(in srgb, var(--primary) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--primary) 25%, transparent)" }}
               >
-                <Zap size={20} style={{ color: "#6366f1" }} />
+                <Zap size={20} style={{ color: "var(--primary)" }} />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: "#6366f1" }}>
+                  <p className="text-sm font-medium" style={{ color: "var(--primary)" }}>
                     Auto-rebuild enabled
                   </p>
                   <p className="text-xs" style={{ color: mutedColor }}>
@@ -327,16 +326,16 @@ export function SettingsModal() {
                   style={{
                     background:
                       syncStatus === "error"
-                        ? "#ef444415"
+                        ? "color-mix(in srgb, var(--danger) 8%, transparent)"
                         : syncStatus === "success"
-                          ? "#4CAF5015"
-                          : "#6366f115",
+                          ? "color-mix(in srgb, var(--success) 8%, transparent)"
+                          : "color-mix(in srgb, var(--primary) 8%, transparent)",
                     color:
                       syncStatus === "error"
-                        ? "#ef4444"
+                        ? "var(--danger)"
                         : syncStatus === "success"
-                          ? "#4CAF50"
-                          : "#6366f1",
+                          ? "var(--success)"
+                          : "var(--primary)",
                   }}
                 >
                   {(syncStatus === "connecting" || syncStatus === "syncing") && (
@@ -350,18 +349,18 @@ export function SettingsModal() {
 
               {/* Save Section */}
               <div
-                className="rounded-xl border p-5"
+                className="rounded-lg border p-5"
                 style={{ borderColor: border, background: bgSecondary }}
               >
                 <div className="mb-4 flex items-center gap-3">
                   <div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ background: canSave ? "#4CAF5015" : "#6366f115" }}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg"
+                    style={{ background: canSave ? "color-mix(in srgb, var(--success) 8%, transparent)" : "color-mix(in srgb, var(--primary) 8%, transparent)" }}
                   >
                     {canSave ? (
-                      <Cloud size={20} style={{ color: "#4CAF50" }} />
+                      <Cloud size={20} style={{ color: "var(--success)" }} />
                     ) : (
-                      <Lock size={20} style={{ color: "#6366f1" }} />
+                      <Lock size={20} style={{ color: "var(--primary)" }} />
                     )}
                   </div>
                   <div className="flex-1">
@@ -382,7 +381,7 @@ export function SettingsModal() {
                     {preview && (
                       <div
                         className="rounded-lg p-3 text-xs"
-                        style={{ background: isDarkTheme ? "#0f172a" : "#fff" }}
+                        style={{ background: "var(--bg)" }}
                       >
                         {/* Has changes */}
                         {preview.filesToCreate.length > 0 ||
@@ -397,21 +396,21 @@ export function SettingsModal() {
                             <div className="mb-2 grid grid-cols-3 gap-2 text-center">
                               <div
                                 className="flex items-center justify-center gap-1"
-                                style={{ color: "#4CAF50" }}
+                                style={{ color: "var(--success)" }}
                               >
                                 <Plus size={12} />
                                 <span>{preview.filesToCreate.length}</span>
                               </div>
                               <div
                                 className="flex items-center justify-center gap-1"
-                                style={{ color: "#2196F3" }}
+                                style={{ color: "var(--accent-commands)" }}
                               >
                                 <Edit size={12} />
                                 <span>{preview.filesToUpdate.length}</span>
                               </div>
                               <div
                                 className="flex items-center justify-center gap-1"
-                                style={{ color: "#ef4444" }}
+                                style={{ color: "var(--danger)" }}
                               >
                                 <Trash size={12} />
                                 <span>{preview.filesToDelete.length}</span>
@@ -427,7 +426,7 @@ export function SettingsModal() {
                                 <div
                                   key={`new-${i}`}
                                   className="flex items-center gap-1.5 py-0.5"
-                                  style={{ color: "#4CAF50" }}
+                                  style={{ color: "var(--success)" }}
                                 >
                                   <Plus size={9} />
                                   <span className="truncate">{getShortPath(path)}</span>
@@ -437,7 +436,7 @@ export function SettingsModal() {
                                 <div
                                   key={`upd-${i}`}
                                   className="flex items-center gap-1.5 py-0.5"
-                                  style={{ color: "#2196F3" }}
+                                  style={{ color: "var(--accent-commands)" }}
                                 >
                                   <Edit size={9} />
                                   <span className="truncate">{getShortPath(path)}</span>
@@ -447,7 +446,7 @@ export function SettingsModal() {
                                 <div
                                   key={`del-${i}`}
                                   className="flex items-center gap-1.5 py-0.5 line-through opacity-60"
-                                  style={{ color: "#ef4444" }}
+                                  style={{ color: "var(--danger)" }}
                                 >
                                   <Trash size={9} />
                                   <span className="truncate">{getShortPath(path)}</span>
@@ -461,9 +460,9 @@ export function SettingsModal() {
                             <Check
                               size={20}
                               className="mx-auto mb-1"
-                              style={{ color: "#4CAF50" }}
+                              style={{ color: "var(--success)" }}
                             />
-                            <div style={{ color: "#4CAF50" }}>No changes to commit</div>
+                            <div style={{ color: "var(--success)" }}>No changes to commit</div>
                             <div className="mt-1" style={{ color: mutedColor, fontSize: "10px" }}>
                               All files are in sync
                             </div>
@@ -503,7 +502,7 @@ export function SettingsModal() {
                           onClick={handleConnect}
                           disabled={!token.trim() || syncStatus === "connecting"}
                           className="rounded-lg px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
-                          style={{ background: "#6366f1", color: "white" }}
+                          style={{ background: "var(--primary)", color: "white" }}
                         >
                           Connect
                         </button>
@@ -516,7 +515,7 @@ export function SettingsModal() {
                     {preview && (
                       <div
                         className="rounded-lg p-3 text-xs"
-                        style={{ background: isDarkTheme ? "#0f172a" : "#fff" }}
+                        style={{ background: "var(--bg)" }}
                       >
                         <div className="mb-2 font-medium" style={{ color: textColor }}>
                           Changes to commit:
@@ -526,21 +525,21 @@ export function SettingsModal() {
                         <div className="mb-2 grid grid-cols-3 gap-2 text-center">
                           <div
                             className="flex items-center justify-center gap-1"
-                            style={{ color: "#4CAF50" }}
+                            style={{ color: "var(--success)" }}
                           >
                             <Plus size={12} />
                             <span>{preview.filesToCreate.length} new</span>
                           </div>
                           <div
                             className="flex items-center justify-center gap-1"
-                            style={{ color: "#2196F3" }}
+                            style={{ color: "var(--accent-commands)" }}
                           >
                             <Edit size={12} />
                             <span>{preview.filesToUpdate.length} update</span>
                           </div>
                           <div
                             className="flex items-center justify-center gap-1"
-                            style={{ color: "#ef4444" }}
+                            style={{ color: "var(--danger)" }}
                           >
                             <Trash size={12} />
                             <span>{preview.filesToDelete.length} delete</span>
@@ -553,7 +552,7 @@ export function SettingsModal() {
                             <button
                               onClick={() => toggleSection("new")}
                               className="flex w-full items-center gap-1 text-left"
-                              style={{ color: "#4CAF50" }}
+                              style={{ color: "var(--success)" }}
                             >
                               {expandedSections.new ? (
                                 <ChevronDown size={12} />
@@ -586,7 +585,7 @@ export function SettingsModal() {
                             <button
                               onClick={() => toggleSection("update")}
                               className="flex w-full items-center gap-1 text-left"
-                              style={{ color: "#2196F3" }}
+                              style={{ color: "var(--accent-commands)" }}
                             >
                               {expandedSections.update ? (
                                 <ChevronDown size={12} />
@@ -619,7 +618,7 @@ export function SettingsModal() {
                             <button
                               onClick={() => toggleSection("delete")}
                               className="flex w-full items-center gap-1 text-left"
-                              style={{ color: "#ef4444" }}
+                              style={{ color: "var(--danger)" }}
                             >
                               {expandedSections.delete ? (
                                 <ChevronDown size={12} />
@@ -700,7 +699,7 @@ export function SettingsModal() {
                         disabled={syncStatus === "syncing"}
                         className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all"
                         style={{
-                          background: "#4CAF50",
+                          background: "var(--success)",
                           color: "white",
                           opacity: syncStatus === "syncing" ? 0.5 : 1,
                         }}
@@ -736,7 +735,7 @@ export function SettingsModal() {
 
               {/* How it works */}
               <div
-                className="rounded-xl border p-4"
+                className="rounded-lg border p-4"
                 style={{ borderColor: border, background: bgSecondary }}
               >
                 <h4 className="mb-2 text-sm font-medium" style={{ color: textColor }}>
@@ -746,7 +745,7 @@ export function SettingsModal() {
                   <div className="flex items-center gap-2">
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded-full text-xs"
-                      style={{ background: "#6366f115", color: "#6366f1" }}
+                      style={{ background: "color-mix(in srgb, var(--primary) 8%, transparent)", color: "var(--primary)" }}
                     >
                       1
                     </span>
@@ -755,7 +754,7 @@ export function SettingsModal() {
                   <div className="flex items-center gap-2">
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded-full text-xs"
-                      style={{ background: "#6366f115", color: "#6366f1" }}
+                      style={{ background: "color-mix(in srgb, var(--primary) 8%, transparent)", color: "var(--primary)" }}
                     >
                       2
                     </span>
@@ -764,7 +763,7 @@ export function SettingsModal() {
                   <div className="flex items-center gap-2">
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded-full text-xs"
-                      style={{ background: "#6366f115", color: "#6366f1" }}
+                      style={{ background: "color-mix(in srgb, var(--primary) 8%, transparent)", color: "var(--primary)" }}
                     >
                       3
                     </span>
@@ -803,11 +802,11 @@ export function SettingsModal() {
                         if (value === "dark" && !isDarkTheme) toggleTheme();
                         if (value === "light" && isDarkTheme) toggleTheme();
                       }}
-                      className="flex flex-col items-center gap-2 rounded-xl border p-4 transition-all"
+                      className="flex flex-col items-center gap-2 rounded-lg border p-4 transition-all"
                       style={{
-                        borderColor: settings.theme === value ? "#6366f1" : border,
-                        background: settings.theme === value ? "#6366f120" : bgSecondary,
-                        color: settings.theme === value ? "#6366f1" : mutedColor,
+                        borderColor: settings.theme === value ? "var(--primary)" : border,
+                        background: settings.theme === value ? "color-mix(in srgb, var(--primary) 12%, transparent)" : bgSecondary,
+                        color: settings.theme === value ? "var(--primary)" : mutedColor,
                       }}
                     >
                       {icon}
@@ -827,7 +826,7 @@ export function SettingsModal() {
                     max="20"
                     value={settings.fontSize}
                     onChange={(e) => setSettings({ fontSize: parseInt(e.target.value) })}
-                    className="flex-1 accent-indigo-500"
+                    className="flex-1 accent-primary"
                   />
                   <span className="w-10 text-center font-mono text-sm" style={{ color: textColor }}>
                     {settings.fontSize}px
@@ -846,7 +845,7 @@ export function SettingsModal() {
               ].map(({ key, label, desc }) => (
                 <div
                   key={key}
-                  className="flex items-center justify-between rounded-xl p-4"
+                  className="flex items-center justify-between rounded-lg p-4"
                   style={{ background: bgSecondary }}
                 >
                   <div>
@@ -861,7 +860,7 @@ export function SettingsModal() {
                     onClick={() => setSettings({ [key]: !settings[key as keyof typeof settings] })}
                     className="relative h-6 w-11 rounded-full transition-colors"
                     style={{
-                      background: settings[key as keyof typeof settings] ? "#6366f1" : border,
+                      background: settings[key as keyof typeof settings] ? "var(--primary)" : border,
                     }}
                   >
                     <div
@@ -883,14 +882,14 @@ export function SettingsModal() {
               <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={exportData}
-                  className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-blue-400"
+                  className="flex items-center gap-3 rounded-lg border p-4 text-left transition-all hover:border-commands"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-lg"
-                    style={{ background: "#2196F315" }}
+                    style={{ background: "color-mix(in srgb, var(--accent-commands) 8%, transparent)" }}
                   >
-                    <Download size={20} style={{ color: "#2196F3" }} />
+                    <Download size={20} style={{ color: "var(--accent-commands)" }} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: textColor }}>
@@ -903,14 +902,14 @@ export function SettingsModal() {
                 </button>
                 <button
                   onClick={handleImport}
-                  className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-green-400"
+                  className="flex items-center gap-3 rounded-lg border p-4 text-left transition-all hover:border-notes"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-lg"
-                    style={{ background: "#4CAF5015" }}
+                    style={{ background: "color-mix(in srgb, var(--success) 8%, transparent)" }}
                   >
-                    <Upload size={20} style={{ color: "#4CAF50" }} />
+                    <Upload size={20} style={{ color: "var(--success)" }} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: textColor }}>
@@ -925,17 +924,17 @@ export function SettingsModal() {
                   onClick={() => {
                     if (confirm("Delete ALL data?")) clearAllData();
                   }}
-                  className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-red-400"
+                  className="flex items-center gap-3 rounded-lg border p-4 text-left transition-all hover:border-danger"
                   style={{ borderColor: border, background: bgSecondary }}
                 >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-lg"
-                    style={{ background: "#ef444415" }}
+                    style={{ background: "color-mix(in srgb, var(--danger) 8%, transparent)" }}
                   >
-                    <Trash2 size={20} className="text-red-400" />
+                    <Trash2 size={20} className="text-danger" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-red-400">Clear All Data</p>
+                    <p className="text-sm font-semibold text-danger">Clear All Data</p>
                     <p className="text-xs" style={{ color: mutedColor }}>
                       Cannot be undone
                     </p>
@@ -958,8 +957,8 @@ export function SettingsModal() {
             onClick={handleSave}
             className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all"
             style={{
-              background: saved ? "#4CAF5020" : "#6366f120",
-              color: saved ? "#4CAF50" : "#6366f1",
+              background: saved ? "color-mix(in srgb, var(--success) 12%, transparent)" : "color-mix(in srgb, var(--primary) 12%, transparent)",
+              color: saved ? "var(--success)" : "var(--primary)",
             }}
           >
             <Save size={14} />

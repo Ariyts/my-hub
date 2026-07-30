@@ -131,7 +131,7 @@ export function MarkdownView({ playbook }: Props) {
           onClick={() => setIsEditing(!isEditing)}
           className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
             isEditing
-              ? "border border-cyan-500/40 bg-cyan-500/20 text-cyan-300"
+              ? "border border-playbooks/40 bg-playbooks/20 text-playbooks"
               : "border border-border-subtle bg-sunken text-muted hover:bg-sunken"
           }`}
         >
@@ -142,7 +142,7 @@ export function MarkdownView({ playbook }: Props) {
         <button
           onClick={handleSave}
           disabled={!dirty || !!validationMsg}
-          className="flex items-center gap-1.5 rounded-md bg-cyan-500 px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-md bg-playbooks px-3 py-1.5 text-xs font-medium text-slate-950 transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Save size={12} />
           Save
@@ -156,14 +156,14 @@ export function MarkdownView({ playbook }: Props) {
           Reset
         </button>
 
-        {dirty && <span className="ml-2 text-[11px] text-amber-400">● unsaved changes</span>}
+        {dirty && <span className="ml-2 text-[11px] text-warning">● unsaved changes</span>}
 
         {saveStatus === "success" && (
-          <span className="ml-2 text-[11px] text-emerald-400">✓ Saved</span>
+          <span className="ml-2 text-[11px] text-success">✓ Saved</span>
         )}
 
         {saveStatus === "error" && (
-          <span className="ml-2 text-[11px] text-red-400">✕ {validationMsg}</span>
+          <span className="ml-2 text-[11px] text-danger">✕ {validationMsg}</span>
         )}
 
         <div className="flex-1" />
