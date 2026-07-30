@@ -4,7 +4,7 @@ title: "OSINT"
 tags: []
 order: 6
 createdAt: "2026-07-30T09:10:17.743Z"
-updatedAt: "2026-07-30T09:11:33.832Z"
+updatedAt: "2026-07-30T09:12:59.331Z"
 ---
 
 ## DNS
@@ -14,3 +14,5 @@ updatedAt: "2026-07-30T09:11:33.832Z"
 - [.virustotal](https://www.virustotal.com/) <!-- link: {"id":"1wgc3i7ufms7anbxp","order":1,"favicon":"https://www.google.com/s2/favicons?domain=www.virustotal.com&sz=32","sectionId":"o9bvqs7r0ms7ams4t"} -->
 - [viewdns.info/](https://viewdns.info/) <!-- link: {"id":"ronp815drms7anlt4","order":2,"favicon":"https://www.google.com/s2/favicons?domain=viewdns.info&sz=32","sectionId":"o9bvqs7r0ms7ams4t"} -->
 - [whois.domaintools.com](https://whois.domaintools.com/inlanefreights.com) <!-- link: {"id":"1iqmykym9ms7anzd4","order":3,"favicon":"https://www.google.com/s2/favicons?domain=whois.domaintools.com&sz=32","sectionId":"o9bvqs7r0ms7ams4t"} -->
+- [truffleHog](https://github.com/trufflesecurity/truffleHog) <!-- link: {"id":"dzfebh4f9ms7apd2j","order":4,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"o9bvqs7r0ms7ams4t"} -->
+- [grayhatwarfare.com/](https://buckets.grayhatwarfare.com/) <!-- link: {"id":"msu1l618oms7aptc3","order":5,"favicon":"https://www.google.com/s2/favicons?domain=buckets.grayhatwarfare.com&sz=32","sectionId":"o9bvqs7r0ms7ams4t"} -->
