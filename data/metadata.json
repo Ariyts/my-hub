@@ -153,7 +153,7 @@
       "parentId": null,
       "name": "Теория",
       "order": 0,
-      "isExpanded": false,
+      "isExpanded": true,
       "createdAt": "2026-03-02T19:10:42.445Z"
     },
     {
@@ -247,6 +247,6 @@
       "createdAt": "2026-07-13T09:40:38.505Z"
     }
   ],
-  "exportedAt": "2026-08-19T11:36:53.829Z",
+  "exportedAt": "2026-08-20T11:52:00.086Z",
   "version": "3.0"
 }
