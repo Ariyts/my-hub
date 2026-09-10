@@ -3,7 +3,7 @@ id: "3kx3xxbltmt1gm9k1"
 title: "mcp burp opencode"
 tags: []
 isFavorite: false
-order: 4
+order: "4"
 createdAt: "2026-08-20T11:51:16.705Z"
 updatedAt: "2026-08-20T11:51:57.345Z"
 ---
