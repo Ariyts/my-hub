@@ -117,6 +117,16 @@
       "baseType": "nmap",
       "order": 2,
       "isDefault": true
+    },
+    {
+      "workspaceId": "ws_1llp",
+      "name": "AI",
+      "icon": "📌",
+      "color": "#6366f1",
+      "baseType": "notes",
+      "isDefault": false,
+      "id": "eyfbf5r47mv6o9zjw",
+      "order": 10
     }
   ],
   "folders": [
@@ -153,7 +163,7 @@
       "parentId": null,
       "name": "Теория",
       "order": 0,
-      "isExpanded": true,
+      "isExpanded": false,
       "createdAt": "2026-03-02T19:10:42.445Z"
     },
     {
@@ -245,8 +255,17 @@
       "id": "7dwiz4vlomrj17w89",
       "order": 3,
       "createdAt": "2026-07-13T09:40:38.505Z"
+    },
+    {
+      "name": "AI tools",
+      "categoryId": "eyfbf5r47mv6o9zjw",
+      "parentId": null,
+      "isExpanded": true,
+      "id": "kfzat95jdmv6oalgz",
+      "order": 1,
+      "createdAt": "2026-10-13T12:44:24.755Z"
     }
   ],
-  "exportedAt": "2026-10-04T10:18:50.700Z",
+  "exportedAt": "2026-10-13T12:48:18.386Z",
   "version": "3.0"
 }
