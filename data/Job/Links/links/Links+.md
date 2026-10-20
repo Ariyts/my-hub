@@ -4,7 +4,7 @@ title: "Links+"
 tags: []
 order: "4"
 createdAt: "2026-05-25T19:30:31.757Z"
-updatedAt: "2026-07-29T13:18:10.287Z"
+updatedAt: "2026-10-20T07:10:19.781Z"
 ---
 
 ## Cheat Sheets & Wikis
@@ -14,6 +14,7 @@ updatedAt: "2026-07-29T13:18:10.287Z"
 - [GTFOBins](https://gtfobins.org/) <!-- link: {"id":"x06bxazecmpllq8r6","order":1,"favicon":"https://www.google.com/s2/favicons?domain=gtfobins.org&sz=32","tags":["linux","privesc","cheatsheet"],"isFavorite":true,"sectionId":"8n592flp2mpllq8pg","description":"Шпора по бинарникам Linux для обхода ограничений и privesc"} -->
 - [WADComs](https://wadcoms.github.io/#) <!-- link: {"id":"qtn4wj82dmpllq8re","order":2,"favicon":"https://www.google.com/s2/favicons?domain=wadcoms.github.io&sz=32","tags":["ad","windows","cheatsheet"],"isFavorite":true,"sectionId":"8n592flp2mpllq8pg","description":"Интерактивная шпаргалка по инструментам и атакам на Active Directory"} -->
 - [Internal All The Things](https://swisskyrepo.github.io/InternalAllTheThings/active-directory/hash-pass-the-hash/#references) <!-- link: {"id":"brca3y5zxmpllq8rk","order":3,"favicon":"https://www.google.com/s2/favicons?domain=swisskyrepo.github.io&sz=32","tags":["ad","internal","wiki"],"sectionId":"8n592flp2mpllq8pg","description":"Подробная вики по внутреннему пентесту и Active Directory"} -->
+- [Windows-Privilege-Escalation](https://github.com/Ignitetechnologies/Windows-Privilege-Escalation/) <!-- link: {"id":"y2camwaa2mvgcfxc5","order":4,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"8n592flp2mpllq8pg"} -->
 
 ## Awesome Lists & OSCP
 <!-- section: {"id":"ku91qhl75mpllq8pm","order":1,"collapsed":false,"color":"#eab308"} -->
