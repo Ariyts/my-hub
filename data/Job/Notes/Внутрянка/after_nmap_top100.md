@@ -5,7 +5,7 @@ tags: []
 isFavorite: false
 order: "4"
 createdAt: "2026-03-25T07:22:36.857Z"
-updatedAt: "2026-04-01T08:51:45.342Z"
+updatedAt: "2026-10-22T18:58:27.003Z"
 ---
 INTERNAL PENTEST PLAYBOOK: POST-NMAP ANALYSIS → DA
 PHASE 1: АНАЛИЗ NMAP РЕЗУЛЬТАТОВ (первые 5 минут)
