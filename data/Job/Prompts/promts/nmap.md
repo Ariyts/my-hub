@@ -12,7 +12,7 @@ updatedAt: "2026-10-22T19:00:15.351Z"
 <!-- section: {"id":"fhv7eiy6smvjwmy4d","order":0,"collapsed":false} -->
 
 ### Nmap результаты, с ИИ
-_NMAP_FILE="new_project_top100" grep -E "open" ${NMAP_FILE}.nmap | grep -v "filtered" | sort -u > all_services.txt_
+_NMAP_
 
 ```
 Вот список открытых сервисов из Nmap (IP и хосты удалены, unauthenticated only, no credentials):

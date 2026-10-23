@@ -4,7 +4,7 @@ title: "Links+"
 tags: []
 order: "4"
 createdAt: "2026-05-25T19:30:31.757Z"
-updatedAt: "2026-10-20T07:10:19.781Z"
+updatedAt: "2026-10-23T18:04:48.481Z"
 ---
 
 ## Cheat Sheets & Wikis
@@ -33,6 +33,7 @@ updatedAt: "2026-10-20T07:10:19.781Z"
 - [WinPwn](https://github.com/S3cur3Th1sSh1t/WinPwn) <!-- link: {"id":"04lqwlrb7mpllq8tt","order":2,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","tags":["windows","ad","automation"],"sectionId":"0e3787q02mpllq8pt","description":"Скрипт для автоматизации разведки и атак в Windows/AD"} -->
 - [Creds](https://github.com/S3cur3Th1sSh1t/Creds) <!-- link: {"id":"bznhlzp0lmpllq8u0","order":3,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","tags":["credentials","windows","tools"],"sectionId":"0e3787q02mpllq8pt","description":"Инструменты и скрипты для работы с учетными данными"} -->
 - [PentestTools](https://github.com/arch3rPro/PentestTools) <!-- link: {"id":"ls7nvbbbympllq8u6","order":4,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","tags":["tools","collection","github"],"sectionId":"0e3787q02mpllq8pt","description":"Большая коллекция инструментов для пентеста"} -->
+- [NmapView](https://github.com/dreizehnutters/NmapView) <!-- link: {"id":"2ro0lc7d9mvla559d","order":5,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"0e3787q02mpllq8pt"} -->
 
 ## Payloads & Frameworks
 <!-- section: {"id":"u9lumfeqkmpllq8pz","order":3,"collapsed":false} -->
