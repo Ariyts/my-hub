@@ -3,11 +3,10 @@ id: "khp3eazpsmvnz9qft"
 title: "ssh"
 tags: []
 isFavorite: false
-order: 9
+order: "9"
 createdAt: "2026-10-25T15:23:45.305Z"
 updatedAt: "2026-10-25T15:24:03.415Z"
 ---
-
 генерим свой ключ
 ```bash
 ssh-keygen

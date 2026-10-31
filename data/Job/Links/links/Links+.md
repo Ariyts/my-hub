@@ -4,7 +4,7 @@ title: "Links+"
 tags: []
 order: "4"
 createdAt: "2026-05-25T19:30:31.757Z"
-updatedAt: "2026-10-23T18:04:48.481Z"
+updatedAt: "2026-10-31T15:28:51.882Z"
 ---
 
 ## Cheat Sheets & Wikis
@@ -56,3 +56,8 @@ updatedAt: "2026-10-23T18:04:48.481Z"
 
 - [My Hub](https://ariyts.github.io/my-hub/) <!-- link: {"id":"utxu485rympllq8wc","order":0,"favicon":"https://www.google.com/s2/favicons?domain=ariyts.github.io&sz=32","tags":["personal","hub"],"isFavorite":true,"sectionId":"xqpzgo09impllq8qb","description":"Мой личный сайт / хаб"} -->
 - [TeneBrae93](https://github.com/TeneBrae93) <!-- link: {"id":"sl8xrh4lhmpllq8wj","order":1,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","tags":["github","ad","scripts"],"sectionId":"xqpzgo09impllq8qb","description":"GitHub профиль с дефолтными скриптами и наработками по AD"} -->
+
+## Pront_AI
+<!-- section: {"id":"bvoyn2ue4mvwk2w61","order":6,"collapsed":false} -->
+
+- [L1B3RT4S - jailbrake-Deepseek](https://github.com/elder-plinius/L1B3RT4S/blob/main/DEEPSEEK.mkd) <!-- link: {"id":"actnynf2bmvwk3ezu","order":0,"favicon":"https://www.google.com/s2/favicons?domain=github.com&sz=32","sectionId":"bvoyn2ue4mvwk2w61"} -->
